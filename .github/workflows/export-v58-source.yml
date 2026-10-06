@@ -1,0 +1,23 @@
+name: Export exact 5.8 source
+
+on:
+  push:
+    branches: ["tooling/export-v58-source"]
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Package source
+        run: |
+          zip -qr Sarah-Maria-Family-Adventure-5.8-Exact-Source.zip . \
+            -x '.git/*' '.github/workflows/export-v58-source.yml'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mermaid-v58-exact-source
+          path: Sarah-Maria-Family-Adventure-5.8-Exact-Source.zip
+          compression-level: 0
