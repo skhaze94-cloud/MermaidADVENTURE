@@ -27,3 +27,6 @@ jobs:
           node tests/controls.cjs
           node tests/open-jumps.cjs
           node tests/mobile-polish.cjs
+          node tests/highland.cjs
+          node tests/rana-combat.cjs
+          node tests/polish-v52.cjs

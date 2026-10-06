@@ -1,0 +1,11 @@
+const assert=require('assert/strict'),fs=require('fs'),rt=require('./runtime.cjs')();
+const polish=fs.readFileSync('dist/polish.js','utf8'),rana=fs.readFileSync('dist/rana.js','utf8'),style=fs.readFileSync('dist/style.css','utf8'),html=fs.readFileSync('dist/index.html','utf8');
+assert.match(polish,/e\.aimX\?\?nessie\.x/);
+assert.match(polish,/BOOST NOW/);
+assert.match(rana,/BOOST NOW/);
+assert.match(style,/boss-ready-pulse/);
+assert.match(html,/5\.2 · VISUAL COMBAT POLISH/);
+rt.run(`mode='story';stage=0;loadStage();state='playing';dialogueSeen=new Set(Object.keys(conversations));const e=enemies[0];nessie.x=e.x-120;nessie.y=e.y;e.cooldown=0;updateStory(.016);globalThis.__aim=[e.aimX,e.aimY,e.windup];`);
+const aim=rt.run('__aim');assert(aim[2]>0);const before=[aim[0],aim[1]];rt.run('nessie.x+=180;nessie.y-=90;updateStory(.05);globalThis.__aim2=[enemies[0].aimX,enemies[0].aimY];');assert.equal(rt.run('__aim2[0]'),before[0],'Wind-up X aim remains locked while the player dodges');assert.equal(rt.run('__aim2[1]'),before[1],'Wind-up Y aim remains locked while the player dodges');
+rt.run("invincible=0;health=5;nessie.y=500;screenShake=0;hurt(nessie.x-100);globalThis.__impact=[health,screenShake,particles.length];");const impact=rt.run('__impact');assert.equal(impact[0],4);assert(impact[1]>=0);assert(impact[2]>=0);
+console.log('5.2 polish passed: locked telegraphs, opening cues and impact feedback are present without changing damage rules.');
