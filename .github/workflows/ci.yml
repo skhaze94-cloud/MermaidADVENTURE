@@ -44,3 +44,4 @@ jobs:
           node tests/shark-polish-v59.cjs
           node tests/music.cjs
           node tests/export-standalone.cjs
+          node tests/tutorial-v6.cjs

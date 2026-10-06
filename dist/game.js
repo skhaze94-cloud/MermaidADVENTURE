@@ -15,6 +15,7 @@ const kingArt=new Image(),queenArt=new Image(),palaceArt=new Image();kingArt.src
 const trainingArt=new Image(),environmentArt=new Image(),creatureArt=new Image();trainingArt.src='assets/training-lagoon.webp';environmentArt.src='assets/environment-atlas.webp';creatureArt.src='assets/creature-atlas.webp';
 const tutorialAtlasArt=new Image();tutorialAtlasArt.src='assets/tutorial-magic-atlas.webp';
 const sharkPaintedArt=new Image();sharkPaintedArt.src='assets/gentleman-shark.webp';
+const tutorialReefArt=new Image(),tutorialFaceArt=new Image();tutorialReefArt.src='assets/tutorial-reef-v6.webp';tutorialFaceArt.src='assets/tutorial-daddy-faces-v6.webp';
 initializeBossV4();
 let dialogueSeen=new Set(),dialogueAfter=null;
 let mode='sarah',selectedStartStage=-1;try{const savedMode=localStorage.getItem('sarah-adventure-menu')?localStorage.getItem('nessie-mode'):'sarah';localStorage.setItem('sarah-adventure-menu','1');if(['sarah','story','trial'].includes(savedMode))mode=savedMode;const savedStageRaw=localStorage.getItem('sarah-family-stage-v17');const savedStage=Number(savedStageRaw);if(savedStageRaw!==null&&[-1,0,1,2,3].includes(savedStage))selectedStartStage=savedStage;}catch{}

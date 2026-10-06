@@ -33,7 +33,7 @@ function drawBossV4(kind,x,y,size,t,pose='idle',mirror=false){if(x+size*1.5<0||x
   const tailAngle=Math.PI/2+wave(0,daddy?2.2:1.6)*(daddy?.24:.17)+(daddy?p.kick*.32:0),tail=bossBone(2,base+5,0,25,91,88,tailAngle);bossPart(2,base+6,tail.x+wave(-1,daddy?2.2:1.6)*(daddy?22:16),tail.y+36,124,90,wave(-1.2,daddy?2.1:1.6)*(daddy?.32:.23)+p.kick*.18);
   // Each arm is a three-node chain: shoulder → elbow → wrist, with stronger pose silhouettes for Daddy's named tutorial moves.
   for(const side of [1,-1]){const daddyReach=daddy?(p.reach*.22+p.kick*.12):0,a=Math.PI/2-side*(.34+p.lift*1.35+daddyReach+wave(side,daddy?1.8:1.4)*.065),wrist=bossArm(2,base+2,side*43,-53,a,-side*(.3+p.bend*.65+daddyReach),wave(side,daddy?2.6:2)*.08,51,46,true);if(side===-1){const staffSwing=daddy?(p.release?-.32:p.charge?.18:p.rush?.28:0):0;bossPart(2,base+7,wrist.x-9,wrist.y-34,daddy?49:42,daddy?215:133,-.12-p.reach*.3+wave(0,daddy?1.8:1.4)*.045+staffSwing);if(p.energy>.1)bossSpell(daddy?2:3,wrist.x-2,wrist.y-(daddy?133:91),70,tick,p.energy);}else if(p.energy>.1)bossSpell(daddy?2:3,wrist.x,wrist.y,42,tick,p.energy*.75);}
-  bossPart(2,base,0,-17,135,141);bossPart(2,base+1,0,-112,103,112,p.head+wave(.4,daddy?1.55:1.2)*.035+(daddy&&p.rush?-.05:0));
+  bossPart(2,base,0,-17,135,141);if(daddy&&isTraining())drawTutorialDaddyHead(pose,p,tick,x);else bossPart(2,base+1,0,-112,103,112,p.head+wave(.4,daddy?1.55:1.2)*.035+(daddy&&p.rush?-.05:0));
   if(daddy&&/bubbleBurst/.test(pose)){for(let i=0;i<6;i++){const a=i/6*Math.PI*2+tick*1.7;bossSpell(3,Math.cos(a)*88,Math.sin(a)*42-12,25,tick+i,.45);}}
   if(daddy&&/celebrate/.test(pose)){for(let i=0;i<5;i++){const a=i/5*Math.PI*2+tick;bossSpell(2,Math.cos(a)*95,Math.sin(a)*36-65,24,tick+i,.35);}}
  }else if(kind==='nessie'){

@@ -5,7 +5,7 @@ assert.match(tutorial,/const shoals=/);
 assert.match(tutorial,/const gardens=/);
 assert.match(tutorial,/drawOrnatePortal\(x,g\.y-35,175,tick,false\)/);
 assert.match(polish,/if\(small\)\{warpedSprite/);
-assert.match(html,/5\.\d+ · /);
+assert.match(html,/\d+\.\d+ · /);
 rt.run(`
 mode='sarah';stage=0;loadStage();state='playing';dialogueSeen=new Set(Object.keys(conversations));
 assert.equal(W,15200);assert.equal(HIGHLAND_LENGTH,15200);assert.equal(boss.x,14600);assert.equal(currentStage().count,144);assert.equal(HIGHLAND_ROUTE_ZONES.length,5);

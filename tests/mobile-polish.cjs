@@ -10,5 +10,5 @@ assert.match(style,/grid-template-columns:repeat\(3,58px\)/);
 assert.match(style,/touch \.touch-dash\{width:84px;height:84px/);
 assert.match(style,/overscroll-behavior:contain/);
 assert.match(ui,/is-pressed/);
-assert.match(html,/5\.\d+ · /);
+assert.match(html,/\d+\.\d+ · /);
 console.log('Mobile polish passed: safe-area controls, larger targets, pressed states and resilient pointer cleanup.');
