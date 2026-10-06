@@ -97,6 +97,19 @@ footer{padding-top:18px}
 }
 @keyframes boost-ring{from{opacity:.45;transform:scale(.97)}to{opacity:1;transform:scale(1.03)}}
 
+
+@media(pointer:coarse) and (min-width:700px) and (min-height:650px){
+ .definitive-touch{left:max(28px,env(safe-area-inset-left));right:max(28px,env(safe-area-inset-right));bottom:max(24px,env(safe-area-inset-bottom))}
+ .definitive-touch .dpad{grid-template-columns:repeat(3,90px);gap:11px}
+ .definitive-touch .dpad button{width:90px;height:84px;border-radius:26px}
+ .definitive-touch .dpad .cue-icon{width:41px;height:41px}
+ .definitive-touch .touch-dash{width:128px;height:128px}
+ .definitive-touch .touch-dash .cue-icon{width:47px;height:47px}
+ .definitive-touch .touch-dash::after{font-size:15px;bottom:22px}
+ .touch-zone-label{left:87px;bottom:192px;font-size:12px}
+ .dash-meter{bottom:174px!important;right:max(38px,env(safe-area-inset-right))!important;transform:scale(1)}
+}
+
 @media(pointer:coarse) and (max-width:520px){
  .definitive-touch{left:max(12px,env(safe-area-inset-left));right:max(12px,env(safe-area-inset-right));gap:12px}
  .definitive-touch .dpad{grid-template-columns:repeat(3,68px);gap:7px}
