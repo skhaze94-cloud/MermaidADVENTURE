@@ -4,7 +4,7 @@ const shark=fs.readFileSync('dist/predators-v56.js','utf8'),html=fs.readFileSync
 
 assert.match(html,/5\.8 · DEFINITIVE SHARK/);
 for(const state of ['patrol','investigate','stalk','circle','lock','charge','lunge','bite','overshoot','recover','stunned'])assert(shark.includes("'"+state+"'"),state);
-for(const token of ['SHARK_TUNE','sharkObstacleSteer','sharkPointBlocked','drawSharkWake','sharkLayerFin','jawOpen','gold tooth','Top hat'])assert(shark.includes(token),token);
+for(const token of ['SHARK_TUNE','sharkObstacleSteer','sharkPointBlocked','drawSharkWake','sharkLayerFin','jawOpen','Top hat',"ctx.fillStyle='#ffd45f'"])assert(shark.includes(token),token);
 assert(shark.includes('enragedChargeSpeed:1030'));
 assert(shark.includes('detectRange:920'));
 
