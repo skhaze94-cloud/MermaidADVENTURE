@@ -1,7 +1,7 @@
 'use strict';
 // 5.5 Spark Eel Expansion: electric eel enemy family + story-route expansion helpers.
 const EXTENDED_STORY_LENGTH=7600;
-function isExtendedStoryStage(){return mode!=='trial'&&stage>=1&&stage<=3&&!isTraining();}
+function isExtendedStoryStage(){return mode!=='trial'&&stage>=1&&stage<=3;}
 function expandedStoryMeta(meta){if(!isExtendedStoryStage())return meta;return {...meta,count:meta.count*2,pads:[...meta.pads,4200,5150,6100,7040]};}
 function storyWorldLength(){return isExtendedStoryStage()?EXTENDED_STORY_LENGTH:3800;}
 function storyBossHomeX(){return stage===1&&isExtendedStoryStage()?7000:3280;}
