@@ -180,7 +180,7 @@ function updateReefSharks(dt){
         e.vx*=-.18;e.vy*=-.18;e.nearMiss=1;sharkState(e,'overshoot');
       }else{
         e.x+=e.vx*dt;e.y+=e.vy*dt;e.vx*=Math.exp(-dt*.42);e.vy*=Math.exp(-dt*.42);sharkWake(e,1.8);
-        if(d<115&&!e.biteLatch){
+        const biteDistance=Math.hypot(nessie.x-e.x,nessie.y-e.y);if(biteDistance<115&&!e.biteLatch){
           e.biteLatch=true;sharkState(e,'bite');sharkBiteBurst(e);
           if(dashTime>0){
             e.hp--;score+=260;dashTime=0;dashCooldown=.12;e.recoil=1;
@@ -224,12 +224,12 @@ function updateReefSharks(dt){
   }
 }
 
-function drawSharkWake(e,t,face,intensity){
+function drawSharkWake(e,t,intensity){
   if(reducedMotion||intensity<=0)return;
   ctx.save();ctx.globalAlpha=.12+.2*intensity;ctx.strokeStyle='#d9fff3';ctx.lineWidth=2;
   for(let i=0;i<3;i++){
     const yy=(i-1)*12+Math.sin(t*6+i)*4,back=118+i*20;
-    ctx.beginPath();ctx.moveTo(face*back,yy);ctx.quadraticCurveTo(face*(back+30),yy-8,face*(back+58),yy+Math.sin(t*4+i)*8);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(back,yy);ctx.quadraticCurveTo(back+30,yy-8,back+58,yy+Math.sin(t*4+i)*8);ctx.stroke();
   }
   ctx.restore();
 }
@@ -255,7 +255,7 @@ function drawReefShark(e,t){
   const wakeIntensity=lunge?1:state==='stalk'||state==='circle'?.55:0;
 
   ctx.save();ctx.translate(x,y);ctx.scale(face,1);ctx.rotate(headAim*.45+bodyRoll+Math.sin(e.recoil*12)*e.recoil*.055);
-  drawSharkWake(e,t,face,wakeIntensity);
+  drawSharkWake(e,t,wakeIntensity);
 
   // Rear tail stalk and articulated tail lobes.
   ctx.save();ctx.translate(88,2);ctx.rotate(tail1);
