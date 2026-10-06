@@ -1,4 +1,4 @@
-# Sarah Maria Family Adventure 5.8
+# Sarah Maria Family Adventure 5.8.1
 
 A static browser game with optional King Daddy training, four story chapters, Sarah and Nessie modes, 60-second coin trials, and embedded browser-generated effects plus the Bubble Bell Adventure soundtrack.
 
@@ -49,3 +49,6 @@ Version 5.7 — Definitive Controls & Mermaid HUD: the input presentation has be
 Version 5.8 Definitive Shark Update: the Reef Shark has been rebuilt as a layered character and a substantially more sophisticated predator. The visual rig now separates articulated tail sections, dorsal and pectoral fins, torso and belly planes, head mass, independently opening jaw, teeth and gold tooth, tracked eye, monocle and chain, top hat, scars, spotting, highlights, wake streaks and dizzy/stun accents. Attack animation now drives the head and jaw independently instead of moving one flat silhouette.
 
 The shark AI now uses a tunable predator controller with patrol, investigate, stalk, circle, lock, charge, lunge, bite, overshoot, recovery and stunned phases. It remembers the player's last position, circles before committing, telegraphs its lock, accelerates aggressively into a lunge, overshoots naturally, and repositions before hunting again. At one remaining hit it enters an enraged profile with faster pursuit, harder charges and shorter recovery. Collision behaviour is proactive as well as corrective: forward sensors inspect the intended attack path, choose upper/lower detours around barriers, and cancel a lunge cleanly before tunnelling through scenery. Core player movement, stage geometry, shark placement and the two-hit balance are otherwise preserved.
+
+
+Version 5.8.1 stability and optimization audit: no gameplay balance or movement physics are changed. The maintenance pass removes the malformed WebP dependency from the header logo, recentres Pearl Palace decorative boss architecture on Antonella's actual expanded arena, resets the Stage 4 storm-seal one-shot state on fresh loads, releases held keyboard/touch input across pause/dialogue/portal/result transitions, prevents health-shell animation timeout races, caches expanded stage metadata, culls ambient creatures before their animation work and removes per-frame temporary fish objects, hardens adaptive music against orphaned rapid crossfades and repeated blocked-playback retries, corrects the Definitive Shark wake orientation and post-movement bite distance, and refreshes adventure-tool build metadata. A dedicated 5.8.1 regression now protects these audit fixes.
