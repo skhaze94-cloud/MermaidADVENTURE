@@ -2,7 +2,7 @@
 // 5.5 Spark Eel Expansion: electric eel enemy family + story-route expansion helpers.
 const EXTENDED_STORY_LENGTH=7600;
 function isExtendedStoryStage(){return mode!=='trial'&&stage>=1&&stage<=3;}
-function expandedStoryMeta(meta){if(!isExtendedStoryStage())return meta;return {...meta,count:meta.count*2,pads:(stage===1||stage===2)?[...meta.pads,4200,5150,6100,7040]:meta.pads};}
+const expandedStoryMetaCache=new WeakMap();function expandedStoryMeta(meta){if(!isExtendedStoryStage())return meta;let cached=expandedStoryMetaCache.get(meta);if(!cached){cached={...meta,count:meta.count*2,pads:(stage===1||stage===2)?[...meta.pads,4200,5150,6100,7040]:meta.pads};expandedStoryMetaCache.set(meta,cached);}return cached;}
 function storyWorldLength(){return isExtendedStoryStage()?EXTENDED_STORY_LENGTH:3800;}
 function storyBossHomeX(){return stage===1&&isExtendedStoryStage()?7000:3280;}
 function storyBossTrigger(){return stage===1&&isExtendedStoryStage()?6420:2730;}
@@ -40,6 +40,13 @@ function setupExtendedStoryStage(){if(!isExtendedStoryStage())return;
 }
 function addExitCoins(start=4050){for(let group=0;group<6;group++){const baseX=start+group*470,baseY=[450,620,760][group%3];for(let i=0;i<5;i++){const x=baseX+i*34,y=baseY+Math.sin(i*.7)*24;coins.push({x,y,bx:x,by:y,cx:baseX,cy:baseY,type:'coin',taken:false,phase:i,group:50+group});}}}
 function unlockExtendedLaunchPads(){if(!isExtendedStoryStage()||stage===1)return;const line=waterSurface();for(const x of [4200,5150,6100,7040]){if(launchPads.some(p=>p.x===x))continue;const pad={x,y:line+75,id:launchPads.length};launchPads.push(pad);if(mode!=='trial')powerups.push({x:x+140,y:line-105,type:'heart',phase:pad.id*1.8,sky:true,taken:false});powerups.push({x:x+265,y:line-155,type:'boost',phase:pad.id*1.8+1,sky:true,taken:false});}}
+function setupRanaHuntArena(){
+ if(!isExtendedStoryStage()||stage!==3||globalThis.ranaHuntExpanded)return;
+ globalThis.ranaHuntExpanded=true;unlockExtendedLaunchPads();
+ // Three sparse blockers create lanes without obscuring the hunt.
+ obstacles.push({x:3980,y:285,w:150,h:235,huntArena:true},{x:5200,y:715,w:190,h:175,huntArena:true},{x:6420,y:300,w:150,h:225,huntArena:true});
+ powerups.push({x:4720,y:650,type:'heart',phase:11,taken:false},{x:6120,y:500,type:'boost',phase:12,taken:false});
+}
 function setupPalaceExitCorridor(){if(!isExtendedStoryStage()||stage!==2||palace?.exitExpanded)return;if(palace)palace.exitExpanded=true;checkpoint=Math.max(checkpoint,6840);unlockExtendedLaunchPads();flash('Royal exit opened!');}
-function setupRanaExitCorridor(){if(!isExtendedStoryStage()||stage!==3||globalThis.ranaExitExpanded)return;globalThis.ranaExitExpanded=true;checkpoint=Math.max(checkpoint,3950);unlockExtendedLaunchPads();obstacles.push({x:4140,y:280,w:170,h:250},{x:4680,y:700,w:230,h:190},{x:5280,y:280,w:180,h:280},{x:5860,y:680,w:220,h:210},{x:6460,y:300,w:170,h:250});spawnSparkEel(4380,520,false,3);spawnSparkEel(5000,700,false,4);spawnSparkEel(5580,460,true,5);spawnSparkEel(6200,690,false,6);spawnSparkEel(6740,470,true,7);addExitCoins(4200);powerups.push({x:4900,y:500,type:'heart',phase:9,taken:false},{x:6350,y:600,type:'boost',phase:10,taken:false});flash('Storm Eel escape route unlocked!');}
-function updateExtendedStoryGate(){if(!isExtendedStoryStage())return;if(stage===3&&!isNessieFinal()&&!rana?.victoryReady&&!leap.active&&nessie.x>3720){nessie.x=3720;nessie.vx=Math.min(0,nessie.vx);if(!globalThis.stage4GateToast){globalThis.stage4GateToast=true;flash('Rana’s storm seal blocks the eastern ruins');}}}
+function setupRanaExitCorridor(){if(!isExtendedStoryStage()||stage!==3||globalThis.ranaExitExpanded)return;globalThis.ranaExitExpanded=true;checkpoint=Math.max(checkpoint,3950);setupRanaHuntArena();addExitCoins(4200);flash('The eastern ruins are clear — portal ahead!');}
+function updateExtendedStoryGate(){if(!isExtendedStoryStage())return;if(stage===3&&!isNessieFinal()&&!boss?.active&&!leap.active&&nessie.x>3720){nessie.x=3720;nessie.vx=Math.min(0,nessie.vx);if(!globalThis.stage4GateToast){globalThis.stage4GateToast=true;flash('Rana is waiting back in the ruin arena');}}}
