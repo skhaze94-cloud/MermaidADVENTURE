@@ -35,3 +35,5 @@ jobs:
           node tests/world-richness-v53.cjs
           node tests/royal-tutorial-v54.cjs
           node tests/spark-eel-v55.cjs
+          node tests/arena-access-v56.cjs
+          node tests/music-v56.cjs
