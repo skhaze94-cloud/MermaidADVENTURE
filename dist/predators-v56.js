@@ -230,7 +230,7 @@ function updateReefSharks(dt){
 
     if(e.sharkState!=='lunge'&&e.sharkState!=='bite'){
       const hit=Math.hypot(nessie.x-e.x,nessie.y-e.y);
-      if(hit<92&&!leap.breached){
+      if(hit<92&&!leap.breached&&e.sharkState!=='stunned'){
         if(dashTime>0){
           e.hp--;score+=240;dashTime=0;dashCooldown=.12;
           popups.push({x:e.x,y:e.y-96,text:e.hp>0?'STUN! '+e.hp+'/'+e.maxHp:'REEF SHARK! +240',life:1,color:'#c8fff1'});
