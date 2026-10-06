@@ -1,4 +1,4 @@
-# Sarah Maria Family Adventure 5.5
+# Sarah Maria Family Adventure 5.6
 
 A static browser game with optional King Daddy training, four story chapters, Sarah and Nessie modes, 60-second coin trials, and embedded browser-generated effects plus the Bubble Bell Adventure soundtrack.
 
@@ -38,3 +38,6 @@ Version 5.4 royal tutorial overhaul: King Daddy now has a distinct 12-second spa
 
 
 Version 5.5 Spark Eel Expansion: stages 2, 3 and 4 now use 7,600-unit story routes while time trials remain at 3,800. Stage 2 moves Miguel to the far end of the expanded lagoon and adds additional obstacles, enemies, checkpoints, treasure and Spark/Storm Eels. Stage 3 keeps Queen Antonella’s proven boss arena but unlocks a second-half Royal Electric Gallery after victory, populated with new electric enemies and palace set-pieces. Stage 4 preserves the Rana/Nessie boss arenas and unlocks a second-half Storm Eel escape corridor after the final boss sequence. Spark Eels use a dedicated patrol/notice/coil/charge/lunge/discharge/stun state machine; Storm Eels are larger two-hit elites with multi-bolt attacks. Electric hits drain boost energy and delay boost recovery rather than hard-locking movement. The eel visuals reuse the existing creature atlas with new serpentine deformation, electric glows and lightning overlays inspired by the supplied eel reference art.
+
+
+Version 5.6 arena + soundtrack overhaul: the supplied remastered soundtrack is mapped by filename to the opening, tutorial, each stage exploration loop, each matching boss, and the Nessie second-threat fight with adaptive crossfades and dialogue ducking. Queen Antonella's 7,600-unit Pearl Palace is now traversable end-to-end before the fight, with the Queen arena moved to the far end, wider alternating obstacle lanes, non-blocking animated gates, and a route audit that keeps the portal reachable. Enemy collision resolution now respects the full world width and pushes roaming AI out of scenery instead of clipping through barriers. Standard enemies tilt toward the player's vertical position while facing them horizontally. A new two-hit Reef Shark predator, styled after the supplied spotted blacktip reference, stalks, telegraphs, lunges, collides with scenery, and can be boost-stunned. The missing intro logo was traced to a malformed WebP and replaced with an inline SVG Sarah Maria wordmark that works in repo and standalone builds without an external image dependency.
