@@ -12,8 +12,9 @@ function jumpToRight(){energy=1;dashCooldown=0;leap.cooldown=0;keys.clear();keys
 nessie.x=4090;nessie.y=440;jumpToRight();assert.equal(training.step,4);finishDialogue();tutorialResetPosition();assert.equal(nessie.x,4540);jumpToRight();assert.equal(training.step,5);assert.equal(health,4);assert.equal(activeDialogueId,'antonella-welcome');finishDialogue();
 for(const p of powerups.filter(p=>!p.sky))collectPowerup(p);assert.equal(health,5);assert(training.heart&&training.boost);assert(boostUnlimited>0);
 boostUnlimited=0;updateTraining(.016);assert(powerups.find(p=>p.type==='boost'&&!p.sky).taken===false);collectPowerup(powerups.find(p=>p.type==='boost'&&!p.sky));nessie.x=5760;nessie.y=440;jumpToRight();assert.equal(training.step,6);assert.equal(activeDialogueId,'daddy-trial');finishDialogue();
+for(const e of training.practiceEnemies){nessie.x=e.x;nessie.y=e.y;dashTime=.2;updateTrainingBoss(.016);}assert(training.practiceCleared);assert.equal(training.practiceHits,3);
 nessie.x=6600;const gx=training.guideX,gy=training.guideY;updateTrainingBoss(.001);assert(boss.active);assert(Math.abs(boss.x-gx)<1);assert(Math.abs(boss.y-gy)<1);for(let i=0;i<130;i++)updateTrainingBoss(1/60);assert(training.bossEntry>=2);
-for(let i=0;i<3;i++){boss.clock=6.9;boss.hitCooldown=0;nessie.x=boss.x;nessie.y=boss.y;dashTime=.2;updateTrainingBoss(.016);assert.equal(boss.hp,2-i);assert(bossLeapReady);}
+for(let i=0;i<3;i++){boss.clock=9;boss.hitCooldown=0;nessie.x=boss.x;nessie.y=boss.y;dashTime=.2;updateTrainingBoss(.016);assert.equal(boss.hp,2-i);assert(bossLeapReady);}
 for(let i=0;i<170;i++)updateTrainingBoss(1/60);assert(training.victoryReady);assert.equal(activeDialogueId,'daddy-win');finishDialogue();assert(familyPortalOpen());syncTutorialUi();assert.equal($('tutorial-title').textContent,'Adventure awaits!');
 // Tutorial UI never leaks into pause, menus, or another chapter.
 state='paused';syncTutorialUi();assert.equal($('tutorial-card').hidden,true);state='ready';syncTutorialUi();assert.equal($('tutorial-speech').hidden,true);stage=0;state='playing';syncTutorialUi();assert.equal($('tutorial-card').hidden,true);
@@ -22,4 +23,4 @@ stage=-1;loadStage();state='playing';const relic=training.relics[0];nessie.x=rel
 // A retry restores a reachable practice task without replaying the entrance.
 stage=-1;loadStage();training.step=4;retryStory();assert.equal(training.step,4);assert(training.entryDone);assert.equal(nessie.x,4500);assert.equal(training.guideExit,0);
 `);
-console.log('Tutorial passed: 12-second active swim, single arrival, every lesson and dialogue, real jumps over the reef, renewable gifts, continuous boss handoff, three hits, portal, retries and UI cleanup.');
+console.log('Tutorial passed: 12-second active swim, lessons/dialogue, practice creature parade, revamped King Daddy sparring, portal, retries and UI cleanup.');

@@ -1,4 +1,4 @@
-# Sarah Maria Family Adventure 5.3
+# Sarah Maria Family Adventure 5.4
 
 A static browser game with optional King Daddy training, four story chapters, Sarah and Nessie modes, 60-second coin trials, and embedded browser-generated effects plus the Bubble Bell Adventure soundtrack.
 
@@ -32,3 +32,6 @@ Version 5.2 visual/combat polish: enemy attacks now lock and display readable ai
 
 
 Version 5.3 animation + world richness: Highland Gold story mode is doubled again from 7,600 to 15,200 world units while the 60-second trial remains unchanged. The post-waterfall route now has five visually distinct reused-asset regions (Secret Grotto, Kelp Cathedral, Ancient Shell Ruins, Open Loch Gardens and Carlo’s Court), more checkpoints, treasure, obstacles, power-ups, scuttling crabs and mixed creature encounters. Ambient life across the game now uses animated seahorse, jelly, puffer, eel and swordfish silhouettes instead of one repeated fish type. Tutorial 2.0 gains friendly creature shoals, bubble/relic gardens, shell shrines and dormant mini-portals using the existing tutorial/environment atlases; these are decorative and do not add hazards or change lesson progression. Core jump physics, boss balance and later story chapters are unchanged.
+
+
+Version 5.4 royal tutorial overhaul: King Daddy now has a distinct 12-second sparring choreography with named Thunder Teapot charge, Triple Tickle Bolt volley, Cloud of Mild Concern, Royal Wobble Wave, Dad Dash, Bubble Beard Blast and a clear green opening. His V4 rig now exaggerates staff swings, tail kicks, rush silhouettes, casting and celebration. Tutorial lesson seven begins with three harmless practice creatures — Professor Puff, Sir Wobble and Noodle — that teach boost contact before King Daddy enters. Queen Antonella now actively gestures, reacts, coaches and celebrates during the tutorial gift/practice sequence, with expanded family comedy dialogue. The opening Sarah Maria logo is explicitly restored as a responsive animated hero image with reduced-motion support. Core story chapters, Highland 5.3 expansion and boss balance outside the tutorial are unchanged.
