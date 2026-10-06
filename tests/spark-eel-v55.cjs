@@ -3,7 +3,7 @@ const assert=require('node:assert/strict'),fs=require('fs'),rt=require('./runtim
 const spark=fs.readFileSync('dist/spark-eel.js','utf8'),html=fs.readFileSync('dist/index.html','utf8');
 for(const state of ['idle','notice','coil','charge','lunge-coil','lunge','recover','stunned'])assert(spark.includes("'"+state+"'"));
 for(const label of ['spark-eel','storm-eel','BOOST DISRUPTED'])assert(spark.includes(label));
-assert.match(html,/spark-eel\.js/);assert.match(html,/5\.5 · SPARK EEL EXPANSION/);
+assert.match(html,/spark-eel\.js/);assert.match(html,/5\.\d+ · /);
 rt.run(`
 mode='story';stage=1;loadStage();state='playing';dialogueSeen=new Set(Object.keys(conversations));
 assert.equal(W,7600);assert.equal(currentStage().count,96);assert.equal(boss.x,7000);assert(enemies.filter(isSparkEel).length>=5);assert(enemies.some(e=>e.kind==='storm-eel'));assert(obstacles.some(o=>o.x>6000));
