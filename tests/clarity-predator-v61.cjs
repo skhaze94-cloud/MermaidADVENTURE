@@ -23,6 +23,6 @@ assert.equal(rt.run('__afterFirst'),3);assert.equal(rt.run('__afterRepeat'),3,'S
 rt.run(`
 const s=enemies.find(isReefShark);s.facing=1;s.faceHoldUntil=s.clock+1;const oldFace=s.facing;updateSharkFacing(s,180,false);globalThis.__heldFace=[oldFace,s.facing];s.renderAngle=.2;s.vx=200;s.vy=-20;const oldAngle=s.renderAngle;sharkMoveToward(s,s.x+300,s.y,220,.016,1);globalThis.__angleDelta=Math.abs(s.renderAngle-oldAngle);
 `);
-assert.deepEqual(rt.run('__heldFace'),[1,1],'Facing hysteresis prevents rapid flip chatter');
+assert.equal(rt.run('__heldFace[0]'),1);assert.equal(rt.run('__heldFace[1]'),1,'Facing hysteresis prevents rapid flip chatter');
 assert(rt.run('__angleDelta')<.08,'Rendered pitch changes smoothly');
 console.log('6.1 clarity/predator arena passed: lower decoration density, six 4-HP hunt sharks, smooth steering, open arena and roaming Rana.');
