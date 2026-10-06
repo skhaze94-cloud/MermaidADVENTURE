@@ -6,6 +6,18 @@ function updateTutorialExploration(dt){training.queenX+=((training.victoryReady?
 function drawTutorialGardens(t){const tick=reducedMotion?0:t;
  // Reuse the painted architecture in low-opacity distant layers, with clear swim lanes.
  ctx.save();for(let i=0;i<12;i++){const x=280+i*630-camera*.8;if(x<-220||x>vw+220)continue;ctx.globalAlpha=.23;envDraw(1,x,430,125,420,tick);ctx.globalAlpha=.34;envDraw(4,x-65,815,260,100,tick,true);}ctx.restore();
+
+ // Friendly life and magic displays make the lagoon feel inhabited without becoming hazards.
+ const shoals=[
+  {x:980,y:470,k:'seahorse',n:3},{x:1850,y:700,k:'jelly',n:4},{x:3380,y:430,k:'puffer',n:3},
+  {x:4300,y:735,k:'eel',n:3},{x:5200,y:500,k:'seahorse',n:4},{x:6120,y:690,k:'swordfish',n:3}
+ ];
+ for(const [si,shoal] of shoals.entries()){for(let j=0;j<shoal.n;j++){const wx=shoal.x+j*55+Math.sin(tick*.65+j+si)*24,wy=shoal.y+Math.sin(tick*(1.05+si*.07)+j*1.3)*30,x=wx-camera;if(x<-120||x>vw+120)continue;ctx.save();ctx.globalAlpha=.58;releaseCreature({kind:shoal.k,x:wx,y:wy,size:12+(j%2)*3,dir:(si+j)%2?1:-1,clock:tick+j+si},tick,true);ctx.restore();}}
+ const gardens=[
+  {x:1180,y:740,portal:false},{x:2280,y:470,portal:true},{x:4020,y:760,portal:false},{x:5050,y:500,portal:true},{x:6260,y:760,portal:false}
+ ];
+ for(const [gi,g] of gardens.entries()){const x=g.x-camera;if(x<-330||x>vw+330)continue;ctx.save();ctx.globalAlpha=.45;envDraw(4,x-150,g.y+55,300,115,tick+gi,true);ctx.globalAlpha=.7;for(let j=0;j<7;j++){const a=j/7*Math.PI*2+tick*.28,r=45+(j%2)*18;tutorialPearl(x+Math.cos(a)*r,g.y+Math.sin(a)*r*.45,4+j%3,tick,.45);}ctx.restore();if(g.portal){ctx.save();ctx.globalAlpha=.36;drawOrnatePortal(x,g.y-35,175,tick,false);ctx.restore();}else{ctx.save();ctx.globalAlpha=.72;drawRelicArtwork(x,g.y-20,92);ctx.restore();}}
+
  for(const r of training.relics){const x=r.x-camera;if(x<-160||x>vw+160)continue;ctx.save();const glow=ctx.createRadialGradient(x,r.y,5,x,r.y,105);glow.addColorStop(0,r.taken?'#a8ffdd17':'#ffe69b35');glow.addColorStop(1,'#b9ffe700');ctx.fillStyle=glow;ctx.fillRect(x-105,r.y-105,210,210);envDraw(0,x-85,r.y+28,170,110,tick);if(!r.taken){if(!drawRelicArtwork(x,r.y-18,125))drawCueBadge(x,r.y-15,'compass',true,tick);for(let j=0;j<4;j++){const a=j*Math.PI/2+tick*.7;paintedBubble(x+Math.cos(a)*55,r.y-18+Math.sin(a)*30,4,.65);}}ctx.restore();}
  // Antonella has her own little court and remains a friendly spectator.
  if(training.queenSeen||training.step>=5){const qx=tutorialQueenX()-camera;ctx.save();ctx.globalAlpha=.7;envDraw(2,qx-130,645,260,215,tick);ctx.restore();drawRoyalCharacter('queen',qx,470+Math.sin(tick*.8)*8,250,tick,'idle','warm');}

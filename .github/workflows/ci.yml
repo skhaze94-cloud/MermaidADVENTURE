@@ -28,5 +28,7 @@ jobs:
           node tests/open-jumps.cjs
           node tests/mobile-polish.cjs
           node tests/highland.cjs
+          node tests/tutorial.cjs
           node tests/rana-combat.cjs
           node tests/polish-v52.cjs
+          node tests/world-richness-v53.cjs
