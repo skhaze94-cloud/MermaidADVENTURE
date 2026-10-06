@@ -1,4 +1,4 @@
-# Sarah Maria Family Adventure 6.0.1
+# Sarah Maria Family Adventure 6.1
 
 A static browser game with optional King Daddy training, four story chapters, Sarah and Nessie modes, 60-second coin trials, and embedded browser-generated effects plus the Bubble Bell Adventure soundtrack.
 
@@ -62,3 +62,6 @@ Version 6.0 Tutorial Revamp: the lagoon has eleven hand-placed coral shelves, pe
 
 
 Version 6.0.1 stability audit: maintenance-only improvements on top of Release 6.0. Fixes the malformed small header logo dependency, resets the Stage 4 storm-seal one-shot state on every fresh load, caches expanded-stage metadata, hardens adaptive music switching against orphaned crossfades and blocked-playback retry churn, corrects the Definitive Shark fallback wake orientation, and refreshes browser adventure-tool build metadata. No 6.0 tutorial, painted-shark, stage-layout, control, boss, movement, jump or balance changes are removed.
+
+
+Version 6.1 Clarity + Predator Arena: the visual hierarchy has been simplified so gameplay reads cleanly over the painted worlds. Ambient fish, bubbles, drifting motes, foreground flora, obstacle decorations, Palace effects and launch-pad bubbles are reduced or made more translucent while solid geometry, pickups, attack telegraphs, sharks and bosses remain high contrast. Stage 4 is now a continuous 2,700–7,240 hunt arena during the Rana fight rather than an old compact boss box followed by a separate corridor. Rana dynamically follows Sarah across the expanded space, re-targets attacks and jungle hazards around her position, and steers around solid arena blockers. Six aggressive Stage 4 sharks are distributed across the hunt space; each has 4 HP and a segmented overhead bar, while sharks elsewhere use 3 HP. Shark steering now uses smoothed targets, acceleration limits, heading hysteresis and stable rendered pitch to eliminate left/right chatter and jitter near obstacles.
