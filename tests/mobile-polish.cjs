@@ -1,0 +1,14 @@
+const assert=require('assert/strict'),fs=require('fs');
+const game=fs.readFileSync('dist/game.js','utf8'),style=fs.readFileSync('dist/style.css','utf8'),ui=fs.readFileSync('dist/ui-v3.css','utf8'),html=fs.readFileSync('dist/index.html','utf8');
+assert.match(game,/activeTouchPointers=new Map\(\)/);
+assert.match(game,/function clearHeldControls\(\)/);
+assert.match(game,/aria-pressed/);
+assert.match(game,/pointercancel/);
+assert.match(game,/lostpointercapture/);
+assert.match(style,/safe-area-inset-bottom/);
+assert.match(style,/grid-template-columns:repeat\(3,58px\)/);
+assert.match(style,/touch \.touch-dash\{width:84px;height:84px/);
+assert.match(style,/overscroll-behavior:contain/);
+assert.match(ui,/is-pressed/);
+assert.match(html,/5\.1 · MOBILE POLISH/);
+console.log('Mobile polish passed: safe-area controls, larger targets, pressed states and resilient pointer cleanup.');
