@@ -1,0 +1,12 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('fs'),rt=require('./runtime.cjs')();rt.sandbox.assert=assert;
+const music=fs.readFileSync('dist/music.js','utf8');
+for(const path of ['opening-aquatic-adventure.mp3','tutorial-friendly-regal-groove.mp3','stage-1-buoyant-splash.mp3','stage-1-boss-crab-kingdom.mp3','stage-2-king-pancake-ray.mp3','stage-2-boss-final-impact.mp3','stage-3-mock-solemn-chant.mp3','stage-3-boss-queen-antonella.mp3','stage-4-constraining-momentum.mp3','stage-4-boss-serpentine-assault.mp3','nessie-second-threat.mp3'])assert(music.includes(path),path);
+assert.equal(rt.run("state='ready';desiredMusicKey()"),'opening');
+rt.run("mode='story';stage=-1;loadStage();state='playing';");assert.equal(rt.run('desiredMusicKey()'),'tutorial');
+rt.run("mode='story';stage=0;loadStage();state='playing';boss.active=false;");assert.equal(rt.run('desiredMusicKey()'),'stage1');rt.run('boss.active=true;');assert.equal(rt.run('desiredMusicKey()'),'stage1Boss');
+rt.run("mode='story';stage=1;loadStage();state='playing';boss.active=false;");assert.equal(rt.run('desiredMusicKey()'),'stage2');rt.run('boss.active=true;');assert.equal(rt.run('desiredMusicKey()'),'stage2Boss');
+rt.run("mode='story';stage=2;loadStage();state='playing';boss.active=false;");assert.equal(rt.run('desiredMusicKey()'),'stage3');rt.run('boss.active=true;');assert.equal(rt.run('desiredMusicKey()'),'stage3Boss');
+rt.run("mode='story';stage=3;loadStage();state='playing';boss.active=false;");assert.equal(rt.run('desiredMusicKey()'),'stage4');rt.run('boss.active=true;');assert.equal(rt.run('desiredMusicKey()'),'stage4Boss');
+rt.run("mode='sarah';stage=3;loadStage();state='playing';nessieTwist={ready:false};");assert.equal(rt.run('desiredMusicKey()'),'nessieBoss');
+console.log('5.6 music map passed: opening, tutorial, all four stage themes, all matching bosses and the Nessie second-threat cue are routed correctly.');
