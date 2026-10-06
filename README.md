@@ -1,4 +1,4 @@
-# Sarah Maria Family Adventure 5.0
+# Sarah Maria Family Adventure 5.1
 
 A static browser game with optional King Daddy training, four story chapters, Sarah and Nessie modes, 60-second coin trials, and embedded browser-generated effects plus the Bubble Bell Adventure soundtrack.
 
@@ -23,3 +23,6 @@ Tutorial refresh: twelve seconds of player-controlled lagoon exploration with Sa
 Highland Gold story expansion: 7,600-unit route (previously 3,800), 1.1-second slide into a 6.7-second waterfall descent with lateral steering, boost dodges, animated jelly/puffer hazards, reef ledges, gold, health damage and a pre-fall checkpoint. A shaded grotto continues through new coral obstacles and five fast scuttling crabs to Carlo at x=7,080 and the portal at x=7,430. Tutorial, later chapters and 60-second trials retain their original bounds. Check `node tests/highland.cjs`; native canvas waterfall/grotto scenes inspected. Browser/device QA remains unverified.
 
 Tutorial 2.0: expanded to 7,600 units, with both artificial horizontal swim limits removed. Optional golden conch relics reward exploration; the lesson trail leads to Antonella’s gift lesson, King Daddy’s dedicated arena, and a family farewell at the portal. Shared portals, travel portals, large bubbles, power-up shells and launch rings use the new transparent painted magic atlas. Other chapter gameplay is unchanged. Verified the unrestricted opening, relic rewards, lessons, family dialogue, arena and portal in the runtime harness; inspected native canvas scenes. Browser/device QA remains unverified.
+
+
+Version 5.1 mobile polish: larger coarse-pointer controls, iPhone/iPad safe-area spacing, clearer pressed-state feedback, resilient multi-touch release/cleanup, and automatic held-input clearing when the browser loses focus or the page is hidden. Gameplay physics, chapter content, bosses, jumps and scoring are unchanged.
