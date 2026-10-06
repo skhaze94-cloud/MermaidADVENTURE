@@ -1,0 +1,13 @@
+const assert=require('node:assert/strict'),rt=require('./runtime.cjs')();
+rt.run("mode='sarah';stage=0;loadStage();state='playing';nessie.y=600");
+const right=rt.touch[3],boost=rt.touch[4];
+const down=(b,id)=>b.events.pointerdown[0]({pointerId:id,preventDefault(){}});
+down(right,1);down(boost,2);assert(rt.run("keys.has('ArrowRight')&&keys.has(' ')"));
+boost.events.pointerup[0]({pointerId:2});assert(rt.run("keys.has('ArrowRight')&&!keys.has(' ')"));
+rt.elements.get('.dpad').getBoundingClientRect=()=>({left:0,top:0,width:100,height:100});right.events.pointermove[0]({pointerId:1,clientX:90,clientY:10});assert(rt.run("keys.has('ArrowUp')&&keys.has('ArrowRight')"));
+right.events.pointercancel[0]({pointerId:1});assert(!rt.run("keys.has('ArrowUp')||keys.has('ArrowRight')"));
+rt.run("keyboardHeld.add('ArrowRight');keys.add('ArrowRight')");down(right,3);right.events.pointerup[0]({pointerId:3});assert(rt.run("keys.has('ArrowRight')"));rt.run('clearHeldControls()');assert.equal(rt.run('keys.size'),0);
+rt.run("state='dialogue'");down(right,4);assert.equal(rt.run('activeTouchPointers.size'),0);
+rt.run("state='playing';energy=1;dashCooldown=0;leap.cooldown=0");rt.elements.get('touch-jump').events.pointerdown[0]({preventDefault(){}});assert(rt.run('leap.active'));assert(!rt.run("keys.has('ArrowUp')"));
+rt.run("state='paused';syncSplashControls()");assert.equal(rt.run('keys.size'),0);
+console.log('Splash controls passed: multi-touch independence, slide diagonals, cancellation, keyboard/touch overlap, input gates and dedicated Jump.');

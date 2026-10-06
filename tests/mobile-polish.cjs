@@ -1,5 +1,5 @@
 const assert=require('assert/strict'),fs=require('fs');
-const game=fs.readFileSync('dist/game.js','utf8'),style=fs.readFileSync('dist/style.css','utf8'),ui=fs.readFileSync('dist/ui-v3.css','utf8'),html=fs.readFileSync('dist/index.html','utf8');
+const game=fs.readFileSync('dist/game.js','utf8')+fs.readFileSync('dist/splash-controls.js','utf8'),style=fs.readFileSync('dist/style.css','utf8'),ui=fs.readFileSync('dist/ui-v3.css','utf8'),html=fs.readFileSync('dist/index.html','utf8');
 assert.match(game,/activeTouchPointers=new Map\(\)/);
 assert.match(game,/function clearHeldControls\(\)/);
 assert.match(game,/aria-pressed/);

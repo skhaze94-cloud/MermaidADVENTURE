@@ -155,3 +155,18 @@ footer{padding-top:18px}
 @media(prefers-reduced-motion:reduce){
  .health-shells.low-health i.filled,.health-shells.health-hit i.filled,.health-shells.health-heal i.filled,.definitive-touch .touch-dash::before,#energy.unlimited{animation:none!important}
 }
+/* Distinct actions and open-water splash chains, integrated into the 5.7 HUD. */
+.touch-jump{display:none}.game-shell.controls-suspended .touch{visibility:hidden!important;pointer-events:none!important}
+@media(any-pointer:coarse){
+ .definitive-touch{display:flex!important;position:absolute;left:max(18px,env(safe-area-inset-left));right:max(18px,env(safe-area-inset-right));bottom:max(18px,env(safe-area-inset-bottom));align-items:flex-end;gap:12px;z-index:2!important}
+ .definitive-touch .dpad button:nth-child(1){grid-area:1/2}.definitive-touch .dpad button:nth-child(2){grid-area:2/1}.definitive-touch .dpad button:nth-child(3){grid-area:3/2}.definitive-touch .dpad button:nth-child(4){grid-area:2/3}
+ .splash-actions{display:flex;align-items:flex-end;gap:18px;pointer-events:none}
+ .definitive-touch .touch-jump{display:flex;position:relative;flex-direction:column;align-items:center;justify-content:center;gap:3px;width:82px;height:82px;border-radius:28px;border:2px solid #e3fff2;background:radial-gradient(circle at 30% 20%,#9feeda,#397d8a 68%,#19445e);box-shadow:inset 0 2px #fff8,0 5px 0 #092b40,0 9px 18px #001c3855;pointer-events:auto;touch-action:none;color:#fff8d5}
+ .touch-jump .cue-icon{width:32px;height:32px}.touch-jump b{font:800 13px var(--story-font);letter-spacing:1px}
+ .definitive-touch .touch-jump.bounce-ready{filter:brightness(1.25);border-color:#ffeaa5;box-shadow:0 0 22px #ffe89699,inset 0 2px #fff8}
+ .definitive-touch .touch-jump.double-ready{border-color:#e7b5ff;background:radial-gradient(circle at 30% 20%,#dabfff,#746cba 70%,#304a75)}
+ .definitive-touch .touch-jump:active{transform:translateY(3px) scale(.96)}
+ .dash-meter{display:none!important}
+}
+@media(any-pointer:coarse) and (max-width:699px){.splash-actions{flex-direction:column;gap:13px}.definitive-touch .touch-jump{width:66px;height:66px;border-radius:23px;align-self:center}.touch-jump .cue-icon{width:25px;height:25px}.touch-jump b{font-size:11px}.boss-hud{bottom:220px!important}}
+@media(any-pointer:coarse) and (max-height:550px) and (orientation:landscape){.splash-actions{flex-direction:row;gap:12px}.definitive-touch .touch-jump{width:62px;height:62px;border-radius:22px}.boss-hud{bottom:20px!important;left:50%!important;transform:translateX(-50%)}}

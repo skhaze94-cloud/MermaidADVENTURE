@@ -27,6 +27,8 @@ jobs:
           node tests/controls.cjs
           node tests/controls-v57.cjs
           node tests/open-jumps.cjs
+          node tests/splash-jump.cjs
+          node tests/splash-controls.cjs
           node tests/mobile-polish.cjs
           node tests/highland.cjs
           node tests/tutorial.cjs
