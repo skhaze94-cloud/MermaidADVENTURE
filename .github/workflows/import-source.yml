@@ -5,12 +5,15 @@ on:
     paths:
       - "Sarah-Maria-Family-Adventure-5.0-Source (2).zip"
       - ".github/workflows/import-source.yml"
+  issues:
+    types: [opened]
 
 permissions:
   contents: write
 
 jobs:
   import-source:
+    if: ${{ github.event_name == 'push' || github.event.issue.title == 'Import Mermaid 5.0 Source' }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
