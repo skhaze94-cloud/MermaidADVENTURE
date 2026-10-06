@@ -2,7 +2,7 @@
 // 5.5 Spark Eel Expansion: electric eel enemy family + story-route expansion helpers.
 const EXTENDED_STORY_LENGTH=7600;
 function isExtendedStoryStage(){return mode!=='trial'&&stage>=1&&stage<=3;}
-function expandedStoryMeta(meta){if(!isExtendedStoryStage())return meta;return {...meta,count:meta.count*2,pads:(stage===1||stage===2)?[...meta.pads,4200,5150,6100,7040]:meta.pads};}
+const expandedStoryMetaCache=new WeakMap();function expandedStoryMeta(meta){if(!isExtendedStoryStage())return meta;let cached=expandedStoryMetaCache.get(meta);if(!cached){cached={...meta,count:meta.count*2,pads:(stage===1||stage===2)?[...meta.pads,4200,5150,6100,7040]:meta.pads};expandedStoryMetaCache.set(meta,cached);}return cached;}
 function storyWorldLength(){return isExtendedStoryStage()?EXTENDED_STORY_LENGTH:3800;}
 function storyBossHomeX(){return stage===1&&isExtendedStoryStage()?7000:3280;}
 function storyBossTrigger(){return stage===1&&isExtendedStoryStage()?6420:2730;}
