@@ -39,3 +39,5 @@ jobs:
           node tests/arena-access-v56.cjs
           node tests/music-v56.cjs
           node tests/shark-v58.cjs
+          node tests/audit-v581.cjs
+          node tests/adventure-tools.cjs
