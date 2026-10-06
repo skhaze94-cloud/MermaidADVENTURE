@@ -1,7 +1,347 @@
-// 5.6 roaming reef shark inspired by the supplied blacktip-style reference.
+// Sarah Maria 5.8 · Definitive Shark Update
+// Layered gentleman reef shark inspired by the supplied top-hat/monocle shark reference.
+
+const SHARK_TUNE={
+  detectRange:920,
+  loseRange:1180,
+  patrolSpeed:74,
+  investigateSpeed:150,
+  stalkSpeed:235,
+  circleSpeed:270,
+  chargeSpeed:900,
+  enragedChargeSpeed:1030,
+  turnRate:4.6,
+  verticalTurnRate:5.4,
+  investigateTime:.42,
+  stalkTime:.72,
+  circleTime:.82,
+  lockTime:.42,
+  lungeTime:.58,
+  biteTime:.22,
+  overshootTime:.34,
+  recoverTime:.64,
+  stunnedTime:1.08,
+  cooldown:1.05,
+  enragedCooldown:.72,
+  bodyRadiusX:88,
+  bodyRadiusY:46,
+  sensorDistance:130,
+  sensorSpread:72
+};
+
 function isReefShark(e){return !!e&&e.kind==='reef-shark';}
-function spawnReefShark(x,y,phase=0){const e={kind:'reef-shark',x,y,bx:x,by:y,hp:2,maxHp:2,phase,clock:phase*.5,sharkState:'patrol',sharkTime:phase*.12,cooldown:.7+phase*.08,facing:1,aimX:x-100,aimY:y,recoil:0};enemies.push(e);return e;}
-function setupReefSharks(){if(mode==='trial'||isTraining())return;if(stage===0){spawnReefShark(8450,520,0);spawnReefShark(12550,690,1);}else if(stage===1){spawnReefShark(2780,520,0);spawnReefShark(5900,690,1);}else if(stage===2){spawnReefShark(3700,690,0);spawnReefShark(5850,500,1);}else if(stage===3){spawnReefShark(1620,690,0);}}
-function sharkState(e,s){e.sharkState=s;e.sharkTime=0;if(s==='stalk'||s==='charge'){e.aimX=nessie.x;e.aimY=nessie.y;}if(s==='stunned'){e.recoil=1;ranaBurst(e.x,e.y,16,'#b8f5ef',120);}}
-function updateReefSharks(dt){if(mode==='trial'||isTraining())return;for(const e of enemies){if(!isReefShark(e)||e.hp<=0)continue;const oldX=e.x,oldY=e.y;e.clock+=dt;e.sharkTime+=dt;e.cooldown=Math.max(0,e.cooldown-dt);e.recoil=Math.max(0,e.recoil-dt*2.8);e.facing=nessie.x<e.x?1:-1;const d=Math.hypot(nessie.x-e.x,nessie.y-e.y),near=d<700&&!leap.breached;if(e.sharkState==='patrol'){e.x=e.bx+Math.sin(e.clock*.46+e.phase)*115;e.y=e.by+Math.sin(e.clock*.8+e.phase)*38;if(near&&e.cooldown<=0)sharkState(e,'stalk');}else if(e.sharkState==='stalk'){const tx=nessie.x+(e.facing>0?130:-130),ty=nessie.y;e.x+=(tx-e.x)*(1-Math.exp(-dt*1.05));e.y+=(ty-e.y)*(1-Math.exp(-dt*1.25));if(e.sharkTime>.8)sharkState(e,'charge');}else if(e.sharkState==='charge'){if(e.sharkTime>.58){const a=Math.atan2(e.aimY-e.y,e.aimX-e.x);e.lungeVX=Math.cos(a)*760;e.lungeVY=Math.sin(a)*760;sharkState(e,'lunge');tone(95,.08,.022);}}else if(e.sharkState==='lunge'){e.x+=e.lungeVX*dt;e.y+=e.lungeVY*dt;e.lungeVX*=Math.exp(-dt*1.2);e.lungeVY*=Math.exp(-dt*1.2);if(e.sharkTime>.55){e.bx=e.x;e.by=e.y;sharkState(e,'recover');e.cooldown=1.6;}}else if(e.sharkState==='stunned'){e.y+=Math.sin(e.clock*14)*dt*15;if(e.sharkTime>1.05)sharkState(e,'recover');}else if(e.sharkState==='recover'){e.x+=(e.bx-e.x)*(1-Math.exp(-dt*2));e.y+=(e.by-e.y)*(1-Math.exp(-dt*2));if(e.sharkTime>.75)sharkState(e,'patrol');}resolveEnemyScenery(e,oldX,oldY);if(e.collided&&e.sharkState==='lunge'){e.bx=e.x;e.by=e.y;sharkState(e,'recover');}const hit=Math.hypot(nessie.x-e.x,nessie.y-e.y);if(hit<92){if(dashTime>0){e.hp--;score+=220;dashTime=0;dashCooldown=.12;popups.push({x:e.x,y:e.y-90,text:e.hp>0?'SHARK STUN!':'REEF SHARK! +220',life:1,color:'#bff8e9'});sharkState(e,'stunned');if(e.hp<=0){ranaBurst(e.x,e.y,28,'#bff8e9',170);tone(420,.13,.03);}}else if(invincible<=0)hurt(e.x);}}}
-function drawReefShark(e,t){const x=e.x-camera,y=e.y;if(x<-220||x>vw+220)return true;const face=e.facing||1,dx=(nessie.x-e.x)*face,dy=nessie.y-e.y,aim=reducedMotion?0:clamp(Math.atan2(dy,Math.max(1,-dx)),-.28,.28),charge=e.sharkState==='charge',stun=e.sharkState==='stunned',wiggle=reducedMotion?0:Math.sin(e.clock*4.2)*.045;ctx.save();ctx.translate(x,y);ctx.scale(face,1);ctx.rotate(aim+wiggle+Math.sin(e.recoil*12)*e.recoil*.06);ctx.scale(1-e.recoil*.06,1+e.recoil*.05);const body=ctx.createLinearGradient(-110,-40,115,40);body.addColorStop(0,'#b8c9c0');body.addColorStop(.28,'#789790');body.addColorStop(.62,'#4f716d');body.addColorStop(1,'#314d4e');ctx.fillStyle=body;ctx.strokeStyle='#294749';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-116,-3);ctx.quadraticCurveTo(-91,-37,-18,-39);ctx.quadraticCurveTo(35,-43,75,-22);ctx.lineTo(103,-50);ctx.lineTo(94,-9);ctx.lineTo(118,0);ctx.lineTo(94,10);ctx.lineTo(105,49);ctx.lineTo(73,24);ctx.quadraticCurveTo(26,42,-36,34);ctx.quadraticCurveTo(-95,30,-116,-3);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#506f69';ctx.strokeStyle='#294749';ctx.beginPath();ctx.moveTo(-5,-34);ctx.lineTo(17,-74);ctx.lineTo(36,-28);ctx.closePath();ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(-5,24);ctx.lineTo(23,52);ctx.lineTo(38,20);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#1f3536';ctx.beginPath();ctx.moveTo(13,-68);ctx.lineTo(19,-75);ctx.lineTo(25,-60);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(98,-46);ctx.lineTo(104,-50);ctx.lineTo(100,-35);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(100,45);ctx.lineTo(106,49);ctx.lineTo(101,33);ctx.closePath();ctx.fill();ctx.fillStyle='#243d3e';ctx.beginPath();ctx.arc(-83,-16,4.8,0,Math.PI*2);ctx.fill();ctx.fillStyle='#e9f5d8';ctx.beginPath();ctx.arc(-84,-17,1.6,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#395454';ctx.lineWidth=2;for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(-66+i*7,-4);ctx.lineTo(-64+i*7,11);ctx.stroke();}ctx.strokeStyle='#354e4e';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-106,7);ctx.quadraticCurveTo(-91,15,-72,10);ctx.stroke();ctx.fillStyle='#657e75';for(const [sx,sy,r] of [[-35,-25,3],[0,-27,2.6],[28,-20,3.2],[48,-8,2.3],[-15,-12,2.1],[18,5,2.4],[-49,-6,2.5]]){ctx.beginPath();ctx.arc(sx,sy,r,0,Math.PI*2);ctx.fill();}if(charge){ctx.strokeStyle='#ffe8a777';ctx.lineWidth=2;ctx.setLineDash([6,9]);ctx.beginPath();ctx.moveTo(-105,0);ctx.lineTo((e.aimX-e.x)*face,(e.aimY-e.y));ctx.stroke();ctx.setLineDash([]);drawReleaseBadge(0,-80,'warning',false,t);}if(stun)drawReleaseBadge(0,-82,'combo',false,t);ctx.restore();return true;}
+
+function spawnReefShark(x,y,phase=0){
+  const e={
+    kind:'reef-shark',x,y,bx:x,by:y,hp:2,maxHp:2,phase,clock:phase*.43,
+    sharkState:'patrol',sharkTime:phase*.09,cooldown:.35+phase*.07,
+    facing:phase%2?1:-1,heading:phase%2?Math.PI:0,aimX:x-120,aimY:y,
+    vx:0,vy:0,recoil:0,turnBias:phase%2?1:-1,collided:false,
+    biteLatch:false,alert:0,eyeBlink:phase*.17%1,nearMiss:0,lastSeenX:x,lastSeenY:y
+  };
+  enemies.push(e);
+  return e;
+}
+
+function setupReefSharks(){
+  if(mode==='trial'||isTraining())return;
+  if(stage===0){
+    spawnReefShark(8450,520,0);spawnReefShark(12550,690,1);
+  }else if(stage===1){
+    spawnReefShark(2780,520,0);spawnReefShark(5900,690,1);
+  }else if(stage===2){
+    spawnReefShark(3700,690,0);spawnReefShark(5850,500,1);
+  }else if(stage===3){
+    spawnReefShark(1620,690,0);
+  }
+}
+
+function sharkState(e,state){
+  e.sharkState=state;e.sharkTime=0;e.biteLatch=false;
+  if(['investigate','stalk','circle','lock','charge'].includes(state)){
+    e.lastSeenX=nessie.x;e.lastSeenY=nessie.y;
+  }
+  if(state==='lock'||state==='charge'){
+    e.aimX=nessie.x;e.aimY=nessie.y;
+  }
+  if(state==='stunned'){
+    e.recoil=1;e.vx*=.18;e.vy*=.18;
+    ranaBurst(e.x,e.y,18,'#c8fff1',130);
+    tone(170,.08,.018);
+  }
+}
+
+function sharkPointBlocked(x,y,rx=SHARK_TUNE.bodyRadiusX,ry=SHARK_TUNE.bodyRadiusY){
+  if(x-rx<105||x+rx>W-105||y-ry<waterSurface()+52||y+ry>865)return true;
+  for(const o of obstacles){
+    if(x+rx>o.x&&x-rx<o.x+o.w&&y+ry>o.y&&y-ry<o.y+o.h)return true;
+  }
+  return false;
+}
+
+function sharkObstacleSteer(e,tx,ty){
+  const dx=tx-e.x,dy=ty-e.y,len=Math.max(1,Math.hypot(dx,dy)),nx=dx/len,ny=dy/len;
+  const forward=SHARK_TUNE.sensorDistance+(e.sharkState==='lunge'?70:0);
+  const fx=e.x+nx*forward,fy=e.y+ny*forward;
+  if(!sharkPointBlocked(fx,fy,82,42))return {x:tx,y:ty,blocked:false};
+  const up={x:e.x+nx*72,y:e.y-SHARK_TUNE.sensorSpread};
+  const down={x:e.x+nx*72,y:e.y+SHARK_TUNE.sensorSpread};
+  const upBlocked=sharkPointBlocked(up.x,up.y,78,40),downBlocked=sharkPointBlocked(down.x,down.y,78,40);
+  let choice;
+  if(!upBlocked&&!downBlocked){
+    const upCost=Math.abs(ty-up.y),downCost=Math.abs(ty-down.y);
+    choice=(upCost<downCost?up:down);
+  }else if(!upBlocked)choice=up;
+  else if(!downBlocked)choice=down;
+  else choice={x:e.x-nx*90,y:clamp(e.y+e.turnBias*95,waterSurface()+85,830)};
+  e.turnBias=choice.y<e.y?-1:1;
+  return {x:choice.x,y:choice.y,blocked:true};
+}
+
+function sharkMoveToward(e,tx,ty,speed,dt,turnBoost=1){
+  const steer=sharkObstacleSteer(e,tx,ty),dx=steer.x-e.x,dy=steer.y-e.y,d=Math.max(1,Math.hypot(dx,dy));
+  const targetVx=dx/d*speed,targetVy=dy/d*speed;
+  const lerpX=1-Math.exp(-dt*SHARK_TUNE.turnRate*turnBoost),lerpY=1-Math.exp(-dt*SHARK_TUNE.verticalTurnRate*turnBoost);
+  e.vx+=(targetVx-e.vx)*lerpX;e.vy+=(targetVy-e.vy)*lerpY;
+  e.x+=e.vx*dt;e.y+=e.vy*dt;
+  e.heading=Math.atan2(e.vy,e.vx||1);
+  return steer;
+}
+
+function sharkTargetSide(e,distance=175){
+  const side=nessie.x<e.x?1:-1;
+  return {x:nessie.x+side*distance,y:nessie.y+Math.sin(e.clock*2.1+e.phase)*42};
+}
+
+function sharkWake(e,intensity=1){
+  if(reducedMotion||Math.random()>.48*intensity)return;
+  const tailX=e.x+(e.facing>0?92:-92),tailY=e.y+Math.sin(e.clock*7)*12;
+  particles.push({
+    x:tailX,y:tailY,vx:(e.facing>0?1:-1)*(28+Math.random()*36),vy:(Math.random()-.5)*32,
+    life:.32+Math.random()*.28,max:.6,color:'#d8fff4',r:2+Math.random()*2,bubble:true
+  });
+  if(particles.length>280)particles.splice(0,particles.length-280);
+}
+
+function sharkBiteBurst(e){
+  const mx=e.x+(e.facing>0?-82:82),my=e.y+8;
+  ranaBurst(mx,my,16,'#fff0c2',150);
+  if(!reducedMotion){
+    for(let i=0;i<10;i++){
+      const a=(i/10-.5)*1.5+(e.facing>0?Math.PI:0),v=90+Math.random()*110;
+      particles.push({x:mx,y:my,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:.3+Math.random()*.28,max:.58,color:i%2?'#d8fff4':'#fff1bd',r:2+Math.random()*2.4,bubble:i%3===0});
+    }
+  }
+  tone(78,.1,.03);
+}
+
+function updateReefSharks(dt){
+  if(mode==='trial'||isTraining())return;
+  for(const e of enemies){
+    if(!isReefShark(e)||e.hp<=0)continue;
+    const oldX=e.x,oldY=e.y;
+    e.clock+=dt;e.sharkTime+=dt;e.cooldown=Math.max(0,e.cooldown-dt);
+    e.recoil=Math.max(0,e.recoil-dt*2.4);e.alert=Math.max(0,e.alert-dt*.7);e.eyeBlink=(e.eyeBlink+dt*.28)%1;
+    const dx=nessie.x-e.x,dy=nessie.y-e.y,d=Math.hypot(dx,dy),enraged=e.hp===1,playerVisible=!leap.breached&&d<SHARK_TUNE.loseRange;
+    if(playerVisible){e.lastSeenX=nessie.x;e.lastSeenY=nessie.y;}
+    const desiredFace=nessie.x<e.x?1:-1;
+    if(Math.abs(dx)>24)e.facing=desiredFace;
+
+    if(e.sharkState==='patrol'){
+      const px=e.bx+Math.sin(e.clock*.42+e.phase)*180,py=e.by+Math.sin(e.clock*.77+e.phase*1.6)*55;
+      sharkMoveToward(e,px,py,SHARK_TUNE.patrolSpeed*(enraged?1.15:1),dt,.75);
+      if(d<SHARK_TUNE.detectRange&&!leap.breached&&e.cooldown<=0){e.alert=1;sharkState(e,'investigate');}
+    }else if(e.sharkState==='investigate'){
+      sharkMoveToward(e,e.lastSeenX,e.lastSeenY,SHARK_TUNE.investigateSpeed*(enraged?1.16:1),dt,1.05);
+      if(e.sharkTime>SHARK_TUNE.investigateTime)sharkState(e,'stalk');
+    }else if(e.sharkState==='stalk'){
+      const target=sharkTargetSide(e,enraged?125:165);
+      sharkMoveToward(e,target.x,target.y,SHARK_TUNE.stalkSpeed*(enraged?1.16:1),dt,1.18);
+      sharkWake(e,.6);
+      if(!playerVisible&&e.sharkTime>.5)sharkState(e,'recover');
+      else if(e.sharkTime>SHARK_TUNE.stalkTime)sharkState(e,'circle');
+    }else if(e.sharkState==='circle'){
+      const orbit=e.turnBias,ang=e.clock*(enraged?2.4:1.9)+e.phase,rx=enraged?125:165,ry=enraged?78:95;
+      const tx=nessie.x+Math.cos(ang)*rx,ty=nessie.y+Math.sin(ang)*ry*orbit;
+      sharkMoveToward(e,tx,ty,SHARK_TUNE.circleSpeed*(enraged?1.14:1),dt,1.35);
+      sharkWake(e,.85);
+      if(e.sharkTime>SHARK_TUNE.circleTime)sharkState(e,'lock');
+    }else if(e.sharkState==='lock'){
+      e.vx*=Math.exp(-dt*4.2);e.vy*=Math.exp(-dt*4.2);e.x+=e.vx*dt;e.y+=e.vy*dt;
+      e.aimX=nessie.x;e.aimY=nessie.y;e.alert=1;
+      if(e.sharkTime>SHARK_TUNE.lockTime)sharkState(e,'charge');
+    }else if(e.sharkState==='charge'){
+      const a=Math.atan2(e.aimY-e.y,e.aimX-e.x),speed=enraged?SHARK_TUNE.enragedChargeSpeed:SHARK_TUNE.chargeSpeed;
+      e.vx=Math.cos(a)*speed;e.vy=Math.sin(a)*speed;e.heading=a;
+      sharkState(e,'lunge');sharkWake(e,1.6);tone(enraged?82:92,.09,.024);
+    }else if(e.sharkState==='lunge'){
+      const aheadX=e.x+e.vx*dt*2.3,aheadY=e.y+e.vy*dt*2.3;
+      if(sharkPointBlocked(aheadX,aheadY,86,44)){
+        e.vx*=-.18;e.vy*=-.18;e.nearMiss=1;sharkState(e,'overshoot');
+      }else{
+        e.x+=e.vx*dt;e.y+=e.vy*dt;e.vx*=Math.exp(-dt*.42);e.vy*=Math.exp(-dt*.42);sharkWake(e,1.8);
+        if(d<115&&!e.biteLatch){
+          e.biteLatch=true;sharkState(e,'bite');sharkBiteBurst(e);
+          if(dashTime>0){
+            e.hp--;score+=260;dashTime=0;dashCooldown=.12;e.recoil=1;
+            popups.push({x:e.x,y:e.y-102,text:e.hp>0?'PARRY! SHARK STUNNED':'SHARK DOWN! +260',life:1.05,color:'#fff2b8'});
+            sharkState(e,'stunned');
+            if(e.hp<=0){ranaBurst(e.x,e.y,36,'#bff8e9',190);tone(390,.16,.035);}
+          }else if(invincible<=0)hurt(e.x);
+        }else if(e.sharkTime>SHARK_TUNE.lungeTime)sharkState(e,'overshoot');
+      }
+    }else if(e.sharkState==='bite'){
+      e.vx*=Math.exp(-dt*4.6);e.vy*=Math.exp(-dt*4.6);e.x+=e.vx*dt;e.y+=e.vy*dt;
+      if(e.sharkTime>SHARK_TUNE.biteTime)sharkState(e,'overshoot');
+    }else if(e.sharkState==='overshoot'){
+      e.vx*=Math.exp(-dt*2.6);e.vy*=Math.exp(-dt*2.6);e.x+=e.vx*dt;e.y+=e.vy*dt;
+      if(e.sharkTime>SHARK_TUNE.overshootTime)sharkState(e,'recover');
+    }else if(e.sharkState==='stunned'){
+      e.vx*=Math.exp(-dt*3.5);e.vy*=Math.exp(-dt*3.5);e.x+=e.vx*dt;e.y+=Math.sin(e.clock*15)*dt*18;
+      if(e.sharkTime>SHARK_TUNE.stunnedTime)sharkState(e,'recover');
+    }else if(e.sharkState==='recover'){
+      const retreatX=clamp(e.x+(e.facing>0?165:-165),160,W-160),retreatY=clamp(e.by+Math.sin(e.clock+e.phase)*70,waterSurface()+95,820);
+      sharkMoveToward(e,retreatX,retreatY,SHARK_TUNE.investigateSpeed,dt,.9);
+      if(e.sharkTime>SHARK_TUNE.recoverTime){e.bx=e.x;e.by=e.y;e.cooldown=enraged?SHARK_TUNE.enragedCooldown:SHARK_TUNE.cooldown;sharkState(e,'patrol');}
+    }
+
+    resolveEnemyScenery(e,oldX,oldY);
+    if(e.collided&&['lunge','bite'].includes(e.sharkState)){
+      e.vx*=-.12;e.vy*=-.12;e.nearMiss=1;sharkState(e,'overshoot');
+    }
+
+    if(e.sharkState!=='lunge'&&e.sharkState!=='bite'){
+      const hit=Math.hypot(nessie.x-e.x,nessie.y-e.y);
+      if(hit<92){
+        if(dashTime>0){
+          e.hp--;score+=240;dashTime=0;dashCooldown=.12;
+          popups.push({x:e.x,y:e.y-96,text:e.hp>0?'SHARK STUN!':'REEF SHARK! +240',life:1,color:'#c8fff1'});
+          sharkState(e,'stunned');
+          if(e.hp<=0){ranaBurst(e.x,e.y,32,'#bff8e9',180);tone(410,.14,.032);}
+        }else if(invincible<=0)hurt(e.x);
+      }
+    }
+  }
+}
+
+function drawSharkWake(e,t,face,intensity){
+  if(reducedMotion||intensity<=0)return;
+  ctx.save();ctx.globalAlpha=.12+.2*intensity;ctx.strokeStyle='#d9fff3';ctx.lineWidth=2;
+  for(let i=0;i<3;i++){
+    const yy=(i-1)*12+Math.sin(t*6+i)*4,back=118+i*20;
+    ctx.beginPath();ctx.moveTo(face*back,yy);ctx.quadraticCurveTo(face*(back+30),yy-8,face*(back+58),yy+Math.sin(t*4+i)*8);ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function sharkLayerFin(fill,stroke,x,y,points,rotation=0){
+  ctx.save();ctx.translate(x,y);ctx.rotate(rotation);ctx.fillStyle=fill;ctx.strokeStyle=stroke;ctx.lineWidth=3;ctx.beginPath();
+  ctx.moveTo(points[0][0],points[0][1]);for(let i=1;i<points.length;i++)ctx.lineTo(points[i][0],points[i][1]);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
+}
+
+function drawReefShark(e,t){
+  const x=e.x-camera,y=e.y;if(x<-280||x>vw+280)return true;
+  const state=e.sharkState||'patrol',face=e.facing||1,enraged=e.hp===1;
+  const targetDx=(nessie.x-e.x)*face,targetDy=nessie.y-e.y;
+  const headAim=reducedMotion?0:clamp(Math.atan2(targetDy,Math.max(70,Math.abs(targetDx))),-.3,.3);
+  const speed=Math.hypot(e.vx||0,e.vy||0),speedNorm=clamp(speed/SHARK_TUNE.enragedChargeSpeed,0,1);
+  const lunge=['charge','lunge','bite'].includes(state),stun=state==='stunned',lock=state==='lock';
+  const jawOpen=state==='bite'?.95:state==='lunge'?.58:state==='lock'?.36:state==='stunned'?.12:.08+Math.sin(e.clock*3.1)*.035;
+  const tailAmp=reducedMotion?0:(.13+speedNorm*.28+(enraged?.05:0));
+  const tail1=Math.sin(e.clock*(4.2+speedNorm*5)+e.phase)*tailAmp;
+  const tail2=Math.sin(e.clock*(4.9+speedNorm*6)+e.phase+1.05)*tailAmp*1.45;
+  const bodyRoll=reducedMotion?0:Math.sin(e.clock*2.1+e.phase)*.025;
+  const blink=e.eyeBlink>.94?1:0;
+  const wakeIntensity=lunge?1:state==='stalk'||state==='circle'?.55:0;
+
+  ctx.save();ctx.translate(x,y);ctx.scale(face,1);ctx.rotate(headAim*.45+bodyRoll+Math.sin(e.recoil*12)*e.recoil*.055);
+  drawSharkWake(e,t,face,wakeIntensity);
+
+  // Rear tail stalk and articulated tail lobes.
+  ctx.save();ctx.translate(88,2);ctx.rotate(tail1);
+  const tailGrad=ctx.createLinearGradient(0,-25,110,25);tailGrad.addColorStop(0,'#4f7777');tailGrad.addColorStop(1,'#304e54');
+  ctx.fillStyle=tailGrad;ctx.strokeStyle='#243f47';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-2,-20);ctx.quadraticCurveTo(34,-18,65,-9);ctx.quadraticCurveTo(79,-4,93,0);ctx.quadraticCurveTo(76,8,60,13);ctx.quadraticCurveTo(30,20,-2,18);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.translate(82,0);ctx.rotate(tail2);
+  sharkLayerFin('#456b70','#243f47',0,0,[[0,-5],[21,-60],[33,-18],[19,0],[34,20],[19,63],[-3,7]],0);
+  ctx.fillStyle='#193943';ctx.beginPath();ctx.moveTo(16,-54);ctx.lineTo(24,-64);ctx.lineTo(29,-43);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(20,52);ctx.lineTo(27,63);ctx.lineTo(30,42);ctx.closePath();ctx.fill();
+  ctx.restore();
+
+  // Dorsal fin behind the body.
+  sharkLayerFin('#547e7d','#29464b',-3,-31,[[-17,8],[7,-69],[34,5]],-.02+bodyRoll);
+
+  // Main torso volume.
+  const body=ctx.createLinearGradient(-104,-55,112,55);
+  body.addColorStop(0,'#b7ccc5');body.addColorStop(.18,'#8fb0a9');body.addColorStop(.48,'#608984');body.addColorStop(.78,'#426766');body.addColorStop(1,'#294b50');
+  ctx.fillStyle=body;ctx.strokeStyle='#243e45';ctx.lineWidth=3.2;ctx.beginPath();
+  ctx.moveTo(-111,-6);ctx.bezierCurveTo(-96,-48,-47,-59,13,-52);ctx.bezierCurveTo(53,-48,83,-32,101,-15);
+  ctx.bezierCurveTo(110,-6,111,8,99,17);ctx.bezierCurveTo(72,39,28,48,-29,43);ctx.bezierCurveTo(-77,38,-104,22,-111,-6);ctx.closePath();ctx.fill();ctx.stroke();
+
+  // Belly plane.
+  const belly=ctx.createLinearGradient(-95,5,70,35);belly.addColorStop(0,'#dce5dc');belly.addColorStop(1,'#839c91');
+  ctx.fillStyle=belly;ctx.globalAlpha=.92;ctx.beginPath();ctx.moveTo(-105,6);ctx.bezierCurveTo(-71,28,-19,36,48,29);ctx.bezierCurveTo(68,27,84,22,97,15);ctx.bezierCurveTo(71,42,24,49,-31,43);ctx.bezierCurveTo(-77,38,-100,24,-105,6);ctx.closePath();ctx.fill();ctx.globalAlpha=1;
+
+  // Pectoral fins.
+  const finLift=lunge?-.22:state==='circle'?.12:Math.sin(e.clock*2.4)*.04;
+  sharkLayerFin('#628983','#29484a',-1,20,[[-8,-2],[36,12],[14,49],[-14,17]],finLift);
+  sharkLayerFin('#4c7474','#29484a',17,-10,[[-5,1],[39,-4],[19,26],[-10,17]],-.15-finLift*.4);
+
+  // Head mass.
+  ctx.save();ctx.translate(-72,-5);ctx.rotate(headAim*.55);
+  const head=ctx.createRadialGradient(-18,-20,8,0,0,92);head.addColorStop(0,'#b9cdc3');head.addColorStop(.48,'#7c9f98');head.addColorStop(1,'#496d6d');
+  ctx.fillStyle=head;ctx.strokeStyle='#29464b';ctx.lineWidth=3;ctx.beginPath();
+  ctx.moveTo(-47,-12);ctx.quadraticCurveTo(-42,-43,-6,-48);ctx.quadraticCurveTo(33,-47,48,-18);ctx.quadraticCurveTo(57,0,43,15);ctx.quadraticCurveTo(17,33,-22,27);ctx.quadraticCurveTo(-46,22,-50,5);ctx.closePath();ctx.fill();ctx.stroke();
+
+  // Snout highlight and scars.
+  ctx.strokeStyle='#d9eee4';ctx.globalAlpha=.35;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-43,-16);ctx.quadraticCurveTo(-19,-35,12,-31);ctx.stroke();ctx.globalAlpha=1;
+  ctx.strokeStyle='#a46e75';ctx.lineWidth=2.3;for(const scar of [[5,-35,13,-25],[22,-30,31,-21],[-3,17,10,21]]){ctx.beginPath();ctx.moveTo(scar[0],scar[1]);ctx.lineTo(scar[2],scar[3]);ctx.stroke();}
+
+  // Mouth cavity and articulated lower jaw.
+  ctx.save();ctx.translate(-27,9);ctx.rotate(jawOpen*.25);
+  ctx.fillStyle='#401f29';ctx.strokeStyle='#2d1d25';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(-13,-4);ctx.quadraticCurveTo(12,-14,49,-7);ctx.quadraticCurveTo(34,16,2,19);ctx.quadraticCurveTo(-14,13,-13,-4);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle='#7b3949';ctx.beginPath();ctx.ellipse(15,9,20,7,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#f6e7c1';for(let i=0;i<7;i++){const tx=-5+i*8,th=7+(i%2)*3;ctx.beginPath();ctx.moveTo(tx,-5);ctx.lineTo(tx+4,-5);ctx.lineTo(tx+2,th*.5);ctx.closePath();ctx.fill();}
+  for(let i=0;i<6;i++){const tx=0+i*8,th=6+(i%2)*3;ctx.beginPath();ctx.moveTo(tx,15);ctx.lineTo(tx+4,15);ctx.lineTo(tx+2,15-th*.65);ctx.closePath();ctx.fill();}
+  ctx.fillStyle='#ffd45f';ctx.beginPath();ctx.moveTo(28,-5);ctx.lineTo(33,-5);ctx.lineTo(31,4);ctx.closePath();ctx.fill();
+  ctx.restore();
+
+  // Eye, tracked pupil and monocle.
+  const eyeX=-9,eyeY=-21,pupilX=clamp(targetDx/280,-3.2,3.2),pupilY=clamp(targetDy/220,-2.6,2.6);
+  ctx.fillStyle='#edf1d7';ctx.strokeStyle='#314c4c';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(eyeX,eyeY,10,8-blink*6,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+  if(!blink){ctx.fillStyle=enraged?'#ffb35c':'#6c8462';ctx.beginPath();ctx.arc(eyeX+pupilX,eyeY+pupilY,4.2,0,Math.PI*2);ctx.fill();ctx.fillStyle='#17282b';ctx.beginPath();ctx.arc(eyeX+pupilX+.5,eyeY+pupilY,1.8,0,Math.PI*2);ctx.fill();}
+  ctx.strokeStyle='#d5af53';ctx.lineWidth=2.3;ctx.beginPath();ctx.arc(eyeX,eyeY,14,0,Math.PI*2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(eyeX+11,eyeY+9);ctx.quadraticCurveTo(18,1,31,11);ctx.quadraticCurveTo(39,18,38,29);ctx.stroke();
+
+  // Gills and spotting.
+  ctx.strokeStyle='#456b69';ctx.lineWidth=2.2;for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(27+i*7,-8);ctx.quadraticCurveTo(24+i*7,4,29+i*7,14);ctx.stroke();}
+  ctx.fillStyle='#597a72';for(const [sx,sy,r] of [[18,-33,3],[34,-27,2.5],[15,17,2.3],[42,8,2.1],[-27,-31,2.4],[-35,10,2]]){ctx.beginPath();ctx.arc(sx,sy,r,0,Math.PI*2);ctx.fill();}
+
+  // Top hat: deliberately slightly oversized and bouncy like the reference sheet.
+  const hatBounce=reducedMotion?0:Math.sin(e.clock*5.1)*2+(lock?2:0);
+  ctx.save();ctx.translate(5,-49+hatBounce);ctx.rotate(-.05-headAim*.2);
+  ctx.fillStyle='#282a2d';ctx.strokeStyle='#16181c';ctx.lineWidth=2.2;ctx.beginPath();ctx.ellipse(0,7,26,7,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#33363a';ctx.fillRect(-15,-25,30,32);ctx.strokeRect(-15,-25,30,32);
+  ctx.fillStyle='#8f4e42';ctx.fillRect(-16,-3,32,7);
+  ctx.fillStyle='#777a78';ctx.globalAlpha=.42;ctx.fillRect(-10,-21,4,17);ctx.globalAlpha=1;ctx.restore();
+
+  ctx.restore();
+
+  // Body spots, side highlight and state glow.
+  ctx.fillStyle='#537570';for(const [sx,sy,r] of [[-38,-33,3.6],[-18,-39,2.8],[7,-34,3.2],[31,-25,2.7],[48,-12,2.4],[-9,19,2.2],[25,16,2.6],[-55,13,2.4]]){ctx.beginPath();ctx.arc(sx,sy,r,0,Math.PI*2);ctx.fill();}
+  ctx.strokeStyle=enraged?'#ffd07a66':'#d6fff044';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-56,-40);ctx.quadraticCurveTo(5,-57,70,-24);ctx.stroke();
+
+  if(lock||state==='charge'){
+    ctx.save();ctx.strokeStyle=enraged?'#ffd36dcc':'#ffe8a7aa';ctx.lineWidth=2.2;ctx.setLineDash([7,9]);ctx.beginPath();ctx.moveTo(-104,0);ctx.lineTo((e.aimX-e.x)*face,(e.aimY-e.y));ctx.stroke();ctx.setLineDash([]);
+    ctx.globalAlpha=.7+.2*Math.sin(t*12);ctx.beginPath();ctx.arc((e.aimX-e.x)*face,(e.aimY-e.y),22+(lock?5:10),0,Math.PI*2);ctx.stroke();ctx.restore();
+    drawReleaseBadge(0,-102,'warning',false,t);
+  }
+  if(stun){
+    drawReleaseBadge(0,-105,'combo',false,t);
+    ctx.save();ctx.globalAlpha=.9;for(let i=0;i<4;i++){const a=t*3+i*Math.PI/2,r=68;ctx.fillStyle=i%2?'#fff0a8':'#d5fbff';ctx.font='900 18px Nunito,sans-serif';ctx.textAlign='center';ctx.fillText('✦',Math.cos(a)*r,-60+Math.sin(a)*20);}ctx.restore();
+  }
+  if(enraged&&!stun){
+    ctx.save();ctx.globalAlpha=.22+.15*Math.sin(t*7);ctx.strokeStyle='#ffb16a';ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(-5,0,124,58,0,0,Math.PI*2);ctx.stroke();ctx.restore();
+  }
+  ctx.restore();
+  return true;
+}

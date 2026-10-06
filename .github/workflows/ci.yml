@@ -38,3 +38,4 @@ jobs:
           node tests/spark-eel-v55.cjs
           node tests/arena-access-v56.cjs
           node tests/music-v56.cjs
+          node tests/shark-v58.cjs
