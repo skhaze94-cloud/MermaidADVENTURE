@@ -1,4 +1,4 @@
-# Sarah Maria Family Adventure 5.6
+# Sarah Maria Family Adventure 5.7
 
 A static browser game with optional King Daddy training, four story chapters, Sarah and Nessie modes, 60-second coin trials, and embedded browser-generated effects plus the Bubble Bell Adventure soundtrack.
 
@@ -41,3 +41,6 @@ Version 5.5 Spark Eel Expansion: stages 2, 3 and 4 now use 7,600-unit story rout
 
 
 Version 5.6 arena + soundtrack overhaul: the supplied remastered soundtrack is mapped by filename to the opening, tutorial, each stage exploration loop, each matching boss, and the Nessie second-threat fight with adaptive crossfades and dialogue ducking. Queen Antonella's 7,600-unit Pearl Palace is now traversable end-to-end before the fight, with the Queen arena moved to the far end, wider alternating obstacle lanes, non-blocking animated gates, and a route audit that keeps the portal reachable. Enemy collision resolution now respects the full world width and pushes roaming AI out of scenery instead of clipping through barriers. Standard enemies tilt toward the player's vertical position while facing them horizontally. A new two-hit Reef Shark predator, styled after the supplied spotted blacktip reference, stalks, telegraphs, lunges, collides with scenery, and can be boost-stunned. The missing intro logo was traced to a malformed WebP and replaced with an inline SVG Sarah Maria wordmark that works in repo and standalone builds without an external image dependency.
+
+
+Version 5.7 — Definitive Controls & Mermaid HUD: the input presentation has been rebuilt for touch-first play without changing the underlying swim/boost physics. Coarse-pointer devices receive large safe-area-aware pearl controls, an oversized labelled BOOST action, iPad-specific sizing, landscape compaction, multi-touch pointer capture and clear pressed states. Desktop keyboard controls are grouped into a polished control dock and mirror key-down feedback in the HUD. The game HUD now uses sea-glass cards, shell/pearl/starfish charms, a five-shell health display with damage/heal feedback, and a dedicated Mermaid Burst energy instrument. The touch layer stays below critical HUD information and scales for phones, tablets and landscape play.

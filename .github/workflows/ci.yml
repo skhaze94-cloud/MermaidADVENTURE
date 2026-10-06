@@ -25,6 +25,7 @@ jobs:
       - name: Focused regressions
         run: |
           node tests/controls.cjs
+          node tests/controls-v57.cjs
           node tests/open-jumps.cjs
           node tests/mobile-polish.cjs
           node tests/highland.cjs
