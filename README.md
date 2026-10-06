@@ -1,4 +1,4 @@
-# Sarah Maria Family Adventure 5.1
+# Sarah Maria Family Adventure 5.2
 
 A static browser game with optional King Daddy training, four story chapters, Sarah and Nessie modes, 60-second coin trials, and embedded browser-generated effects plus the Bubble Bell Adventure soundtrack.
 
@@ -26,3 +26,6 @@ Tutorial 2.0: expanded to 7,600 units, with both artificial horizontal swim limi
 
 
 Version 5.1 mobile polish: larger coarse-pointer controls, iPhone/iPad safe-area spacing, clearer pressed-state feedback, resilient multi-touch release/cleanup, and automatic held-input clearing when the browser loses focus or the page is hidden. Gameplay physics, chapter content, bosses, jumps and scoring are unchanged.
+
+
+Version 5.2 visual/combat polish: enemy attacks now lock and display readable aim telegraphs, creature recoil has stronger motion feedback, Carlo/Miguel/Rana vulnerable windows display a clear BOOST NOW cue, boss HUD openings pulse, player damage has a restrained impact burst, and successful boosted projectile blocks have sharper audiovisual feedback. Core physics, damage values, boss timing windows, story progression and scoring rules are unchanged.
