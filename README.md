@@ -1,4 +1,4 @@
-# Sarah Maria Family Adventure 5.4
+# Sarah Maria Family Adventure 5.5
 
 A static browser game with optional King Daddy training, four story chapters, Sarah and Nessie modes, 60-second coin trials, and embedded browser-generated effects plus the Bubble Bell Adventure soundtrack.
 
@@ -35,3 +35,6 @@ Version 5.3 animation + world richness: Highland Gold story mode is doubled agai
 
 
 Version 5.4 royal tutorial overhaul: King Daddy now has a distinct 12-second sparring choreography with named Thunder Teapot charge, Triple Tickle Bolt volley, Cloud of Mild Concern, Royal Wobble Wave, Dad Dash, Bubble Beard Blast and a clear green opening. His V4 rig now exaggerates staff swings, tail kicks, rush silhouettes, casting and celebration. Tutorial lesson seven begins with three harmless practice creatures — Professor Puff, Sir Wobble and Noodle — that teach boost contact before King Daddy enters. Queen Antonella now actively gestures, reacts, coaches and celebrates during the tutorial gift/practice sequence, with expanded family comedy dialogue. The opening Sarah Maria logo is explicitly restored as a responsive animated hero image with reduced-motion support. Core story chapters, Highland 5.3 expansion and boss balance outside the tutorial are unchanged.
+
+
+Version 5.5 Spark Eel Expansion: stages 2, 3 and 4 now use 7,600-unit story routes while time trials remain at 3,800. Stage 2 moves Miguel to the far end of the expanded lagoon and adds additional obstacles, enemies, checkpoints, treasure and Spark/Storm Eels. Stage 3 keeps Queen Antonella’s proven boss arena but unlocks a second-half Royal Electric Gallery after victory, populated with new electric enemies and palace set-pieces. Stage 4 preserves the Rana/Nessie boss arenas and unlocks a second-half Storm Eel escape corridor after the final boss sequence. Spark Eels use a dedicated patrol/notice/coil/charge/lunge/discharge/stun state machine; Storm Eels are larger two-hit elites with multi-bolt attacks. Electric hits drain boost energy and delay boost recovery rather than hard-locking movement. The eel visuals reuse the existing creature atlas with new serpentine deformation, electric glows and lightning overlays inspired by the supplied eel reference art.

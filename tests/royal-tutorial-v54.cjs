@@ -1,7 +1,7 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('fs'),rt=require('./runtime.cjs')();rt.sandbox.assert=assert;
 const family=fs.readFileSync('dist/family.js','utf8'),tutorial=fs.readFileSync('dist/tutorial.js','utf8'),tutorialTwo=fs.readFileSync('dist/tutorial-two.js','utf8'),bossV4=fs.readFileSync('dist/boss-v4.js','utf8'),title=fs.readFileSync('dist/title.css','utf8'),html=fs.readFileSync('dist/index.html','utf8');
-assert.match(title,/\.opening-logo\{/);assert.match(title,/logo-return/);assert.match(html,/5\.4 · ROYAL TUTORIAL/);
+assert.match(title,/\.opening-logo\{/);assert.match(title,/logo-return/);assert.match(html,/5\.\d+ · /);
 for(const name of ['Professor Puff','Sir Wobble','Noodle'])assert(family.includes(name));
 for(const move of ['THUNDER TEAPOT','TRIPLE TICKLE BOLT','THE CLOUD OF MILD CONCERN','ROYAL WOBBLE WAVE','DAD DASH','BUBBLE BEARD BLAST','GREEN GLOW · BOOST NOW'])assert(family.includes(move));
 assert.match(bossV4,/dadDash/);assert.match(bossV4,/bubbleBurst/);assert.match(tutorialTwo,/queenReact/);assert.match(tutorialTwo,/bloomCharge/);assert.match(tutorial,/practice creature/i);
