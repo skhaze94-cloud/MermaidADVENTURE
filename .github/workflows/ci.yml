@@ -34,3 +34,4 @@ jobs:
           node tests/polish-v52.cjs
           node tests/world-richness-v53.cjs
           node tests/royal-tutorial-v54.cjs
+          node tests/spark-eel-v55.cjs
