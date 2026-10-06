@@ -1,0 +1,25 @@
+# Sarah Maria Family Adventure 3.0
+
+A static browser game with optional King Daddy training, four story chapters, Sarah and Nessie modes, 60-second coin trials, and embedded browser-generated effects plus the Bubble Bell Adventure soundtrack.
+
+Release 2.0 unifies the painted tutorial and palace environments, introduces six expressive enemy sprites, adds continuous mesh animation to all boss bodies and limbs, and uses a shared set of solid pearl action glyphs in both canvas and HUD. First chapter defeats finish before dialogue opens. Minor enemies patrol and telegraph volleys. Jump variants and the earned two-zone escape retain their existing physics.
+
+Run locally using any static file server with `dist` as its root. No package installation or build is required.
+
+Validation: `node tests/release.cjs`, `node tests/family-expansion.cjs`, `node tests/rana-combat.cjs`, `node tests/surface-leap.cjs`, `node tests/music.cjs`, `node tests/adventure-tools.cjs`. Native canvas rendering scripts require the supplied runtime canvas package. Browser UI, live sound output, and device-specific performance have not been tested in this environment.
+
+Artwork is served as WebP with transparency preserved. Music starts after Play or a sound-button gesture, loops, fades in, softens during dialogue, and pauses when the tab is hidden. Preferences are local to the device.
+
+Title refresh: Khaze · Sarah Games opening, three immediate play actions, optional chapter drawer, a shared articulated Sarah sprite, continuous intro/portal arrival, and restored luminous launch rings. The five jump profiles and physics are unchanged from the earlier offline edition. Validate with `node tests/title-flow.cjs` and the existing jump/combat checks.
+
+Art direction pass: sequential portrait dialogue with keyboard navigation and every reply checked; calmer tutorial composition and a smoothly moving guide; six distinct palace encounters; recessed curtains, floor fountains, fixed throne architecture, and collision-matched gate panels. StorySerif uses bundled DejaVu Serif fonts with the included license. The existing five jumps, music and boss attack patterns remain. `node tests/conversation.cjs` covers every dialogue branch.
+
+Open jumps: Up + Boost now launches from anywhere underwater. Existing rings still offer convenient launches and recharge. Momentum and remaining boost increase the leap; unlimited boost produces a faster, higher flip. The one-use boss double-flip still targets two zones.
+
+Version 3.0: UI-only pearl, sea-glass and gold styling for the title, buttons, chapter drawer, HUD, dialogue, touch controls and results. The illustrated logo headlines the opening; Sarah greets Nessie and the royal seahorse using existing artwork. Local SVG controls and an S monogram favicon replace generic glyphs. Backgrounds, gameplay rigs, physics and attacks are unchanged. Title/control/dialogue/open-jump checks pass; native canvas opening inspected. Browser DOM layout and device QA remain unverified.
+
+Tutorial refresh: twelve seconds of player-controlled lagoon exploration with Sarah’s self-talk; one 3.4-second thunder arrival; a continuous King Daddy guide-to-sparring transition; seven hands-on lessons with keyboard/touch guidance, branching exchanges, renewable practice gifts and optional return-to-practice positioning. King Daddy has independent staff, shoulder, elbow, palm, knee, ankle, head and fabric skinning. Tutorial pearl bubbles, speech balloons and lesson cards use the family palette. Other worlds and jump physics are preserved. Validate with `node tests/tutorial.cjs`, `node tests/conversation.cjs`, `node tests/title-flow.cjs`, `node tests/controls.cjs`, `node tests/open-jumps.cjs` and `node tests/family-expansion.cjs`. Native canvas scenes were visually inspected; browser DOM and device performance remain unverified.
+
+Highland Gold story expansion: 7,600-unit route (previously 3,800), 1.1-second slide into a 6.7-second waterfall descent with lateral steering, boost dodges, animated jelly/puffer hazards, reef ledges, gold, health damage and a pre-fall checkpoint. A shaded grotto continues through new coral obstacles and five fast scuttling crabs to Carlo at x=7,080 and the portal at x=7,430. Tutorial, later chapters and 60-second trials retain their original bounds. Check `node tests/highland.cjs`; native canvas waterfall/grotto scenes inspected. Browser/device QA remains unverified.
+
+Tutorial 2.0: expanded to 7,600 units, with both artificial horizontal swim limits removed. Optional golden conch relics reward exploration; the lesson trail leads to Antonella’s gift lesson, King Daddy’s dedicated arena, and a family farewell at the portal. Shared portals, travel portals, large bubbles, power-up shells and launch rings use the new transparent painted magic atlas. Other chapter gameplay is unchanged. Verified the unrestricted opening, relic rewards, lessons, family dialogue, arena and portal in the runtime harness; inspected native canvas scenes. Browser/device QA remains unverified.

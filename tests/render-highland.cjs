@@ -1,0 +1,9 @@
+const fs=require('node:fs'),path=require('node:path'),{createCanvas,loadImage}=require(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES+'/@napi-rs/canvas');
+async function render(){const names=['highlands','colombia','nessie','dancers','barrier-reef','barrier-jungle','flora-layer','carlo','miguel','rana-rex','sarah-mermaid','dialogue-friends','king-daddy-atlas','queen-antonella-atlas','pearl-palace','training-lagoon','environment-atlas','creature-atlas','tutorial-magic-atlas'];const images=await Promise.all(names.map(name=>loadImage(path.resolve(__dirname,'../dist/assets/'+name+'.webp'))));for(const img of images){Object.defineProperties(img,{src:{set(){}},naturalWidth:{get(){return this.width}},naturalHeight:{get(){return this.height}},complete:{get(){return true}}});img.addEventListener=()=>{};}const rt=require('./runtime.cjs')(true,images);
+const out=process.argv[2]||'/tmp/rana-contact-sheet.png',sheet=createCanvas(2100,960),sc=sheet.getContext('2d');
+const states=[['The waterfall mouth',2800,-1],['Into the depths',0,1.5],['Moving hazards',0,4.3],['Hidden grotto',4050,-1],['Scuttling crabs',5150,-1],['Carlo’s distant court',6200,-1]];
+for(const [i,[label,cam,falltime]] of states.entries()){rt.run(`mode='sarah';stage=0;loadStage();state='playing';camera=${cam};nessie.x=${cam+430};nessie.y=610;dialogueSeen=new Set(Object.keys(conversations));${falltime>=0?"beginHighlandFall();highland.fall.phase='descent';highland.fall.time="+falltime+";highland.fall.travel="+falltime+";highland.fall.depth="+(180+falltime*350)+";":cam>=4000?"highland.fallen=true;":""}draw(20);`);sc.drawImage(rt.surface,i%3*700,Math.floor(i/3)*480,700,480);sc.fillStyle='#102534ed';sc.fillRect(i%3*700,Math.floor(i/3)*480,700,28);sc.fillStyle='#e1fff1';sc.font='bold 16px sans-serif';sc.fillText(label,i%3*700+12,Math.floor(i/3)*480+20);}
+fs.writeFileSync(out,sheet.toBuffer('image/png'));console.log(out);
+
+}
+render().catch(e=>{console.error(e);process.exit(1)});

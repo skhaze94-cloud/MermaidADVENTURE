@@ -1,0 +1,76 @@
+'use strict';
+// The lagoon owns its teaching sequence; other chapters keep their existing flow.
+function tutorialSay(text,who='daddy',life=4){if(training)training.speech={text,who,life};}
+const TUTORIAL_LESSONS=[
+ ['compass','Follow the pearl rings','Use WASD or the arrow keys to swim through each glowing ring.','Drag nothing — tap the direction buttons to swim through each glowing ring.'],
+ ['compass','Around the reef','Swim up and over the reef, then continue right.','Hold the up button to swim over the reef, then swim right.'],
+ ['boost','A burst of speed','Point right and press SPACE to boost. The aqua bar refills when you rest.','Hold right and tap the gold BOOST button. The aqua bar refills when you rest.'],
+ ['leap','Your first sky jump','Hold W or ↑, then press SPACE. You can jump from anywhere with enough boost.','Hold the up button and tap the gold BOOST button together. Keep at least 40% boost.'],
+ ['leap','Steer through the air','Start left of the reef. Hold UP + SPACE to jump, then hold RIGHT to sail over it.','Start left of the reef. Hold UP and tap BOOST, then hold RIGHT while airborne.'],
+ ['heart','Gifts from King Daddy','Collect the pink heart and gold boost bubble. Then use UP + SPACE for a powered jump.','Collect the pink heart and gold boost bubble. Then hold UP and tap BOOST for a powered jump.'],
+ ['shield','A friendly practice fight','Dodge the slow spells. When Daddy glows GREEN, aim at him and press SPACE.','Dodge the slow spells. When Daddy glows GREEN, aim at him and tap BOOST.']
+];
+let tutorialUiKey='',tutorialSpeechKey='';
+function syncTutorialUi(){const card=$('tutorial-card'),speech=$('tutorial-speech'),visible=isTraining()&&!!training&&state==='playing';card.hidden=!visible;speech.hidden=!visible||!training?.speech;if(!visible)return;
+ const touch=window.matchMedia('(pointer:coarse)').matches,step=training.step,lesson=TUTORIAL_LESSONS[step],done=training.victoryReady;
+ let title=step===-2?'Just you and the lagoon':step===-1?'A little thunder…':done?'Adventure awaits!':lesson?.[1]||'Keep swimming';
+ let instruction=step===-2?(touch?'Explore with the direction buttons. Follow your curiosity!':'Use WASD or the arrow keys. Explore and get comfortable swimming.') :step===-1?'Here comes the Lord of Thunder & Bedtime.':done?'Swim right into the glowing portal to begin your adventure.':lesson?.[touch?3:2]||'';
+ if(step===0)instruction+=(training.ring?' '+training.ring+' of 3 rings found.':'');
+ if(step===5){if(training.heart&&training.boost)instruction=touch?'Gold power is active! Hold UP and tap BOOST. Land to finish the lesson.':'Gold power is active! Hold W or ↑ and press SPACE. Land to finish the lesson.';else if(training.heart)instruction='Heart restored! Swim into the golden boost bubble next.';}
+ if(step===6&&boss?.active&&boss.hp>0&&boss.vulnerable)instruction=touch?'GREEN GLOW! Aim towards Daddy and tap BOOST.':'GREEN GLOW! Aim towards Daddy and press SPACE.';
+ const count=step<0?'TUTORIAL 2.0 · EXPLORE':done?'READY TO EXPLORE':'LESSON '+(step+1)+' OF 7',icon=done?'portal':lesson?.[0]||'compass',key=[title,instruction,count,icon].join('|');
+ if(key!==tutorialUiKey){tutorialUiKey=key;$('tutorial-title').textContent=title;$('tutorial-instruction').textContent=instruction;$('tutorial-count').textContent=count;$('tutorial-icon').innerHTML=cueMarkup(icon);}
+ $('tutorial-progress').style.width=(step===-2?training.swimSeconds/12:step===-1?training.arrival/3.4:done?1:(step+(step===0?training.ring/3:0))/7)*100+'%';
+ const reset=$('tutorial-reset');reset.hidden=step<0||step>=6||training.time<14;reset.onclick=tutorialResetPosition;
+ if(training.speech){const q=training.speech,who=q.who==='sarah'?'Sarah Maria':q.who==='queen'?'Queen Antonella':'King Daddy',textKey=who+q.text;if(textKey!==tutorialSpeechKey){tutorialSpeechKey=textKey;$('tutorial-speaker').textContent=who;$('tutorial-speech-text').textContent=q.text;}const wx=q.who==='sarah'?nessie.x:q.who==='queen'?tutorialQueenX():boss?.active?boss.x:training.guideX,wy=q.who==='sarah'?nessie.y:q.who==='queen'?470:boss?.active?boss.y:training.guideY;speech.style.left=clamp((wx-camera)/vw*100,24,76)+'%';speech.style.top=clamp((wy-155)/H*100,28,65)+'%';speech.dataset.who=q.who;}
+}
+function tutorialResetPosition(){if(!training||training.step<0||training.step>=6)return;const positions=[[TRAINING_RINGS[training.ring]?.x-130||2350,500],[3480,480],[3940,480],[4150,440],[4540,420],[5480,500]],p=positions[training.step];nessie.x=p[0];nessie.y=p[1];nessie.vx=nessie.vy=0;resetLeap();training.seenLeap=false;training.time=0;energy=1;dashTime=0;dashCooldown=0;keys.clear();canvas.focus();tutorialSay('Take your time. Great adventures take practice.','daddy',4);}
+function drawTutorialOverlay(t){syncTutorialUi();}
+function tutorialPearl(x,y,r,t,alpha=1){if(drawPaintedBubbleArtwork(x,y,r,alpha))return;ctx.save();ctx.globalAlpha=alpha;const g=ctx.createRadialGradient(x-r*.35,y-r*.38,r*.03,x,y,r);g.addColorStop(0,'#ffffffd9');g.addColorStop(.12,'#d4ffff28');g.addColorStop(.6,'#77d8ea0c');g.addColorStop(.83,'#ca9dff35');g.addColorStop(.96,'#a8fff58a');g.addColorStop(1,'#faffffcf');ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();ctx.lineWidth=Math.max(1,r*.045);ctx.strokeStyle='#f3ffff';ctx.beginPath();ctx.arc(x,y,r*.86,3.8,4.9);ctx.stroke();ctx.strokeStyle='#ffdbeb9c';ctx.beginPath();ctx.arc(x,y,r*.91,.2,1.1);ctx.stroke();ctx.restore();}
+function drawTutorialWorld(t){if(!training||state==='ready'||state==='intro')return;drawTutorialGardens(t);const tick=reducedMotion?0:t;
+ // Sparse, layered pearl bubbles share the lagoon palette and never hide targets.
+ for(let i=0;i<12;i++){const bx=(170+i*287-camera*.85+Math.sin(tick*.7+i)*14),by=waterSurface()+70+(640-((tick*19+i*83)%640));if(bx>-50&&bx<vw+50)tutorialPearl(bx,by,7+i%4*3,tick,.35);}
+ if(training.step===-2){for(let i=0;i<5;i++){const x=310+i*175-camera,y=470+Math.sin(i*1.3+tick*.3)*100;tutorialPearl(x,y,18+i%2*5,tick,.55);}return;}
+ if(training.step===-1){const u=training.arrival/3.4,x=training.arrivalX-camera;ctx.save();const glow=ctx.createRadialGradient(x,waterSurface()+100,10,x,waterSurface()+100,330);glow.addColorStop(0,'#baffed'+(Math.round(Math.sin(u*Math.PI)*48).toString(16).padStart(2,'0')));glow.addColorStop(1,'#91eaff00');ctx.fillStyle=glow;ctx.fillRect(x-330,waterSurface()-230,660,660);
+ for(let i=0;i<3;i++){ctx.strokeStyle=['#eddaaa9c','#b4ffef99','#c3ceff66'][i];ctx.lineWidth=3-i*.6;ctx.beginPath();ctx.ellipse(x,waterSurface()+8,60+u*155+i*18,17+u*23+i*4,0,0,Math.PI*2);ctx.stroke();}
+ if(!reducedMotion&&u>.12&&u<.58){ctx.lineJoin='round';ctx.lineCap='round';for(const width of [12,4,1.5]){ctx.lineWidth=width;ctx.strokeStyle=width>4?'#80e9ff38':width>2?'#b8faffcc':'#fff9d8';ctx.beginPath();ctx.moveTo(x-18,35);ctx.lineTo(x+19,115);ctx.lineTo(x-14,150);ctx.lineTo(x+14,235);ctx.lineTo(x,waterSurface()+60);ctx.stroke();}}
+ for(let i=0;i<9;i++){const a=i/9*Math.PI*2+tick*.6;tutorialPearl(x+Math.cos(a)*(85+u*70),waterSurface()+30+Math.sin(a)*30-u*50,4+i%3*2,tick,.6);}ctx.restore();drawRoyalCharacter('daddy',training.guideX-camera,training.guideY,training.guideSize,tick,'arrival');return;}
+ if(training.step===0){const ring=TRAINING_RINGS[training.ring];if(ring){const x=ring.x-camera;ctx.save();ctx.shadowColor='#fff1b2';ctx.shadowBlur=13;ctx.strokeStyle='#ffdf92';ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(x,ring.y,61,75,0,0,Math.PI*2);ctx.stroke();ctx.shadowBlur=0;ctx.strokeStyle='#fcffe1';ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(x,ring.y,55,69,0,-2.7,-.7);ctx.stroke();for(let i=0;i<5;i++){const a=tick*.55+i*Math.PI*2/5;tutorialPearl(x+Math.cos(a)*61,ring.y+Math.sin(a)*75,4,tick,.85);}ctx.restore();}}
+ if(training.step>=1&&training.step<6){const goal=trainingGoal();if(goal){const x=clamp(goal.x-camera,50,vw-50),y=clamp(goal.y-100,waterSurface()+25,760);drawCueBadge(x,y,TUTORIAL_LESSONS[training.step][0],true,tick);}}
+ if(!boss.active){drawRoyalCharacter('daddy',training.guideX-camera,training.guideY,training.guideSize,tick,training.praise>0?'celebrate':state==='dialogue'?'teach':'idle');}
+ if(training.cloud){drawFriendlyCloud(training.cloud.x-camera,training.cloud.y,1.1,tick);tutorialPearl(training.cloud.x-camera,training.cloud.y,58,tick,.22);}
+ if(training.wave){ctx.save();ctx.strokeStyle='#91eaff66';ctx.lineWidth=17;ctx.beginPath();ctx.moveTo(training.wave.x-camera,training.wave.y-110);ctx.bezierCurveTo(training.wave.x-camera+65,training.wave.y-60,training.wave.x-camera-40,training.wave.y+60,training.wave.x-camera,training.wave.y+110);ctx.stroke();ctx.strokeStyle='#eafffa';ctx.lineWidth=3;ctx.stroke();ctx.restore();}
+}
+// High-density skinning keeps every painted limb attached while giving each its own phase.
+function drawTutorialKing(x,y,height,t,pose){if(!kingArt.complete||!kingArt.naturalWidth)return false;const tick=reducedMotion?0:t,w=height*.75,arrival=pose==='arrival',teaching=pose==='teach',celebrate=pose==='celebrate',charging=pose==='boltCharge',firing=pose==='bolt',cast=charging?Math.sin(clamp((boss?.clock||0)%10/2.6,0,1)*Math.PI/2):firing?Math.exp(-Math.max(0,(boss?.clock||0)%10-2.6)*3):0,gesture=arrival?.7:teaching?.45:celebrate?.8:pose==='welcome'?.4:0,hit=training?.hit||0;
+ const staffAngle=Math.sin(tick*1.25)*.035-cast*.18-gesture*.08;
+ ctx.save();ctx.translate(x,y);ctx.rotate(pose==='swim'?clamp(nessie.vx*.0004,-.2,.2)+(leap.active?jumpPose().angle:0):Math.sin(tick*.8)*.016+Math.sin(hit*11)*hit*.06);
+ warpedSprite(kingArt,[0,0,.5,1],w,height,(u,v)=>{const cloth=clamp((v-.45)/.55,0,1),staff=Math.exp(-2*((u-.285)/.065)**2),cape=clamp((Math.abs(u-.53)-.19)/.23,0,1),p={x:(u-.5)*w,y:(v-.5)*height};
+ p.x+=Math.sin(tick*1.7-v*6)*height*(cloth*.018+cape*.012)*(1-staff);p.y+=Math.cos(tick*1.45-v*7)*height*.009*cloth*(1-staff);
+ // Staff and gripping hand, shoulder, elbow, palm, independent knees/ankles, head and hair.
+ const a=staffAngle*staff,dx=(u-.285)*w,dy=(v-.30)*height;p.x+=(Math.cos(a)-1)*dx-Math.sin(a)*dy;p.y+=Math.sin(a)*dx+(Math.cos(a)-1)*dy;
+ spriteJoint(p,u,v,.72,.30,.18,.17,-cast*.16-gesture*.12+Math.sin(tick*1.4)*.05,w,height);
+ spriteJoint(p,u,v,.82,.40,.13,.105,-gesture*.17+Math.sin(tick*2.1+.5)*.06,w,height);
+ spriteJoint(p,u,v,.89,.40,.075,.07,Math.sin(tick*2.7)*.05+gesture*.10,w,height);
+ spriteJoint(p,u,v,.35,.37,.13,.13,-cast*.1+Math.sin(tick*1.2+1)*.035,w,height);
+ spriteJoint(p,u,v,.45,.75,.12,.18,Math.sin(tick*1.6)*.065,w,height);
+ spriteJoint(p,u,v,.72,.77,.13,.17,Math.sin(tick*1.6+2.3)*.065,w,height);
+ spriteJoint(p,u,v,.42,.92,.10,.09,Math.sin(tick*2+.6)*.055,w,height);
+ spriteJoint(p,u,v,.78,.94,.11,.08,Math.sin(tick*1.8+2)*.05,w,height);
+ spriteJoint(p,u,v,.60,.145,.15,.15,Math.sin(tick*1.15)*.026+(teaching?Math.sin(tick*2.3)*.025:0),w,height);
+ spriteJoint(p,u,v,.59,.21,.095,.07,Math.sin(tick*2.1)*.025,w,height);
+ return p;},16,20);
+ const sx=(.285-.5)*w-Math.sin(staffAngle)*(-height*.18),sy=-height*.20+Math.cos(staffAngle)*(-height*.18);
+ characterSpell(sx,sy,height*(.038+cast*.032),tick,'#b6f6ff',.2+cast*.7);
+ if(gesture>0||charging){const px=w*.35,py=-height*.1;for(let i=0;i<4;i++){const a=tick*1.4+i*Math.PI/2;tutorialPearl(px+Math.cos(a)*height*.085,py+Math.sin(a)*height*.04,2+height*.006,tick,.75);}}
+ ctx.restore();return true;}
+function installTutorialDialogue(){const c=(portrait,line,options)=>({speaker:'King Daddy',portrait,line,options,hint:''});Object.assign(conversations,{
+ 'daddy-intro':c('daddy-heroic','BEHOLD! The Lord of Thunder… and Bedtime!\nSarah: Dad! You nearly startled my tail off.\nKing Daddy: A royal entrance requires a little sparkle. Ready for mermaid school?',[['Do we get snacks?','After three pearl rings. Use your swim controls to go right, down, and back up. I’ll stay with you.'],['I was born ready!','Excellent. Swim through the glowing rings, one at a time. No rush: this lagoon is for practice.'],['Can you show me slowly?','Of course. Press a direction to swim; release it to slow down. Follow the bright ring. I’m right here.']]),
+ 'daddy-rock':c('daddy-serious','Behold: the elite reef.\nSarah: Did you put a rock in my swimming lesson?\nKing Daddy: A carefully qualified rock. Swim UP, pass over it, then continue RIGHT.',[['Does it bite?','Only if you owe it homework. Take your time and steer around it.'],['I’ll go over it!','That’s the idea. Your tail can take you in every direction.']]),
+ 'daddy-boost':c('daddy-smile','Now, a burst of speed! Aim right and press SPACE, or tap the gold BOOST button.\nSarah: Like mermaid zoomies?\nKing Daddy: Exactly. Very dignified zoomies.',[['How much boost do I need?','At least 40% of the aqua bar. It refills by itself. Swim near a glowing jump ring for a quicker refill.'],['Stand back. Zoomies incoming.','Aim first, boost second. Try it now.']]),
+ 'daddy-jump':c('daddy-heroic','Time to meet the sky! Hold W or the UP arrow, then press SPACE. On touch controls, hold UP and tap BOOST.\nSarah: From anywhere?\nKing Daddy: Anywhere underwater, with enough boost. You do not need a jump ring.',[['And how do I land?','Gravity brings you back. Use LEFT and RIGHT in the air to steer. Try one jump, then splash down.'],['What if it doesn’t work?','Let the aqua bar refill to at least 40%. Hold UP first, then press BOOST. You can practise as often as you like.']]),
+ 'daddy-air':c('daddy-proud','A magnificent splash! Now jump OVER the next reef. Start on its left, jump up, and steer RIGHT in the air.\nSarah: Please rate my landing kindly.',[['What makes a bigger jump?','More boost and more swimming speed make a bigger jump. Golden power-ups make it even stronger.'],['Ten out of ten, please.','I have already ordered the trophy. Cross the reef and land on the other side.']]),
+ 'daddy-gifts':c('daddy-warm','Two gifts! The PINK HEART restores one heart. The GOLD bubble gives eight seconds of unlimited boost.\nSarah: Unlimited zoomies?\nKing Daddy: For eight seconds. The royal budget is very strict.',[['Let’s try both!','Collect the heart and the gold bubble. Then hold UP and press BOOST for a fancy powered jump. Land to finish the lesson.'],['What if the gold runs out?','I’ll refill the gift here until you finish your practice jump. No stress, little mermaid.']]),
+ 'daddy-trial':c('daddy-heroic','You’ve learned to swim, boost, jump and use gifts. One friendly practice fight!\nSarah: Are you going to do the big entrance again?\nKing Daddy: No. I’m already here. Excellent point.',[['How do I win?','Swim around my slow spells. When my shield turns GREEN, aim AT ME and BOOST into me. Three good hits!'],['And if I get hit?','You cannot lose all your hearts here. Every mistake is practice. A successful hit also earns one extra double-flip jump: UP plus BOOST.'],['Does Mum know about this?','She approved the lesson. She did not approve the thunder. Aim at my green glow and boost!']]),
+ 'daddy-win':c('daddy-warm','You did it! My brave little mermaid.\nSarah: Even the elite rock was impressed.\nKing Daddy: I saw it crying. Probably sea water.',[['Ready for the adventure!','Swim right into the glowing portal. Scotland is waiting!'],['One last hug?','Always. And remember: aim, boost, and believe in your tail. The portal is just to the right.']])
+ });}

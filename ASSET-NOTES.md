@@ -1,0 +1,6 @@
+# Tutorial 2.0 artwork
+
+Built-in image generation; one request, transparent output, converted to WebP preserving alpha.
+Project asset: `dist/assets/tutorial-magic-atlas.webp` (1983 × 793).
+
+Prompt: Use case: stylized-concept. Asset type: transparent game sprite atlas for a premium painterly children's mermaid adventure. Create ONE landscape transparent canvas with exactly THREE separate isolated objects, one per evenly spaced column. Large empty transparent gutters between columns and generous empty margins, no overlap. LEFT: ornate upright oval underwater portal gate, aquamarine and gold carved shell frame, pearls, starfish and coral, luminous violet and aqua magical interior. CENTER: one large perfectly spherical translucent iridescent soap/water bubble, nearly transparent empty center and brilliant pearl rainbow rim, nothing inside the bubble. RIGHT: small ancient treasure relic pedestal supporting a beautiful golden conch compass shell with aqua gemstones. Style: high-detail polished painted 3D fairy tale game art, friendly magical luxurious objects, crisp clean silhouettes. Fully show every object, front three-quarter view with consistent lighting. No words, no labels, no background, no floor, no shared shadow, no environment. True transparent alpha outside objects and bubble interior translucent.

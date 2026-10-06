@@ -1,0 +1,21 @@
+'use strict';
+const assert=require('node:assert/strict'),rt=require('./runtime.cjs')();rt.sandbox.assert=assert;
+rt.run(`
+mode='sarah';stage=0;loadStage();state='playing';dialogueSeen=new Set(Object.keys(conversations));assert.equal(W,7600);assert.equal(boss.x,7080);assert.equal(W-170,7430);assert(enemies.filter(e=>e.scuttle).length===5);assert(coins.some(c=>c.x>6000));assert(obstacles.some(o=>o.x>6000));
+nessie.x=2990;nessie.y=500;updateHighland(.016);assert.equal(highland.fall,null);nessie.x=3040;updateHighland(.016);assert.equal(highland.fall.phase,'pull');assert.equal(checkpoint,2770);assert(highland.speech.text.includes('Oh no'));
+for(let i=0;i<109;i++)update(1/60);assert.equal(highland.fall.phase,'descent');const before=highland.fall.time;state='paused';update(.5);assert.equal(highland.fall.time,before);state='playing';
+const f=highland.fall;f.x=0;keys.add('ArrowRight');for(let i=0;i<10;i++)update(1/60);assert(f.x>0);keys.delete('ArrowRight');energy=1;keys.add('ArrowLeft');burst();assert(f.vx<0);assert(f.boost>0);assert(energy<1);keys.clear();
+// Currents alternate and remain weaker than deliberate steering.
+for(const w of f.currents){f.travel=w.at;f.x=w.x;assert.equal(Math.sign(waterfallCurrent(f)),w.dir);assert(Math.abs(waterfallCurrent(f))<1.4);}
+f.phase='pull';f.time=FALL_ENTRY;const entry=waterfallPose(f,0);f.phase='descent';f.time=0;const descent=waterfallPose(f,0);assert.equal(entry.x,descent.x);assert.equal(entry.y,descent.y);assert.equal(entry.mix,1);
+f.phase='outflow';f.time=0;const exit=waterfallPose(f,0);assert.equal(exit.x,descent.x);assert.equal(exit.y,descent.y);assert.equal(exit.mix,1);f.time=FALL_EXIT;assert.equal(waterfallPose(f,0).mix,0);f.phase='descent';
+// Collision hurts once, respects immunity, and cannot advance after death.
+f.boost=0;f.time=f.hazards[0].at-.016;f.x=waterfallHazardX(f.hazards[0],f.time);f.vx=0;health=5;invincible=0;updateHighlandFall(.016);assert.equal(health,4);updateHighlandFall(.016);assert.equal(health,4);
+health=1;invincible=0;f.time=f.hazards[2].at-.016;f.x=waterfallHazardX(f.hazards[2],f.time);f.vx=0;updateHighlandFall(.016);assert.equal(state,'finished');retryStory();assert.equal(state,'playing');assert.equal(nessie.x,2770);assert.equal(highland.fall,null);assert.equal(highland.fallen,false);
+nessie.x=3040;beginHighlandFall();for(let i=0;i<109;i++)updateHighlandFall(1/60);invincible=100;let duration=0;while(highland.fall&&duration<20){updateHighlandFall(1/60);duration+=1/60;}assert(Math.abs(duration-(FALL_DURATION+FALL_EXIT))<.05);assert(highland.fallen);assert.equal(checkpoint,4120);assert.equal(nessie.x,4120);assert.equal(health,5);
+// Scuttlers patrol quickly, reverse at their bounds, and have contact/boost combat.
+const crab=enemies.find(e=>e.scuttle);highland.clock=1;const old=crab.x;updateHighland(.1);assert(Math.abs(crab.x-old)>20);crab.x=crab.max;crab.dir=1;updateHighland(.1);assert.equal(crab.dir,-1);assert(crab.x<=crab.max);
+nessie.x=6520;nessie.y=500;updateStory(.016);assert.equal(checkpoint,6500);assert(boss.active);for(let i=0;i<3;i++){boss.clock=5;boss.hitCooldown=0;bossAnnounced=true;nessie.x=boss.x;nessie.y=boss.y;dashTime=.2;updateStory(.016);}assert.equal(boss.hp,0);bossDefeat=0;boss.winShown=true;nessie.x=7430;nessie.y=540;updateStory(.016);assert.equal(state,'portal');updatePortal(3.5);assert.equal(stage,1);assert.equal(W,3800);assert.equal(highland,null);
+for(const chapter of [-1,1,2,3]){stage=chapter;mode='story';loadStage();assert.equal(W,chapter===-1?7600:3800);assert.equal(highland,null);}mode='trial';stage=0;loadStage();assert.equal(W,3800);assert.equal(currentStage().count,36);assert.equal(highland,null);syncHighlandUi();assert($('highland-caption').hidden);assert($('waterfall-help').hidden);
+`);
+console.log('Highland passed: double-length story only, chute trigger and pull, 17-second controllable descent, boost, damage/immunity/death/retry, pause, scuttlers, extended boss/portal and unchanged later stages/time trial.');

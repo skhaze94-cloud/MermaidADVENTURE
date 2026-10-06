@@ -1,0 +1,35 @@
+[
+  {
+    "name": "king-daddy-atlas",
+    "refs": [
+      "/workspace/scratch/060981a79282/upload/ChatGPT Image Oct 5, 2026, 02_22_16 PM(1).png",
+      "/workspace/scratch/060981a79282/upload/ChatGPT Image Oct 5, 2026, 02_22_23 PM(1).png",
+      "/workspace/scratch/060981a79282/upload/ChatGPT Image Oct 5, 2026, 02_22_28 PM(1).png",
+      "/workspace/scratch/060981a79282/upload/ChatGPT Image Oct 5, 2026, 02_22_33 PM(1).png",
+      "/workspace/scratch/060981a79282/rana-rex-build/dist/assets/sarah-mermaid.png"
+    ],
+    "transparent": true,
+    "prompt": "Use case: stylized-concept. Asset type: browser game transparent sprite atlas. Create a recognizable stylized King Daddy based on the actual Sam in reference photographs 1-4. Photo 1 and 2 are current beard identity, photo 3 clarifies underlying jaw but KEEP the full beard; photo 4 clarifies likeness, OMIT its eyeglasses and photo UI. Reference 5 is STYLE ONLY: match its lush glossy illustrated storybook game rendering, smooth expressive character face, iridescent highlights, polished volumetric lighting. Do not copy the child, mermaid, or dark backdrop. Sam is a youthful affectionate Zeus dad: short thick dark hair, full dark beard and connected moustache, strongly connected thick dark brows, dark eyes, prominent straight nose, broad warm smile, strong jaw, warm olive skin. Retain Sam's facial identity instead of generic Zeus. White and champagne-gold toga, turquoise flowing underwater cape, laurel crown, lightning bracers and lightning staff, gold sandals, strong but approachable. Landscape 3:2 atlas. Genuine transparent background. EXACTLY 9 isolated drawings: LEFT HALF one complete full-body character, crown/head through feet visible, inside x=0.03..0.46,y=0.04..0.96. RIGHT HALF exactly eight shoulders-and-head expression portraits, in TWO COLUMNS and FOUR ROWS, fixed equal cells x=0.50..0.75 and 0.75..1.00, each row y=0..0.25,0.25..0.50,0.50..0.75,0.75..1.00. Portraits entirely within cells, transparent gutters, no overlap. Row-major expression order. No cell lines, text, titles, labels, frames, backdrop, checkerboard pixels, watermark, or photo UI. Full-body alone in left half, faces alone in right half. Consistent same person, proportions and costume in all 9 drawings. The 8 portrait expressions in row-major order: proud; heroic; enormous smile; surprised; laughing; mock-serious; comically defeated; emotional warm proud. No white beard, no grey hair, no glasses, no photo cutouts."
+  },
+  {
+    "name": "queen-antonella-atlas",
+    "refs": [
+      "/workspace/scratch/060981a79282/upload/ChatGPT Image Oct 5, 2026, 02_20_59 PM(1).png",
+      "/workspace/scratch/060981a79282/upload/ChatGPT Image Oct 5, 2026, 02_21_06 PM(1).png",
+      "/workspace/scratch/060981a79282/upload/ChatGPT Image Oct 5, 2026, 02_21_11 PM(1).png",
+      "/workspace/scratch/060981a79282/upload/ChatGPT Image Oct 5, 2026, 02_21_17 PM(1).png",
+      "/workspace/scratch/060981a79282/upload/ChatGPT Image Oct 5, 2026, 02_21_22 PM(1).png"
+    ],
+    "transparent": true,
+    "prompt": "Use case: stylized-concept. Asset type: browser game transparent sprite atlas. Create recognizable stylized Queen Antonella based on actual woman in ALL five reference photos 1-5. Photo 5 has two expressions of the SAME woman, use her face identity. Use the visible facial structure throughout: long sleek very dark center-part hair, elegant dark brows, almond-shaped open dark eyes with eyeliner, softly tapering oval face, refined straight nose, softly defined lips, composed smile and expressive side-eye. Do not reproduce sunglasses, closed eyes, photo backgrounds, another person, or photo UI. Style matches the established Sarah mermaid game illustration: lush glossy illustrated storybook rendering, smooth expressive slightly caricatured adult character face, finely rendered dark sleek hair, jewel-tone iridescent highlights and soft polished volumetric lighting, richly textured fabric and pearlescent jewellery. The style reference was inspected, its photo is not an input to this call. Do not copy the child, mermaid, or dark backdrop. She is a beautiful warm glamorous mum and royal ocean queen, not evil. Pearl crown, elegant iridescent ocean-blue royal gown with ruby burgundy panels, translucent trailing fabric, coral and shell jewellery, pearl-white/champagne-gold accents. Recognizable adult Antonella face, not generic fantasy princess. Landscape 3:2 atlas. Genuine transparent background. EXACTLY 9 isolated drawings: LEFT HALF one complete full-body character, crown/head through feet visible, inside x=0.03..0.46,y=0.04..0.96. RIGHT HALF exactly eight shoulders-and-head expression portraits, in TWO COLUMNS and FOUR ROWS, fixed equal cells x=0.50..0.75 and 0.75..1.00, each row y=0..0.25,0.25..0.50,0.50..0.75,0.75..1.00. Portraits entirely within cells, transparent gutters, no overlap. Row-major expression order. No cell lines, text, titles, labels, frames, backdrop, checkerboard pixels, watermark, or photo UI. Full-body alone in left half, faces alone in right half. Consistent same person, proportions and costume in all 9 drawings. The 8 portrait expressions in row-major order: regal neutral; warm smile; unimpressed; side-eye; surprised; amused; proud; competitive. Keep eyes readable; no glasses."
+  },
+  {
+    "name": "pearl-palace",
+    "refs": [
+      "/workspace/scratch/060981a79282/rana-rex-build/dist/assets/sarah-mermaid.png",
+      "/workspace/scratch/060981a79282/rana-rex-build/dist/assets/colombia.png"
+    ],
+    "transparent": false,
+    "prompt": "Use case: illustration-story. Asset type: landscape panoramic browser game background, 3:2 format. Create the bright beautiful underwater Pearl Palace, panoramic SIDE VIEW 2D game setting, lush glossy illustrated storybook game style matching both references. References are STYLE and GAME COMPOSITION ONLY, not edit targets. Match the polished luminous colorful rendering of the existing landscape and iridescent mermaid illustration. Top 30% above water: turquoise sky, warm radiant daylight, pearlescent palace silhouettes emerging beyond the level horizontal waterline at y=0.30. Bottom 70% underwater: ornate shell arches and pearl gates, champagne-gold coral columns, clamshell architecture, pearl chandeliers, intricate mosaics, burgundy and ocean-blue curtains, luminous windows, iridescent coral gardens, beautiful turquoise light shafts and gentle caustics. Palace structures and gardens at sides and distant back, broad open readable foreground playable swimming lanes through the middle. Warm luxurious family fantasy, inviting and beautiful. No characters, people, creatures, lettering, text, HUD, icons, labels, watermark. No foreground architecture blocking the broad playable lanes."
+  }
+]

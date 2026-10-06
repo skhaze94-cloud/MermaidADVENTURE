@@ -1,0 +1,45 @@
+{
+  "size": [
+    1536,
+    1024
+  ],
+  "grid": {
+    "columns": 3,
+    "rows": 2,
+    "tileWidth": 512,
+    "tileHeight": 512
+  },
+  "trainingLagoon": {
+    "file": "training-lagoon.png",
+    "waterlineApproxY": 280
+  },
+  "environmentAtlas": {
+    "file": "environment-atlas.png",
+    "order": [
+      "coral-rock-barrier",
+      "marble-coral-column",
+      "pearl-arch-gate",
+      "royal-curtain",
+      "coral-garden",
+      "shell-bubble-elevator"
+    ]
+  },
+  "creatureAtlas": {
+    "file": "creature-atlas.png",
+    "facing": "left",
+    "order": [
+      "emerald-seahorse",
+      "pearl-pink-crab",
+      "lavender-puffer",
+      "aqua-jellyfish",
+      "turquoise-eel",
+      "royal-blue-swordfish"
+    ]
+  },
+  "notes": [
+    "Built-in image generation, one request per asset.",
+    "Atlases have actual RGBA transparency.",
+    "Nominal 512x512 tile layout; some fine fins/coral extend near tile boundaries.",
+    "No identity sprites changed."
+  ]
+}

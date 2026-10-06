@@ -1,0 +1,24 @@
+const assert=require('node:assert/strict'),rt=require('./runtime.cjs')();rt.sandbox.assert=assert;
+rt.run(`
+assert.equal(selectedStartStage,-1);
+mode='story';stage=-1;loadStage();state='playing';training.step=0;training.entryDone=true;
+for(const ring of TRAINING_RINGS){nessie.x=ring.x;nessie.y=ring.y;updateTraining(.016);}assert.equal(training.step,1);
+nessie.x=3830;updateTraining(.016);assert.equal(training.step,2);nessie.x=3990;dashTime=.2;updateTraining(.016);assert.equal(training.step,3);
+leap.breached=true;leap.active=true;updateTraining(.016);leap.active=false;leap.breached=false;updateTraining(.016);assert.equal(training.step,4);
+training.jumpStart=4540;nessie.x=4830;leap.breached=true;leap.active=true;updateTraining(.016);nessie.x=4930;leap.active=false;leap.breached=false;updateTraining(.016);assert.equal(training.step,5);
+health=4;for(const p of powerups)collectPowerup(p);assert.equal(health,5);assert(boostUnlimited>0);leap.variant='combo';leap.breached=true;leap.active=true;updateTraining(.016);leap.active=false;leap.breached=false;updateTraining(.016);assert.equal(training.step,6);assert.equal(checkpoint,6500);
+nessie.x=6700;nessie.y=400;updateTrainingBoss(.016);for(let i=0;i<250;i++)updateTrainingBoss(1/60);assert(boss.active);
+for(let hit=0;hit<3;hit++){boss.clock=6.8;boss.hitCooldown=0;nessie.x=boss.x;nessie.y=boss.y;dashTime=.2;updateTrainingBoss(.016);assert.equal(boss.hp,2-hit);assert(bossLeapReady);}
+assert(!familyPortalOpen());for(let i=0;i<230;i++)updateTrainingBoss(1/60);assert(familyPortalOpen());nessie.x=7430;nessie.y=540;updateStory(.016);assert.equal(state,'portal');updatePortal(3.5);assert.equal(stage,0);updatePortal(3.6);assert.equal(state,'playing');
+mode='sarah';stage=-1;loadStage();state='playing';dialogueSeen=new Set();openDialogue('daddy-intro');assert.equal(state,'dialogue');assert.equal(conversations['daddy-intro'].options.length,3);finishDialogue();assert.equal(state,'playing');chooseTrainingHero('daddy');assert.equal(trainingHero,'daddy');
+mode='story';stage=2;loadStage();state='playing';invincible=1000;nessie.x=2900;nessie.y=380;dialogueSeen=new Set(Object.keys(conversations));boss.active=true;queen.entry=4;
+assert.equal(boss.hp,5);assert.equal(new Set(enemies.map(e=>e.kind)).size,6);
+for(let hit=0;hit<5;hit++){nessie.x=2860;nessie.y=380;for(let i=0;i<3000&&queen.state!=='vulnerable';i++)updateQueen(1/60);assert.equal(queen.state,'vulnerable');boss.hitCooldown=0;nessie.x=boss.x;nessie.y=boss.y;dashTime=.2;updateQueen(.016);assert.equal(boss.hp,4-hit);assert(bossLeapReady);assert.equal(queen.phase,boss.hp>=4?1:boss.hp>=2?2:3);for(let i=0;i<180&&queen.state!=='observe'&&boss.hp>0;i++)updateQueen(1/60);}
+assert.equal(queen.state,'defeated');assert(!familyPortalOpen());for(let i=0;i<250;i++)updateQueen(1/60);assert(familyPortalOpen());nessie.x=3630;nessie.y=540;updateStory(.016);assert.equal(state,'portal');updatePortal(3.5);assert.equal(stage,3);assert.equal(boss.hp,6);assert(isRana());
+const attacks=new Set();for(let phase=1;phase<=3;phase++){mode='story';stage=2;loadStage();state='playing';boss.active=true;queen.entry=4;queen.phase=phase;boss.hp=phase===1?5:phase===2?3:1;invincible=1000;nessie.x=2860;nessie.y=380;for(let i=0;i<8000;i++){updateQueen(1/60);attacks.add(queen.state);assert(projectiles.length<=60);assert(Number.isFinite(boss.x+boss.y));}}
+for(const name of ['fan','wave','crown','bloom','whirl','vulnerable'])assert(attacks.has(name),name);
+mode='story';stage=2;loadStage();state='playing';boss.active=true;queen.entry=4;checkpoint=2820;queen.phase=3;queenNext('whirl');health=1;invincible=0;nessie.y=500;hurt(nessie.x);assert.equal(state,'finished');retryStory();assert.equal(queen.phase,1);assert.equal(boss.hp,5);assert.equal(queen.state,'observe');assert.equal(nessie.x,2820);assert.equal(projectiles.length,0);
+for(let chapter=0;chapter<4;chapter++){mode='trial';selectedStartStage=chapter;start();assert.equal(stage,chapter);assert.equal(state,'playing');update(60);assert.equal(state,'finished');}
+mode='trial';stage=1;loadStage();state='playing';elapsed=12;coins.forEach(c=>c.taken=true);update(.016);assert.equal(state,'portal');updatePortal(7.1);assert.equal(stage,2);assert.equal(elapsed,0);
+console.log('Family expansion passed: tutorial tasks, pickups, playable Daddy, three training hits, five Queen hits, all phases and attack families, six creatures, dialogue, retries, manual portals, Rana migration and four time trials.');
+`);
