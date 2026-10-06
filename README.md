@@ -1,4 +1,4 @@
-# Sarah Maria Family Adventure 3.0
+# Sarah Maria Family Adventure 5.0
 
 A static browser game with optional King Daddy training, four story chapters, Sarah and Nessie modes, 60-second coin trials, and embedded browser-generated effects plus the Bubble Bell Adventure soundtrack.
 
