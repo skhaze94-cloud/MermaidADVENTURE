@@ -12,7 +12,7 @@ assert.equal(W,15200);assert.equal(HIGHLAND_LENGTH,15200);assert.equal(boss.x,14
 assert(obstacles.some(o=>o.x>13700));assert(coins.some(c=>c.x>14000));assert(powerups.some(p=>p.x>14000));
 assert(enemies.some(e=>e.kind==='eel'));assert(enemies.some(e=>e.kind==='swordfish'));assert(enemies.filter(e=>e.scuttle).length>=13);
 assert.equal(new Set(fish.map(f=>f.kind)).size,5);
-nessie.x=13940;nessie.y=500;updateStory(.016);assert(boss.active);
+highland.fallen=true;checkpoint=13750;nessie.x=13940;nessie.y=500;updateStory(.016);assert(boss.active);
 mode='trial';stage=0;loadStage();assert.equal(W,3800);assert.equal(currentStage().count,36);
 mode='sarah';stage=-1;loadStage();assert.equal(W,7600);assert.equal(training.relics.length,3);assert.equal(new Set(fish.map(f=>f.kind)).size,5);
 `);
