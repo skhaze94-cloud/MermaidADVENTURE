@@ -28,7 +28,7 @@ assert(rt.run('__steer.blocked'),'Forward sensor detects a barrier');
 assert.notEqual(rt.run('__steer.y'),500,'Barrier look-ahead chooses a vertical detour');
 
 rt.run(`
-globalThis.__shark3=enemies.find(isReefShark);obstacles=[];__shark3.x=3000;__shark3.y=520;__shark3.bx=3000;__shark3.by=520;__shark3.hp=3;__shark3.maxHp=3;sharkState(__shark3,'patrol');nessie.x=__shark3.x;nessie.y=__shark3.y;dashTime=.2;dashCooldown=0;updateReefSharks(.016);globalThis.__first=[__shark3.hp,__shark3.sharkState];dashTime=.2;updateReefSharks(.016);globalThis.__sameStun=__shark3.hp;sharkState(__shark3,'recover');__shark3.sharkTime=SHARK_TUNE.recoverTime+.1;updateReefSharks(.016);sharkState(__shark3,'patrol');__shark3.x=nessie.x;__shark3.y=nessie.y;dashTime=.2;updateReefSharks(.016);globalThis.__second=__shark3.hp;
+globalThis.__shark3=enemies.find(isReefShark);obstacles=[];__shark3.x=3000;__shark3.y=520;__shark3.bx=3000;__shark3.by=520;__shark3.hp=3;__shark3.maxHp=3;sharkState(__shark3,'patrol');nessie.x=__shark3.x;nessie.y=__shark3.y;dashTime=.2;dashCooldown=0;updateReefSharks(.016);globalThis.__first=[__shark3.hp,__shark3.sharkState];dashTime=.2;updateReefSharks(.016);globalThis.__sameStun=__shark3.hp;dashTime=0;sharkState(__shark3,'recover');__shark3.sharkTime=SHARK_TUNE.recoverTime+.1;updateReefSharks(.016);sharkState(__shark3,'patrol');__shark3.x=nessie.x;__shark3.y=nessie.y;dashTime=.2;updateReefSharks(.016);globalThis.__second=__shark3.hp;
 `);
 assert.equal(rt.run('__first[0]'),2);assert.equal(rt.run('__first[1]'),'stunned');assert.equal(rt.run('__sameStun'),2,'One HP chunk per stun window');assert.equal(rt.run('__second'),1);
 
