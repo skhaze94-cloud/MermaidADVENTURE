@@ -41,3 +41,6 @@ jobs:
           node tests/arena-access-v56.cjs
           node tests/music-v56.cjs
           node tests/shark-v58.cjs
+          node tests/shark-polish-v59.cjs
+          node tests/music.cjs
+          node tests/export-standalone.cjs

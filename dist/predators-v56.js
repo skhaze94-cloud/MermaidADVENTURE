@@ -90,7 +90,8 @@ function sharkObstacleSteer(e,tx,ty){
   let choice;
   if(!upBlocked&&!downBlocked){
     const upCost=Math.abs(ty-up.y),downCost=Math.abs(ty-down.y);
-    choice=(upCost<downCost?up:down);
+    choice=(e.avoidUntil>e.clock?(e.turnBias<0?up:down):(upCost<downCost?up:down));
+    if(!(e.avoidUntil>e.clock))e.avoidUntil=e.clock+.45;
   }else if(!upBlocked)choice=up;
   else if(!downBlocked)choice=down;
   else choice={x:e.x-nx*90,y:clamp(e.y+e.turnBias*95,waterSurface()+85,830)};
@@ -144,8 +145,11 @@ function updateReefSharks(dt){
     e.recoil=Math.max(0,e.recoil-dt*2.4);e.alert=Math.max(0,e.alert-dt*.7);e.eyeBlink=(e.eyeBlink+dt*.28)%1;
     const dx=nessie.x-e.x,dy=nessie.y-e.y,d=Math.hypot(dx,dy),enraged=e.hp===1,playerVisible=!leap.breached&&d<SHARK_TUNE.loseRange;
     if(playerVisible){e.lastSeenX=nessie.x;e.lastSeenY=nessie.y;}
-    const desiredFace=nessie.x<e.x?1:-1;
-    if(Math.abs(dx)>24)e.facing=desiredFace;
+    // Commit to the attack heading; never moonwalk or swivel mid-lunge.
+    const committed=['charge','lunge','bite','overshoot'].includes(e.sharkState);
+    if(committed&&Math.abs(e.vx)>12)e.facing=e.vx<0?1:-1;
+    else if(Math.abs(e.vx)>25)e.facing=e.vx<0?1:-1;
+    else if(Math.abs(dx)>70)e.facing=dx<0?1:-1;
 
     if(e.sharkState==='patrol'){
       const px=e.bx+Math.sin(e.clock*.42+e.phase)*180,py=e.by+Math.sin(e.clock*.77+e.phase*1.6)*55;
@@ -167,12 +171,14 @@ function updateReefSharks(dt){
       sharkWake(e,.85);
       if(e.sharkTime>SHARK_TUNE.circleTime)sharkState(e,'lock');
     }else if(e.sharkState==='lock'){
+      if(!playerVisible){sharkState(e,'recover');continue;}
+      e.facing=dx<0?1:-1;
       e.vx*=Math.exp(-dt*4.2);e.vy*=Math.exp(-dt*4.2);e.x+=e.vx*dt;e.y+=e.vy*dt;
       e.aimX=nessie.x;e.aimY=nessie.y;e.alert=1;
       if(e.sharkTime>SHARK_TUNE.lockTime)sharkState(e,'charge');
     }else if(e.sharkState==='charge'){
       const a=Math.atan2(e.aimY-e.y,e.aimX-e.x),speed=enraged?SHARK_TUNE.enragedChargeSpeed:SHARK_TUNE.chargeSpeed;
-      e.vx=Math.cos(a)*speed;e.vy=Math.sin(a)*speed;e.heading=a;
+      e.vx=Math.cos(a)*speed;e.vy=Math.sin(a)*speed;e.heading=a;e.facing=e.vx<0?1:-1;
       sharkState(e,'lunge');sharkWake(e,1.6);tone(enraged?82:92,.09,.024);
     }else if(e.sharkState==='lunge'){
       const aheadX=e.x+e.vx*dt*2.3,aheadY=e.y+e.vy*dt*2.3;
@@ -180,7 +186,7 @@ function updateReefSharks(dt){
         e.vx*=-.18;e.vy*=-.18;e.nearMiss=1;sharkState(e,'overshoot');
       }else{
         e.x+=e.vx*dt;e.y+=e.vy*dt;e.vx*=Math.exp(-dt*.42);e.vy*=Math.exp(-dt*.42);sharkWake(e,1.8);
-        if(d<115&&!e.biteLatch){
+        if(Math.hypot(nessie.x-e.x,nessie.y-e.y)<115&&!leap.breached&&!e.biteLatch){
           e.biteLatch=true;sharkState(e,'bite');sharkBiteBurst(e);
           if(dashTime>0){
             e.hp--;score+=260;dashTime=0;dashCooldown=.12;e.recoil=1;
@@ -212,13 +218,13 @@ function updateReefSharks(dt){
 
     if(e.sharkState!=='lunge'&&e.sharkState!=='bite'){
       const hit=Math.hypot(nessie.x-e.x,nessie.y-e.y);
-      if(hit<92){
+      if(hit<92&&!leap.breached){
         if(dashTime>0){
           e.hp--;score+=240;dashTime=0;dashCooldown=.12;
           popups.push({x:e.x,y:e.y-96,text:e.hp>0?'SHARK STUN!':'REEF SHARK! +240',life:1,color:'#c8fff1'});
           sharkState(e,'stunned');
           if(e.hp<=0){ranaBurst(e.x,e.y,32,'#bff8e9',180);tone(410,.14,.032);}
-        }else if(invincible<=0)hurt(e.x);
+        }else if(invincible<=0&&e.sharkState!=='stunned')hurt(e.x);
       }
     }
   }
@@ -240,6 +246,7 @@ function sharkLayerFin(fill,stroke,x,y,points,rotation=0){
 }
 
 function drawReefShark(e,t){
+  if(drawPaintedReefShark(e,t))return true;
   const x=e.x-camera,y=e.y;if(x<-280||x>vw+280)return true;
   const state=e.sharkState||'patrol',face=e.facing||1,enraged=e.hp===1;
   const targetDx=(nessie.x-e.x)*face,targetDy=nessie.y-e.y;
@@ -343,5 +350,42 @@ function drawReefShark(e,t){
     ctx.save();ctx.globalAlpha=.22+.15*Math.sin(t*7);ctx.strokeStyle='#ffb16a';ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(-5,0,124,58,0,0,Math.PI*2);ctx.stroke();ctx.restore();
   }
   ctx.restore();
+  return true;
+}
+
+
+// Painted, state-specific silhouettes. Low-density mesh moves the tail and fins
+// without bending the face, teeth, pinstripes or top hat into rubber.
+function sharkPaintedPose(state){
+  return state==='stunned'?3:state==='bite'?2:['lock','charge','lunge'].includes(state)?1:0;
+}
+function drawPaintedReefShark(e,t){
+  if(!sharkPaintedArt?.complete||!sharkPaintedArt.naturalWidth)return false;
+  const x=e.x-camera;if(x<-260||x>vw+260)return true;
+  const state=e.sharkState||'patrol',pose=sharkPaintedPose(state),face=e.facing||1;
+  const speed=clamp(Math.hypot(e.vx||0,e.vy||0)/1030,0,1),tick=reducedMotion?0:e.clock;
+  const crop=[(pose%2)*.5,Math.floor(pose/2)*.5,.5,.5],w=310,h=207;
+  const swimAngle=Math.abs(e.vx)>20?Math.atan2(e.vy,Math.abs(e.vx)):0;
+  ctx.save();ctx.translate(x,e.y);ctx.scale(-face,1);
+  ctx.rotate(clamp(swimAngle,-.38,.38)*(face>0?-1:1));
+  drawSharkWake(e,t,-1,['lunge','bite'].includes(state)?1:state==='circle'?.5:0);
+  ctx.rotate(Math.sin(tick*2)*.018+Math.sin(tick*18)*(e.recoil||0)*.045);
+  const amplitude=reducedMotion?0:4+speed*7;
+  warpedSprite(sharkPaintedArt,crop,w,h,(u,v)=>{
+    const tail=Math.max(0,(.43-u)/.43),fin=Math.max(0,(v-.58)/.42);
+    return {x:(u-.5)*w,y:(v-.5)*h+Math.sin(tick*(4+speed*5)-u*5)*tail*tail*amplitude+Math.sin(tick*3.4-u*4)*fin*2};
+  },6,4);
+  ctx.restore();
+  if(state==='lock'||state==='charge'){
+    // World-space aim stays on the actual committed trajectory when facing flips.
+    ctx.save();ctx.strokeStyle=e.hp===1?'#ffbb7d':'#ffe8ac';ctx.globalAlpha=.6;
+    ctx.lineWidth=2;ctx.setLineDash([8,10]);ctx.beginPath();ctx.moveTo(x,e.y);ctx.lineTo(e.aimX-camera,e.aimY);ctx.stroke();ctx.setLineDash([]);
+    ctx.beginPath();ctx.arc(e.aimX-camera,e.aimY,22+Math.sin(t*9)*3,0,Math.PI*2);ctx.stroke();ctx.restore();
+    drawReleaseBadge(x,e.y-112,'warning',false,t);
+  }
+  if(state==='stunned'){
+    ctx.save();ctx.fillStyle='#ffe5a5';ctx.font='900 19px Nunito,sans-serif';ctx.textAlign='center';
+    for(let i=0;i<3;i++){const a=(reducedMotion?0:t*3)+i*Math.PI*2/3;ctx.fillText('✦',x+Math.cos(a)*46,e.y-98+Math.sin(a)*12);}ctx.restore();
+  }
   return true;
 }

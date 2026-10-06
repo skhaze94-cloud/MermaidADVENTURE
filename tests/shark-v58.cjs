@@ -2,7 +2,7 @@
 const assert=require('node:assert/strict'),fs=require('fs'),rt=require('./runtime.cjs')();rt.sandbox.assert=assert;
 const shark=fs.readFileSync('dist/predators-v56.js','utf8'),html=fs.readFileSync('dist/index.html','utf8');
 
-assert.match(html,/5\.8 · DEFINITIVE SHARK/);
+assert.match(html,/5\.9 · PAINTED SHARK/);
 for(const state of ['patrol','investigate','stalk','circle','lock','charge','lunge','bite','overshoot','recover','stunned'])assert(shark.includes("'"+state+"'"),state);
 for(const token of ['SHARK_TUNE','sharkObstacleSteer','sharkPointBlocked','drawSharkWake','sharkLayerFin','jawOpen','Top hat',"ctx.fillStyle='#ffd45f'"])assert(shark.includes(token),token);
 assert(shark.includes('enragedChargeSpeed:1030'));
