@@ -22,13 +22,13 @@ sh.hp=1;sh.aimX=nessie.x;sh.aimY=nessie.y;updateReefSharks(.001);assert.equal(sh
 assert(rt.run('__enragedSpeed')>1000,'Enraged shark charge is aggressive');
 
 rt.run(`
-const sh=enemies.find(isReefShark);sh.x=800;sh.y=500;obstacles=[{x:1000,y:400,w:180,h:220}];globalThis.__steer=sharkObstacleSteer(sh,1400,500);
+globalThis.__shark2=enemies.find(isReefShark);__shark2.x=800;__shark2.y=500;obstacles=[{x:1000,y:400,w:180,h:220}];globalThis.__steer=sharkObstacleSteer(__shark2,1400,500);
 `);
 assert(rt.run('__steer.blocked'),'Forward sensor detects a barrier');
 assert.notEqual(rt.run('__steer.y'),500,'Barrier look-ahead chooses a vertical detour');
 
 rt.run(`
-const sh=enemies.find(isReefShark);obstacles=[];sh.x=3000;sh.y=520;sh.bx=3000;sh.by=520;sh.hp=2;sh.maxHp=2;sharkState(sh,'patrol');nessie.x=sh.x;nessie.y=sh.y;dashTime=.2;dashCooldown=0;updateReefSharks(.016);globalThis.__first=[sh.hp,sh.sharkState];dashTime=.2;sh.x=nessie.x;sh.y=nessie.y;updateReefSharks(.016);globalThis.__second=[sh.hp,sh.sharkState];
+globalThis.__shark3=enemies.find(isReefShark);obstacles=[];__shark3.x=3000;__shark3.y=520;__shark3.bx=3000;__shark3.by=520;__shark3.hp=2;__shark3.maxHp=2;sharkState(__shark3,'patrol');nessie.x=__shark3.x;nessie.y=__shark3.y;dashTime=.2;dashCooldown=0;updateReefSharks(.016);globalThis.__first=[__shark3.hp,__shark3.sharkState];dashTime=.2;__shark3.x=nessie.x;__shark3.y=nessie.y;updateReefSharks(.016);globalThis.__second=[__shark3.hp,__shark3.sharkState];
 `);
 assert.equal(rt.run('__first[0]'),1);assert.equal(rt.run('__first[1]'),'stunned');assert.equal(rt.run('__second[0]'),0);
 
