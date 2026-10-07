@@ -17,7 +17,8 @@ function updateSparkEels(dt){if(mode==='trial'||isTraining())return;for(const e 
   const dx=nessie.x-e.x,dy=nessie.y-e.y,dist=Math.hypot(dx,dy),near=dist<(e.elite?760:640)&&!leap.breached,committed=e.sparkState==='lunge';
   const desiredFace=committed&&Math.abs(e.lungeVX)>25?(e.lungeVX<0?1:-1):dx<0?1:-1;
   if(desiredFace!==e.facing&&e.clock>=(e.faceHoldUntil||0)&&(committed||Math.abs(dx)>95)){e.facing=desiredFace;e.faceHoldUntil=e.clock+.24;}
-  if(Math.abs(e.x-camera)>vw+1900&&['idle','recover'].includes(e.sparkState)){e.x=e.bx+Math.sin(e.clock*.55+e.phase)*54;e.y=e.by+Math.sin(e.clock*.92+e.phase)*22;continue;}
+  const farOffscreen=Math.abs(e.x-camera)>vw+1900&&dist>1400;
+  if(farOffscreen&&['idle','recover'].includes(e.sparkState)){e.x=e.bx+Math.sin(e.clock*.55+e.phase)*54;e.y=e.by+Math.sin(e.clock*.92+e.phase)*22;continue;}
   if(e.sparkState==='stunned'){e.x=e.bx+Math.sin(e.clock*9)*8;e.y=e.by+Math.sin(e.clock*13)*7;if(e.sparkTime>=e.stun)sparkSetState(e,'recover');}
   else if(e.sparkState==='idle'){const tx=e.bx+Math.sin(e.clock*.62+e.phase)*72,ty=e.by+Math.sin(e.clock*1.05+e.phase)*30,blend=1-Math.exp(-dt*4);e.driftX+=(tx-e.driftX)*blend;e.driftY+=(ty-e.driftY)*blend;e.x+=(e.driftX-e.x)*(1-Math.exp(-dt*5));e.y+=(e.driftY-e.y)*(1-Math.exp(-dt*5));if(near&&e.cooldown<=0)sparkSetState(e,'notice');}
   else if(e.sparkState==='notice'){const side=e.facing>0?1:-1,targetX=e.bx+side*58,targetY=e.by+Math.sin(e.clock*2)*18;e.x+=(targetX-e.x)*(1-Math.exp(-dt*3.6));e.y+=(targetY-e.y)*(1-Math.exp(-dt*4.5));if(e.sparkTime>.42)sparkSetState(e,(e.sparkSeq++%3===1)?'lunge-coil':'coil');}
