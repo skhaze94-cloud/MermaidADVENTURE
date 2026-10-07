@@ -1,7 +1,7 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('fs'),rt=require('./runtime.cjs')();rt.sandbox.assert=assert;
 const html=fs.readFileSync('dist/index.html','utf8'),game=fs.readFileSync('dist/game.js','utf8'),css=fs.readFileSync('dist/scoring-v62.css','utf8');
-assert.match(html,/scoring-v62\.css/);assert.match(html,/6\.2 · TREASURE \+ SCORING/);
+assert.match(html,/scoring-v62\.css/);assert.match(html,/6\.\d+ · /);
 for(const id of ['pearl-count','treasure-count','reward-banner','reward-title','reward-sub'])assert(html.includes('id="'+id+'"'),id);
 for(const token of ['combo-meter','multiplier-shells','v62-result-score','v62-stars','reward-banner.kind-combo'])assert(css.includes(token),token);
 for(const token of ['function relicKind','function drawGemTreasure','function drawPearlTreasure','function drawStarCoinTreasure','function drawTreasureChest62','function drawScorePopup','function showRewardBanner','+250 COMBO BONUS','+1000 PERFECT BONUS'])assert(game.includes(token),token);

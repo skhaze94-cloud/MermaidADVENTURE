@@ -1,11 +1,12 @@
 'use strict';
 // 5.5 Spark Eel Expansion: electric eel enemy family + story-route expansion helpers.
-const EXTENDED_STORY_LENGTH=7600;
+const STORY_LENGTH_FACTOR=3,EXTENDED_STORY_LENGTH=22800;
 function isExtendedStoryStage(){return mode!=='trial'&&stage>=1&&stage<=3;}
-const expandedStoryMetaCache=new WeakMap();function expandedStoryMeta(meta){if(!isExtendedStoryStage())return meta;let cached=expandedStoryMetaCache.get(meta);if(!cached){cached={...meta,count:meta.count*2,pads:(stage===1||stage===2)?[...meta.pads,4200,5150,6100,7040]:meta.pads};expandedStoryMetaCache.set(meta,cached);}return cached;}
+function storyStretchX(x){return isExtendedStoryStage()?Math.round(x*STORY_LENGTH_FACTOR):x;}
+const expandedStoryMetaCache=new WeakMap();function expandedStoryMeta(meta){if(!isExtendedStoryStage())return meta;let cached=expandedStoryMetaCache.get(meta);if(!cached){const sourcePads=(stage===1||stage===2)?[...meta.pads,4200,5150,6100,7040]:meta.pads;cached={...meta,count:meta.count*2,coinSpacing:meta.coinSpacing*STORY_LENGTH_FACTOR,pads:sourcePads.map(storyStretchX)};expandedStoryMetaCache.set(meta,cached);}return cached;}
 function storyWorldLength(){return isExtendedStoryStage()?EXTENDED_STORY_LENGTH:3800;}
-function storyBossHomeX(){return stage===1&&isExtendedStoryStage()?7000:3280;}
-function storyBossTrigger(){return stage===1&&isExtendedStoryStage()?6420:2730;}
+function storyBossHomeX(){return stage===1&&isExtendedStoryStage()?storyStretchX(7000):3280;}
+function storyBossTrigger(){return stage===1&&isExtendedStoryStage()?storyStretchX(6420):2730;}
 function isSparkEel(e){return !!e&&(e.kind==='spark-eel'||e.kind==='storm-eel');}
 function spawnSparkEel(x,y,elite=false,phase=0){const e={kind:elite?'storm-eel':'spark-eel',x,y,bx:x,by:y,hp:elite?2:1,maxHp:elite?2:1,elite,phase,clock:phase*.41,sparkState:'idle',sparkTime:phase*.17,sparkSeq:phase%2,cooldown:.4+phase*.08,facing:1,recoil:0,aimX:x-120,aimY:y,shot:false,stun:0};enemies.push(e);return e;}
 function sparkBurst(x,y,elite=false,n=16){if(reducedMotion)return;for(let i=0;i<n;i++){const a=i/n*Math.PI*2,v=(elite?150:105)*(.5+Math.random()*.65);particles.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:.35+Math.random()*.45,max:.8,color:i%2?'#70edff':'#ffe66f',r:1.5+Math.random()*2.8,bubble:i%4===0});}if(particles.length>280)particles.splice(0,particles.length-280);}
@@ -34,19 +35,27 @@ function drawSparkEel(e,t,small=false){if(!creatureArt?.complete||!creatureArt.n
 }
 function drawSparkProjectile(p,t){if(p.type!=='electric')return false;const x=p.x-camera,y=p.y;if(x<-80||x>vw+80)return true;ctx.save();ctx.translate(x,y);ctx.shadowColor=p.elite?'#ffe34c':'#70eaff';ctx.shadowBlur=p.elite?22:16;ctx.fillStyle=p.elite?'#fff3a0':'#d8fbff';ctx.beginPath();ctx.arc(0,0,p.elite?9:7,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;ctx.strokeStyle=p.elite?'#ffe24f':'#69ebff';ctx.lineWidth=p.elite?3:2;for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(-8-i*7,Math.sin(t*10+i)*5);ctx.lineTo(-20-i*9,Math.sin(t*13+i)*10);ctx.lineTo(-32-i*10,Math.sin(t*9+i*2)*6);ctx.stroke();}ctx.restore();return true;}
 function setupExtendedStoryStage(){if(!isExtendedStoryStage())return;
- if(stage===1){boss.x=7000;obstacles.push({x:3820,y:280,w:180,h:260},{x:4300,y:690,w:250,h:210},{x:4810,y:280,w:170,h:290},{x:5350,y:670,w:240,h:230},{x:5900,y:280,w:190,h:270},{x:6350,y:700,w:230,h:200});const kinds=['jelly','puffer','eel','swordfish','jelly','puffer'];for(const [i,x] of [3940,4460,4920,5430,5920,6260].entries())enemies.push({kind:kinds[i],x,y:i%2?450:760,bx:x,by:i%2?450:760,hp:1,cooldown:1.4+i*.2,phase:i,clock:0});spawnSparkEel(1700,510,false,0);spawnSparkEel(3550,650,false,1);spawnSparkEel(4700,500,false,2);spawnSparkEel(5720,690,true,3);spawnSparkEel(6250,440,false,4);for(const [i,x] of [4100,5200,6150].entries())powerups.push({x,y:i%2?520:690,type:i===1?'boost':'heart',phase:i,taken:false});}
- else if(stage===2){spawnSparkEel(1050,500,false,0);spawnSparkEel(2050,700,false,1);spawnSparkEel(3150,450,false,2);spawnSparkEel(4300,690,false,3);spawnSparkEel(5300,470,true,4);spawnSparkEel(6200,650,false,5);}
- else if(stage===3){obstacles.push({x:930,y:720,w:170,h:150},{x:1780,y:300,w:150,h:240},{x:2100,y:700,w:170,h:180});spawnSparkEel(980,500,false,0);spawnSparkEel(1680,700,false,1);spawnSparkEel(2380,470,true,2);}
+ const sx=storyStretchX;
+ if(stage===1){boss.x=storyBossHomeX();obstacles.push(
+  {x:sx(3820),y:280,w:180,h:260},{x:sx(4300),y:690,w:250,h:210},{x:sx(4810),y:280,w:170,h:290},
+  {x:sx(5350),y:670,w:240,h:230},{x:sx(5900),y:280,w:190,h:270},{x:sx(6350),y:700,w:230,h:200});
+  const kinds=['jelly','puffer','eel','swordfish','jelly','puffer'];
+  for(const [i,x] of [3940,4460,4920,5430,5920,6260].entries()){const wx=sx(x);enemies.push({kind:kinds[i],x:wx,y:i%2?450:760,bx:wx,by:i%2?450:760,hp:1,cooldown:1.4+i*.2,phase:i,clock:0});}
+  spawnSparkEel(sx(1700),510,false,0);spawnSparkEel(sx(3550),650,false,1);spawnSparkEel(sx(4700),500,false,2);spawnSparkEel(sx(5720),690,true,3);spawnSparkEel(sx(6250),440,false,4);
+  for(const [i,x] of [4100,5200,6150].entries())powerups.push({x:sx(x),y:i%2?520:690,type:i===1?'boost':'heart',phase:i,taken:false});
+ }
+ else if(stage===2){spawnSparkEel(sx(1050),500,false,0);spawnSparkEel(sx(2050),700,false,1);spawnSparkEel(sx(3150),450,false,2);spawnSparkEel(sx(4300),690,false,3);spawnSparkEel(sx(5300),470,true,4);spawnSparkEel(sx(6200),650,false,5);}
+ else if(stage===3){obstacles.push({x:sx(930),y:720,w:170,h:150},{x:sx(1780),y:300,w:150,h:240},{x:sx(2100),y:700,w:170,h:180});spawnSparkEel(sx(980),500,false,0);spawnSparkEel(sx(1680),700,false,1);spawnSparkEel(sx(2380),470,true,2);}
 }
-function addExitCoins(start=4050){for(let group=0;group<6;group++){const baseX=start+group*470,baseY=[450,620,760][group%3];for(let i=0;i<5;i++){const x=baseX+i*34,y=baseY+Math.sin(i*.7)*24;coins.push({x,y,bx:x,by:y,cx:baseX,cy:baseY,type:'coin',taken:false,phase:i,group:50+group});}}}
-function unlockExtendedLaunchPads(){if(!isExtendedStoryStage()||stage===1)return;const line=waterSurface();for(const x of [4200,5150,6100,7040]){if(launchPads.some(p=>p.x===x))continue;const pad={x,y:line+75,id:launchPads.length};launchPads.push(pad);if(mode!=='trial')powerups.push({x:x+140,y:line-105,type:'heart',phase:pad.id*1.8,sky:true,taken:false});powerups.push({x:x+265,y:line-155,type:'boost',phase:pad.id*1.8+1,sky:true,taken:false});}}
+function addExitCoins(start=4050){for(let group=0;group<6;group++){const baseX=storyStretchX(start+group*470),baseY=[450,620,760][group%3];for(let i=0;i<5;i++){const x=baseX+i*34,y=baseY+Math.sin(i*.7)*24;coins.push({x,y,bx:x,by:y,cx:baseX,cy:baseY,type:'coin',taken:false,phase:i,group:50+group});}}}
+function unlockExtendedLaunchPads(){if(!isExtendedStoryStage()||stage===1)return;const line=waterSurface();for(const sourceX of [4200,5150,6100,7040]){const x=storyStretchX(sourceX);if(launchPads.some(p=>p.x===x))continue;const pad={x,y:line+75,id:launchPads.length};launchPads.push(pad);if(mode!=='trial')powerups.push({x:x+140,y:line-105,type:'heart',phase:pad.id*1.8,sky:true,taken:false});powerups.push({x:x+265,y:line-155,type:'boost',phase:pad.id*1.8+1,sky:true,taken:false});}}
 function setupRanaHuntArena(){
  if(!isExtendedStoryStage()||stage!==3||globalThis.ranaHuntExpanded)return;
  globalThis.ranaHuntExpanded=true;unlockExtendedLaunchPads();
  // Three sparse blockers create lanes without obscuring the hunt.
- obstacles.push({x:3980,y:285,w:150,h:235,huntArena:true},{x:5200,y:715,w:190,h:175,huntArena:true},{x:6420,y:300,w:150,h:225,huntArena:true});
- powerups.push({x:4720,y:650,type:'heart',phase:11,taken:false},{x:6120,y:500,type:'boost',phase:12,taken:false});
+ obstacles.push({x:storyStretchX(3980),y:285,w:150,h:235,huntArena:true},{x:storyStretchX(5200),y:715,w:190,h:175,huntArena:true},{x:storyStretchX(6420),y:300,w:150,h:225,huntArena:true});
+ powerups.push({x:storyStretchX(4720),y:650,type:'heart',phase:11,taken:false},{x:storyStretchX(6120),y:500,type:'boost',phase:12,taken:false});
 }
-function setupPalaceExitCorridor(){if(!isExtendedStoryStage()||stage!==2||palace?.exitExpanded)return;if(palace)palace.exitExpanded=true;checkpoint=Math.max(checkpoint,6840);unlockExtendedLaunchPads();flash('Royal exit opened!');}
-function setupRanaExitCorridor(){if(!isExtendedStoryStage()||stage!==3||globalThis.ranaExitExpanded)return;globalThis.ranaExitExpanded=true;checkpoint=Math.max(checkpoint,3950);setupRanaHuntArena();addExitCoins(4200);flash('The eastern ruins are clear — portal ahead!');}
-function updateExtendedStoryGate(){if(!isExtendedStoryStage())return;if(stage===3&&!isNessieFinal()&&!boss?.active&&!leap.active&&nessie.x>3720){nessie.x=3720;nessie.vx=Math.min(0,nessie.vx);if(!globalThis.stage4GateToast){globalThis.stage4GateToast=true;flash('Rana is waiting back in the ruin arena');}}}
+function setupPalaceExitCorridor(){if(!isExtendedStoryStage()||stage!==2||palace?.exitExpanded)return;if(palace)palace.exitExpanded=true;checkpoint=Math.max(checkpoint,storyStretchX(6840));unlockExtendedLaunchPads();flash('Royal exit opened!');}
+function setupRanaExitCorridor(){if(!isExtendedStoryStage()||stage!==3||globalThis.ranaExitExpanded)return;globalThis.ranaExitExpanded=true;checkpoint=Math.max(checkpoint,storyStretchX(3950));setupRanaHuntArena();addExitCoins(4200);flash('The eastern ruins are clear — portal ahead!');}
+function updateExtendedStoryGate(){if(!isExtendedStoryStage())return;if(stage===3&&!isNessieFinal()&&!boss?.active&&!leap.active&&nessie.x>storyStretchX(3720)){nessie.x=storyStretchX(3720);nessie.vx=Math.min(0,nessie.vx);if(!globalThis.stage4GateToast){globalThis.stage4GateToast=true;flash('Rana is waiting back in the ruin arena');}}}

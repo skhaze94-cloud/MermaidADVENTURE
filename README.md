@@ -1,4 +1,4 @@
-# Sarah Maria Family Adventure 6.2
+# Sarah Maria Family Adventure 6.3
 
 A static browser game with optional King Daddy training, four story chapters, Sarah and Nessie modes, 60-second coin trials, and embedded browser-generated effects plus the Bubble Bell Adventure soundtrack.
 
@@ -68,3 +68,6 @@ Version 6.1 Clarity + Predator Arena: the visual hierarchy has been simplified s
 
 
 Version 6.2 Treasure + Scoring: a comprehensive reward-graphics pass inspired by the supplied pearl, gem, starfish, score, combo and stage-clear reference sheets. The HUD now uses a glossy shell score plate with live treasure/chest counters, a five-notch combo meter and x2/x3/x5 shell multipliers. Ordinary collectibles render as stage-varied pearls, pink/aqua/purple gems and star coins, while chests, hearts and boost pickups use richer jewel-style artwork. World score feedback now uses short-lived sticker/ripple popups instead of plain text, and real gameplay events trigger compact centre-screen reward banners for Combo, Perfect, Treasure Bonus, Pearl Bonus, Heart +1, Time Bonus and Stage Clear. Every five-item treasure chain now awards a deliberate +250 combo milestone; story stage clears retain the +500 tier; fast complete trial clears can earn a +1000 Perfect bonus. Trial and story result screens now use large score plates, bonus chips and one-to-three star ratings while keeping the 6.1 clarity rules and playfield visibility intact.
+
+
+Version 6.3 The Length Update: story/adventure pacing is expanded without multiplying encounter counts. Highland Gold grows from 15,200 to 45,600 world units while preserving the scripted waterfall intro; its post-waterfall route, obstacles, sharks, chests, powerups, checkpoints and decorative regions are redistributed across the longer swim. Stages 2–4 grow from 7,600 to 22,800 world units using a shared 3× story-distance transform. Coins, launch pads, Palace furniture, roaming enemies, Spark Eels, Reef Sharks, checkpoints, boss homes and the Stage 4 Rana hunt arena all use the same transform, while attack ranges and local movement amplitudes stay unchanged. Tutorial and 60-second Trial layouts remain compact. Enemy counts are intentionally not tripled, and decorative foreground dressing is regenerated sparsely near the camera, creating longer clear swimming/jumping stretches with fewer simultaneous encounters and no proportional increase in runtime entity counts.
