@@ -72,8 +72,13 @@ function releaseRoyal(kind,x,y,height,t,pose){const art=kind==='daddy'?kingArt:q
 
  ctx.restore();return true;}
 const CREATURE_KINDS=['seahorse','pearl-crab','puffer','jelly','eel','swordfish'];
-function releaseCreature(e,t,small=false){if(isReefShark(e))return drawReefShark(e,t);if(isSparkEel(e))return drawSparkEel(e,t,small);if(!creatureArt?.complete||!creatureArt.naturalWidth)return false;const x=e.x-camera,y=e.y;if(x<-150||x>vw+150)return true;const kind=e.kind||'pearl-crab',index=Math.max(0,CREATURE_KINDS.indexOf(kind)),crop=CREATURE_CROPS[index],tick=reducedMotion?0:(e.clock||t),w=small?e.size*3.3:kind==='swordfish'?157:kind==='eel'?144:kind==='jelly'?108:kind==='puffer'?105:118,h=small?w*.65:kind==='eel'?83:kind==='swordfish'?90:kind==='jelly'?148:kind==='seahorse'?145:101,face=small?(e.dir===1?-1:1):(e.facing||((nessie.x<e.x)?1:-1)),charge=e.windup>0?1-e.windup/.65:0,recoil=Math.max(0,e.recoil||0);
+const ENEMY_ARCHETYPE_VISUALS={
+ 'coral-sentinel':'#8fffe0','reef-guard':'#ffdca0','bubble-bomber':'#ffb7df',
+ 'moon-jelly':'#d8b9ff','kelp-stalker':'#8defff','blue-lancer':'#9fc7ff'
+};
+function releaseCreature(e,t,small=false){if(isReefShark(e))return drawReefShark(e,t);if(isSparkEel(e))return drawSparkEel(e,t,small);if(!creatureArt?.complete||!creatureArt.naturalWidth)return false;const x=e.x-camera,y=e.y;if(x<-150||x>vw+150)return true;const kind=e.kind||'pearl-crab',index=Math.max(0,CREATURE_KINDS.indexOf(kind)),crop=CREATURE_CROPS[index],tick=reducedMotion?0:(e.clock||t),w=small?e.size*3.3:kind==='swordfish'?157:kind==='eel'?144:kind==='jelly'?108:kind==='puffer'?105:118,h=small?w*.65:kind==='eel'?83:kind==='swordfish'?90:kind==='jelly'?148:kind==='seahorse'?145:101,face=small?(e.dir===1?-1:1):(e.facing||((nessie.x<e.x)?1:-1)),charge=e.windup>0?1-e.windup/.65:0,recoil=Math.max(0,e.recoil||0),archetype=e.archetype||'',accent=ENEMY_ARCHETYPE_VISUALS[archetype]||'';
  if(!small){ctx.save();ctx.globalAlpha=.16;ctx.fillStyle='#001d35';ctx.beginPath();ctx.ellipse(x,y+h*.34,w*.34,h*.12,0,0,Math.PI*2);ctx.fill();ctx.restore();}
+ if(!small&&accent){ctx.save();const pulse=reducedMotion?.5:(Math.sin(tick*3.4+(e.phase||0))+1)/2;ctx.globalAlpha=.16+pulse*.12;ctx.strokeStyle=accent;ctx.shadowColor=accent;ctx.shadowBlur=reducedMotion?0:10;ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(x,y,w*.48+4*pulse,h*.48+3*pulse,0,0,Math.PI*2);ctx.stroke();ctx.shadowBlur=0;for(let i=0;i<3;i++){const a=tick*.9+i*Math.PI*2/3+(e.phase||0);ctx.globalAlpha=.35+pulse*.22;ctx.fillStyle=accent;ctx.beginPath();ctx.arc(x+Math.cos(a)*w*.43,y+Math.sin(a)*h*.38,2.2,0,Math.PI*2);ctx.fill();}ctx.restore();}
  if(e.windup>0&&!small){const tx=(e.aimX??nessie.x)-camera,ty=e.aimY??nessie.y,attackColor=kind==='puffer'?'#ffd39a':kind==='jelly'?'#d7b7ff':kind==='eel'||kind==='swordfish'?'#9eeeff':'#bfffe1';ctx.save();ctx.globalAlpha=.2+charge*.55;ctx.strokeStyle=attackColor;ctx.lineWidth=1.5+charge*1.6;ctx.setLineDash([5,9]);ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(tx,ty);ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=.28+charge*.45;ctx.lineWidth=2;ctx.beginPath();ctx.arc(tx,ty,18+charge*14,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(tx-8,ty);ctx.lineTo(tx+8,ty);ctx.moveTo(tx,ty-8);ctx.lineTo(tx,ty+8);ctx.stroke();ctx.restore();}
  ctx.save();ctx.translate(x,y);ctx.scale(face,1);const playerTilt=!small?clamp(Math.atan2(nessie.y-e.y,Math.max(90,-(nessie.x-e.x)*face)),-.3,.3):0;ctx.rotate((e.renderTilt||0)+playerTilt*.55+(kind==='swordfish'?clamp((e.vy||0)*.0008,-.16,.16):Math.sin(tick*1.8)*.018));ctx.scale(1-recoil*.09,1+recoil*.07);
  if(small){warpedSprite(creatureArt,crop,w,h,(u,v)=>{const tail=Math.pow(u,2),edge=Math.abs(u-.5)*2,low=Math.max(0,(v-.35)/.65);let dx=0,dy=0;if(kind==='jelly'){dx=Math.sin(tick*2.2-v*5+u*3)*low*3.5;dy=Math.sin(tick*1.7+u*2)*low*3;}else if(kind==='eel'||kind==='swordfish'){dy=Math.sin(tick*(kind==='eel'?4.8:3.7)-u*6)*tail*(kind==='eel'?5.5:4);}else if(kind==='seahorse'){dx=Math.sin(tick*2-v*4)*low*2.8;dy=Math.sin(tick*3+u*4)*edge*2.2;}else if(kind==='puffer'){const puff=.03+Math.sin(tick*2.4)*.018;dx=(u-.5)*w*puff;dy=(v-.5)*h*puff;}else{dy=Math.sin(tick*5+u*5)*edge*2.8;}return{x:(u-.5)*w+dx,y:(v-.5)*h+dy};},2,3);}else warpedSprite(creatureArt,crop,w,h,(u,v)=>{const tail=Math.pow(u,2),edge=Math.abs(u-.5)*2,low=Math.max(0,(v-.35)/.65),pulse=kind==='puffer'?Math.sin(tick*2)*.025+charge*.1:0;let dx=0,dy=0;if(kind==='jelly'){dx=Math.sin(tick*2.8-v*6+u*4)*low*9;dy=Math.sin(tick*2)*low*4;}else if(kind==='eel'||kind==='swordfish'){dy=Math.sin(tick*(e.charge?9:4)-u*7)*tail*(kind==='eel'?13:8);}else if(kind==='pearl-crab'){dy=Math.sin(tick*6+u*8)*edge*7-Math.sin(charge*Math.PI*.5)*edge*15;dx=Math.sin(tick*4+v*3)*low*edge*3;}else{dx=Math.sin(tick*3-v*5)*low*4;dy=Math.sin(tick*5+u*5)*edge*3;}return{x:(u-.5)*w*(1+pulse)+dx,y:(v-.5)*h*(1+pulse)+dy};},4,6);
@@ -91,12 +96,26 @@ const RELEASE_ENEMY_PROFILE={
  swordfish:{range:640,follow:150,speedX:2.3,speedY:2.55,fire:2.3},
  'pearl-crab':{range:430,follow:60,speedX:1.1,speedY:1.3,fire:3.2}
 };
-function updateReleaseEnemies(dt){if(isTraining()||isPalace()||isRana())return;for(const e of enemies){if(e.hp<=0||e.scuttle||isSparkEel(e)||isReefShark(e))continue;e.bx??=e.x;e.by??=e.y;e.clock=(e.clock||0)+dt;e.recoil=Math.max(0,(e.recoil||0)-dt*3);const kind=e.kind||'pearl-crab',profile=RELEASE_ENEMY_PROFILE[kind]||RELEASE_ENEMY_PROFILE['pearl-crab'],dx=nessie.x-e.x,dy=nessie.y-e.y,distance=Math.hypot(dx,dy),far=Math.abs(e.x-camera)>vw+1700;
+const ENEMY_ARCHETYPE_TUNE={
+ 'coral-sentinel':{range:1.08,follow:1.15,speedX:1.08,speedY:1.12,fire:.88},
+ 'reef-guard':{range:.92,follow:.72,speedX:.82,speedY:.86,fire:1.08},
+ 'bubble-bomber':{range:1.12,follow:1.35,speedX:.82,speedY:.92,fire:1.08},
+ 'moon-jelly':{range:1.1,follow:1.08,speedX:.9,speedY:1.2,fire:.94},
+ 'kelp-stalker':{range:1.18,follow:1.28,speedX:1.22,speedY:1.24,fire:.86},
+ 'blue-lancer':{range:1.2,follow:1.45,speedX:1.3,speedY:1.2,fire:.9}
+};
+function updateReleaseEnemies(dt){if(isTraining()||isPalace()||isRana())return;for(const e of enemies){if(e.hp<=0||e.scuttle||isSparkEel(e)||isReefShark(e))continue;e.bx??=e.x;e.by??=e.y;e.clock=(e.clock||0)+dt;e.recoil=Math.max(0,(e.recoil||0)-dt*3);const kind=e.kind||'pearl-crab',baseProfile=RELEASE_ENEMY_PROFILE[kind]||RELEASE_ENEMY_PROFILE['pearl-crab'],tune=ENEMY_ARCHETYPE_TUNE[e.archetype],profile=tune?{range:baseProfile.range*tune.range,follow:baseProfile.follow*tune.follow,speedX:baseProfile.speedX*tune.speedX,speedY:baseProfile.speedY*tune.speedY,fire:baseProfile.fire*tune.fire}:baseProfile,dx=nessie.x-e.x,dy=nessie.y-e.y,distance=Math.hypot(dx,dy),far=Math.abs(e.x-camera)>vw+1700;
  if(Math.abs(dx)>95&&e.clock>=(e.faceHoldUntil||0)){e.facing=dx<0?1:-1;e.faceHoldUntil=e.clock+.22;}
  if(far&&!e.windup){const idleX=e.bx+Math.sin(e.clock*.5+(e.phase||0))*48,idleY=e.by+Math.sin(e.clock*.85+(e.phase||0))*20;e.x+=(idleX-e.x)*(1-Math.exp(-dt));e.y+=(idleY-e.y)*(1-Math.exp(-dt));continue;}
  const engage=distance<profile.range&&!leap.breached;e.aiState=e.windup?'windup':engage?'stalk':'patrol';let tx=e.bx+Math.sin(e.clock*.62+(e.phase||0))*62,ty=e.by+Math.sin(e.clock*.9+(e.phase||0))*26;
  if(engage){
-   if(kind==='swordfish'){const side=dx<0?1:-1;tx=nessie.x+side*profile.follow;ty=nessie.y+Math.sin(e.clock*2.2+e.phase)*58;}
+   if(e.archetype==='coral-sentinel'){const orbit=e.clock*1.55+(e.phase||0);tx=nessie.x+(dx<0?1:-1)*(175+Math.cos(orbit)*44);ty=nessie.y+Math.sin(orbit)*92;}
+   else if(e.archetype==='reef-guard'){tx=e.bx+clamp(nessie.x-e.bx,-profile.follow,profile.follow);ty=e.by+clamp(nessie.y-e.by,-58,58);}
+   else if(e.archetype==='bubble-bomber'){const side=dx<0?1:-1;tx=nessie.x+side*340;ty=nessie.y-35+Math.sin(e.clock*1.3+(e.phase||0))*58;}
+   else if(e.archetype==='moon-jelly'){tx=e.bx+clamp(nessie.x-e.bx,-profile.follow,profile.follow);ty=nessie.y-105+Math.sin(e.clock*1.9+(e.phase||0))*82;}
+   else if(e.archetype==='kelp-stalker'){tx=nessie.x+(dx<0?1:-1)*(105+Math.sin(e.clock*2.6)*42);ty=nessie.y+Math.sin(e.clock*4.1+(e.phase||0))*96;}
+   else if(e.archetype==='blue-lancer'){const side=dx<0?1:-1;tx=nessie.x+side*profile.follow;ty=nessie.y+Math.sin(e.clock*3+(e.phase||0))*40;}
+   else if(kind==='swordfish'){const side=dx<0?1:-1;tx=nessie.x+side*profile.follow;ty=nessie.y+Math.sin(e.clock*2.2+e.phase)*58;}
    else if(kind==='puffer'){const side=dx<0?1:-1;tx=nessie.x+side*285;ty=nessie.y+Math.sin(e.clock*1.7+e.phase)*38;}
    else if(kind==='jelly'){tx=e.bx+clamp(nessie.x-e.bx,-profile.follow,profile.follow);ty=nessie.y-65+Math.sin(e.clock*1.45+e.phase)*52;}
    else if(kind==='eel'){tx=e.bx+clamp(nessie.x-e.bx,-profile.follow,profile.follow);ty=nessie.y+Math.sin(e.clock*3.1+e.phase)*74;}
@@ -152,7 +171,16 @@ function releaseLaunchPads(t){
 let titleSceneTime=0;
 function smoothUnit(value){const u=clamp(value,0,1);return u*u*(3-2*u);}
 function launchTitleMode(next){if(!assetsReady)return;chooseMode(next);selectStage(next==='sarah'?-1:0);start();}
-function drawLivingHero(art,w,h,wave,speed=0,air=0){warpedSprite(art,[0,0,1,1],w,h,(u,v)=>{
+function drawIdentitySafeSarah(art,w,h,wave,speed=0,air=0){
+ if(!art?.complete||!art.naturalWidth)return;ctx.save();ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+ const bob=reducedMotion?0:Math.sin(wave*.52+air*2)*Math.min(2.4,1+speed*.7),tilt=reducedMotion?0:Math.sin(wave*.31+air)*.008;
+ ctx.translate(0,bob);ctx.rotate(tilt);ctx.drawImage(art,-w/2,-h/2,w,h);ctx.restore();
+}
+function drawLivingHero(art,w,h,wave,speed=0,air=0){
+ // Sarah's original painted identity stays on one high-quality surface. Mesh deformation is
+ // reserved for non-identity creatures so facial detail cannot split across triangle boundaries.
+ if(art===sarahArt){drawIdentitySafeSarah(art,w,h,wave,speed,air);return;}
+ warpedSprite(art,[0,0,1,1],w,h,(u,v)=>{
  const tail=Math.pow(1-u,2),sway=Math.sin(wave-u*5+air*5),fin=Math.sin(wave*1.3-u*7+v*3);let p={x:(u-.5)*w+fin*tail*2,y:(v-.5)*h+sway*tail*(4+speed*5+(air?8:0))};
  spriteJoint(p,u,v,.17,.52,.21,.45,Math.sin(wave*1.1-1.4+air*3)*(.075+speed*.025),w,h);
  spriteJoint(p,u,v,.09,.28,.15,.24,Math.sin(wave*1.5-2)*.12,w,h);

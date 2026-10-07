@@ -49,3 +49,4 @@ jobs:
           node tests/graphics-scoring-v62.cjs
           node tests/length-v63.cjs
           node tests/jump-enemy-v64.cjs
+          node tests/restoration-enemy-v65.cjs
