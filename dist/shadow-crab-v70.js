@@ -107,7 +107,7 @@ function updateMermaidBubble(dt){
   if(hit)continue;
   for(const e of enemies){if(e.hp<=0||isSparkEel?.(e)&&e.sparkState==='stunned')continue;const radius=e.shadowKind==='armoured'?62:48;if(Math.hypot(p.x-e.x,p.y-e.y)>radius)continue;if(e.shadowKind==='guard'&&e.guardUp){popMermaidBubble(p);e.recoil=.18;hit=true;break;}e.hp-=1;e.recoil=.22;popMermaidBubble(p,e.x,e.y,true);if(e.hp<=0){score+=e.shadowKind?120:90;rewardPopup(e.x,e.y-48,'POP! +'+(e.shadowKind?120:90),'pearl','#bffcff',.8);}hit=true;break;}
   if(hit)continue;
-  if(boss?.active&&boss.hp>0&&Math.hypot(p.x-boss.x,p.y-boss.y)<150){if(isShadowCrabKingdom()){if(shadowBubbleHitBoss(p))continue;}else if(boss.vulnerable&&boss.hitCooldown<=0){boss.bubbleHits=(boss.bubbleHits||0)+1;popMermaidBubble(p,boss.x,boss.y,true);if(boss.bubbleHits>=3){boss.bubbleHits=0;boss.hp=Math.max(0,boss.hp-1);boss.hitCooldown=.75;score+=180;bossImpact(boss);}continue;}else{popMermaidBubble(p);continue;}}
+  if(boss?.active&&boss.hp>0&&Math.hypot(p.x-boss.x,p.y-boss.y)<(isDarkTunnel()?245:150)){if(isShadowCrabKingdom()){if(shadowBubbleHitBoss(p))continue;}else if(boss.vulnerable&&boss.hitCooldown<=0){boss.bubbleHits=(boss.bubbleHits||0)+1;popMermaidBubble(p,boss.x,boss.y,true);if(boss.bubbleHits>=3){boss.bubbleHits=0;boss.hp=Math.max(0,boss.hp-1);boss.hitCooldown=.75;score+=180;bossImpact(boss);}continue;}else{popMermaidBubble(p);continue;}}
  }
  V70.bubbleProjectiles=V70.bubbleProjectiles.filter(p=>p.life>0&&p.x>0&&p.x<W&&p.y>waterSurface()+4&&p.y<935);
  if(V70.bubbleProjectiles.length>V70.caps.bubbles)V70.bubbleProjectiles.splice(0,V70.bubbleProjectiles.length-V70.caps.bubbles);
