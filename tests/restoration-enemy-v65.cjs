@@ -4,7 +4,7 @@ const html=fs.readFileSync('dist/index.html','utf8'),game=fs.readFileSync('dist/
 
 assert.match(html,/6\.5 · RESTORATION \+ ENEMY POLISH/);
 for(const token of ["drawIdentitySafeSarah","art===sarahArt","imageSmoothingQuality='high'","ctx.drawImage(art,-w/2,-h/2,w,h)"])assert(polish.includes(token),token);
-for(const token of ["LONG_ROUTE_ARCHETYPES","coral-sentinel","reef-guard","bubble-bomber","moon-jelly","kelp-stalker","blue-lancer"])assert(game.includes(token),token);
+for(const token of ["longRouteArchetype","coral-sentinel","reef-guard","bubble-bomber","moon-jelly","kelp-stalker","blue-lancer"])assert(game.includes(token),token);
 for(const token of ["ENEMY_ARCHETYPE_VISUALS","ENEMY_ARCHETYPE_TUNE"])assert(polish.includes(token),token);
 assert.match(game,/area<1500000\?3:2/);
 assert.match(game,/ctx\.imageSmoothingQuality='high'/);
