@@ -50,3 +50,17 @@ jobs:
           node tests/length-v63.cjs
           node tests/jump-enemy-v64.cjs
           node tests/restoration-enemy-v65.cjs
+
+      - name: Upload source snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: mermaid-source-snapshot
+          path: |
+            dist
+            scripts
+            tests
+            VERSION
+            README.md
+            .github/workflows/ci.yml
+          include-hidden-files: true
+          if-no-files-found: error
