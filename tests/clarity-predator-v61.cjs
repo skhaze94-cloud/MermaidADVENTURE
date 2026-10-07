@@ -9,16 +9,16 @@ assert.match(pred,/function drawSharkHealthBar/);assert.match(pred,/HUNT SHARK/)
 assert.match(ranaSrc,/RANA_ARENA_EXPANDED_RIGHT=7240/);assert.match(ranaSrc,/function ranaAvoidObstacles/);
 rt.run(`
 mode='story';stage=3;loadStage();state='playing';dialogueSeen=new Set(Object.keys(conversations));
-assert.equal(W,22800);assert.equal(ranaArenaRight(),21720);
+assert.equal(W,64000);assert.equal(ranaArenaRight(),60968);
 const sharks=enemies.filter(isReefShark);assert.equal(sharks.length,6);assert(sharks.every(s=>s.maxHp===4&&s.arenaShark&&s.aggressive));
-assert.equal(obstacles.filter(o=>o.huntArena).length,3);assert(launchPads.some(p=>p.x===21120));
-nessie.x=8400;nessie.y=560;updateRana(.016);assert(boss.active);
-nessie.x=15600;nessie.vx=100;const before=nessie.x;updateExtendedStoryGate();assert.equal(nessie.x,before,'Expanded arena stays open while Rana is active');
-bossAnnounced=true;rana.state='observe';rana.time=0;boss.x=9840;boss.y=570;nessie.x=18750;nessie.y=620;invincible=1000;
+assert.equal(obstacles.filter(o=>o.huntArena).length,3);assert(launchPads.some(p=>p.x===storyStretchX(7040)));
+nessie.x=storyStretchX(2800);nessie.y=560;updateRana(.016);assert(boss.active);
+nessie.x=storyStretchX(5200);nessie.vx=100;const before=nessie.x;updateExtendedStoryGate();assert.equal(nessie.x,before,'Expanded arena stays open while Rana is active');
+bossAnnounced=true;rana.state='observe';rana.time=0;boss.x=ranaHomeX();boss.y=570;nessie.x=storyStretchX(6250);nessie.y=620;invincible=1000;
 for(let i=0;i<120;i++)updateRana(1/60);globalThis.__ranaTracked=boss.x;
 const huntShark=sharks[0];assert.equal(huntShark.hp,4);nessie.x=huntShark.x;nessie.y=huntShark.y;dashTime=.2;sharkState(huntShark,'patrol');updateReefSharks(.016);globalThis.__afterFirst=huntShark.hp;dashTime=.2;updateReefSharks(.016);globalThis.__afterRepeat=huntShark.hp;
 `);
-assert(rt.run('__ranaTracked')>12900,'Rana follows Sarah well beyond the old arena');
+assert(rt.run('__ranaTracked')>storyStretchX(4300),'Rana follows Sarah well beyond the old arena');
 assert.equal(rt.run('__afterFirst'),3);assert.equal(rt.run('__afterRepeat'),3,'Stunned shark cannot lose another HP chunk until recovery');
 rt.run(`
 const s=enemies.find(isReefShark);s.facing=1;s.faceHoldUntil=s.clock+1;const oldFace=s.facing;updateSharkFacing(s,180,false);globalThis.__heldFace=[oldFace,s.facing];s.renderAngle=.2;s.vx=200;s.vy=-20;const oldAngle=s.renderAngle;sharkMoveToward(s,s.x+300,s.y,220,.016,1);globalThis.__angleDelta=Math.abs(s.renderAngle-oldAngle);
