@@ -79,3 +79,12 @@ Version 6.3 The Length Update: story pacing is deliberately sequential rather th
 Version 6.4 Jump + Enemy Overhaul: desktop Jump now has full parity with touch. A permanent in-game desktop Jump button sits beside the Boost instrument, J and either Shift key trigger the same action, the world cue now correctly says J / SHIFT rather than SPACE, and the control reflects live JUMP, SPLASH and SUPER JUMP states plus powered-jump benefits. Main story stages now deliberately double their enemy rosters by inserting the extra encounter into the next large route gap rather than stacking duplicates on top of existing enemies. The long 6.3 maps therefore gain roughly twice the action while keeping readable spacing.
 
 Spark and Storm Eels receive a full presentation/AI polish: facing hysteresis, smoother drift/recovery, stable rendered pitch, richer electric halos and wake arcs, luminous dorsal accents, cleaner charge telegraphs, stun stars and an elite HP strip. Regular enemies now use species-specific movement profiles instead of one shared float routine: swordfish flank and dart, puffers hold distance, jellyfish track vertically, ordinary eels weave, and seahorses orbit. They also gain softer grounding shadows, rim highlights, head glints and species-appropriate trails. Off-screen AI work is reduced to preserve performance with the doubled roster.
+
+
+## 7.1 Adventure Select + Blackwater Tunnel
+
+- Revamped start menu with direct selection for the prologue, all four main chapters, Shadow Crab Kingdom, and the new Blackwater Tunnel interlude.
+- Added The Blackwater Tunnel between Miguel's Lagoon and the Pearl Palace: severely limited visibility, a midpoint checkpoint, Bubble Rush support, and a huge arena reveal.
+- Added Baron Bite, a giant boss-scale version of the painted top-hat reef shark with 8 HP, telegraphed locked charges, recovery openings, Bubble support, and a two-tempo wounded phase.
+- Rana Rex now pursues a delayed remembered target with acceleration and speed caps. He can catch up when Sarah creates a large gap, but he no longer mirrors her position every frame.
+- Existing 7.0 Shadow Crab Kingdom, Mermaid Bubble progression, stage lengths, Sarah face restoration and legacy bosses remain intact.

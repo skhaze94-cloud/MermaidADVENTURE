@@ -386,7 +386,7 @@ function drawPaintedReefShark(e,t){
   const x=e.x-camera;if(x<-260||x>vw+260)return true;
   const state=e.sharkState||'patrol',pose=sharkPaintedPose(state),face=e.facing||1;
   const speed=clamp(Math.hypot(e.vx||0,e.vy||0)/1030,0,1),tick=reducedMotion?0:e.clock;
-  const crop=[(pose%2)*.5,Math.floor(pose/2)*.5,.5,.5],w=310,h=207;
+  const crop=[(pose%2)*.5,Math.floor(pose/2)*.5,.5,.5],renderScale=e.renderScale||1,w=310*renderScale,h=207*renderScale;
   const swimAngle=e.renderAngle||0;
   ctx.save();ctx.translate(x,e.y);ctx.scale(-face,1);
   ctx.rotate(clamp(swimAngle,-.38,.38)*(face>0?-1:1));

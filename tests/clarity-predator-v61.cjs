@@ -1,7 +1,7 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('fs'),rt=require('./runtime.cjs')();rt.sandbox.assert=assert;
 const game=fs.readFileSync('dist/game.js','utf8'),polish=fs.readFileSync('dist/polish.js','utf8'),pred=fs.readFileSync('dist/predators-v56.js','utf8'),ranaSrc=fs.readFileSync('dist/rana.js','utf8'),html=fs.readFileSync('dist/index.html','utf8');
-assert.match(html,/(?:6\.\d+|7\.0) · /);
+assert.match(html,/(?:6\.\d+|7\.\d+) · /);
 for(const token of ['for(let i=0;i<34;i++)fish.push','for(let i=0;i<36;i++)bubbles.push','for(let i=0;i<24;i++)','nessie.y>730?.18:.34'])assert(game.includes(token),token);
 assert.match(polish,/ctx\.globalAlpha=\.26;envDraw\(4/);
 assert.match(polish,/const center=palaceArenaCenter\(\),x=center-camera/);
@@ -14,11 +14,13 @@ const sharks=enemies.filter(isReefShark);assert.equal(sharks.length,12);assert(s
 assert.equal(obstacles.filter(o=>o.huntArena).length,3);assert(launchPads.some(p=>p.x===storyStretchX(7040)));
 nessie.x=storyStretchX(2800);nessie.y=560;updateRana(.016);assert(boss.active);
 nessie.x=storyStretchX(5200);nessie.vx=100;const before=nessie.x;updateExtendedStoryGate();assert.equal(nessie.x,before,'Expanded arena stays open while Rana is active');
-bossAnnounced=true;rana.state='observe';rana.time=0;boss.x=ranaHomeX();boss.y=570;nessie.x=storyStretchX(6250);nessie.y=620;invincible=1000;
-for(let i=0;i<120;i++)updateRana(1/60);globalThis.__ranaTracked=boss.x;
+bossAnnounced=true;rana.state='observe';rana.time=0;boss.x=ranaHomeX();boss.y=570;globalThis.__ranaHome=boss.x;nessie.x=storyStretchX(6250);nessie.y=620;globalThis.__ranaTargetX=nessie.x;invincible=1000;
+for(let i=0;i<120;i++)updateRana(1/60);globalThis.__ranaTracked=boss.x;globalThis.__ranaChaseSpeed=Math.hypot(rana.chaseVx||0,rana.chaseVy||0);
 const huntShark=sharks[0];assert.equal(huntShark.hp,4);nessie.x=huntShark.x;nessie.y=huntShark.y;dashTime=.2;sharkState(huntShark,'patrol');updateReefSharks(.016);globalThis.__afterFirst=huntShark.hp;dashTime=.2;updateReefSharks(.016);globalThis.__afterRepeat=huntShark.hp;
 `);
-assert(rt.run('__ranaTracked')>rt.run('storyStretchX(4300)'),'Rana follows Sarah well beyond the old arena');
+assert(rt.run('__ranaTracked')>rt.run('__ranaHome')+150,'Rana still makes meaningful catch-up progress');
+assert(rt.run('__ranaTracked')<rt.run('__ranaTargetX')-120,'Rana no longer glues himself directly to Sarah');
+assert(rt.run('__ranaChaseSpeed')<430,'Normal Rana pursuit remains speed-bounded');
 assert.equal(rt.run('__afterFirst'),3);assert.equal(rt.run('__afterRepeat'),3,'Stunned shark cannot lose another HP chunk until recovery');
 rt.run(`
 const s=enemies.find(isReefShark);s.facing=1;s.faceHoldUntil=s.clock+1;const oldFace=s.facing;updateSharkFacing(s,180,false);globalThis.__heldFace=[oldFace,s.facing];s.renderAngle=.2;s.vx=200;s.vy=-20;const oldAngle=s.renderAngle;sharkMoveToward(s,s.x+300,s.y,220,.016,1);globalThis.__angleDelta=Math.abs(s.renderAngle-oldAngle);
