@@ -39,6 +39,6 @@ d=stageSnapshot(1,'trial');
 assert.equal(d.W,3800,'60-second trial remains compact');
 assert.equal(d.count,48);
 
-assert.equal(rt.run('storyStretchX(7000)'),21000);
+rt.run("mode='story';stage=1;");assert.equal(rt.run('storyStretchX(7000)'),21000);
 assert.equal(rt.run('highlandRouteX(14600)'),45000);
 console.log('6.3 Length Update passed: 3× story routes, unchanged compact modes and low screen-density encounters.');
