@@ -1,0 +1,23 @@
+name: Export final 6.4 source
+
+on:
+  push:
+    branches: ["tooling/export-v64-final-source"]
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Package source
+        run: |
+          zip -qr Sarah-Maria-Family-Adventure-6.4-Final-Source.zip . \
+            -x '.git/*' '.github/workflows/export-v64-final-source.yml'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mermaid-v64-final-source
+          path: Sarah-Maria-Family-Adventure-6.4-Final-Source.zip
+          compression-level: 0
