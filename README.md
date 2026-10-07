@@ -1,6 +1,8 @@
-# Sarah Maria Family Adventure 6.4
+# Sarah Maria Family Adventure 6.5
 
 A static browser game with optional King Daddy training, four story chapters, Sarah and Nessie modes, 60-second coin trials, and embedded browser-generated effects plus the Bubble Bell Adventure soundtrack.
+
+Version 6.5 — Restoration + Enemy Polish: Sarah Maria's original painted character is now identity-safe in gameplay, entrances and the title scene: her bitmap is drawn as one high-quality smoothed surface instead of being split across the generic deformation mesh, while existing whole-character banking, jump, stretch and transition motion remains. Canvas backing resolution now scales up to 3× on manageable viewports for crisper painted detail. Long-route duplicate creatures are upgraded into six named elite archetypes — Coral Sentinel, Reef Guard, Bubble Bomber, Moon Jelly, Kelp Stalker and Blue Lancer — with distinct movement tuning, attack patterns and restrained aura cues. Existing Spark Eels, gentleman sharks, bosses, stage lengths, jump physics and roster counts remain compatible with 6.4.
 
 Release 2.0 unifies the painted tutorial and palace environments, introduces six expressive enemy sprites, adds continuous mesh animation to all boss bodies and limbs, and uses a shared set of solid pearl action glyphs in both canvas and HUD. First chapter defeats finish before dialogue opens. Minor enemies patrol and telegraph volleys. Jump variants and the earned two-zone escape retain their existing physics.
 
