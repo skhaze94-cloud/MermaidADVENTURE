@@ -53,7 +53,7 @@ function setupReefSharks(){
   if(mode==='trial'||isTraining())return;
   const sx=storyStretchX;
   if(stage===0){
-    spawnReefShark(8450,520,0);spawnReefShark(12550,690,1);
+    spawnReefShark(highlandRouteX(8450),520,0);spawnReefShark(highlandRouteX(12550),690,1);
   }else if(stage===1){
     spawnReefShark(sx(2780),520,0);spawnReefShark(sx(5900),690,1);
   }else if(stage===2){
