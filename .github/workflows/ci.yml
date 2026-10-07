@@ -54,12 +54,13 @@ jobs:
           node tests/shadow-crab-runtime-v70.cjs
           node tests/polish-v70.cjs
           node tests/adventure-select-v71.cjs
+          node tests/icon-spectacular-v72.cjs
 
-      - name: Export standalone 7.1 HTML
-        run: python3 scripts/export-standalone.py Mermaid-Adventure-7.1.html
-      - name: Upload standalone 7.1 HTML
+      - name: Export standalone 7.2 HTML
+        run: python3 scripts/export-standalone.py Mermaid-Adventure-7.2.html
+      - name: Upload standalone 7.2 HTML
         uses: actions/upload-artifact@v4
         with:
-          name: Mermaid-Adventure-7.1
-          path: Mermaid-Adventure-7.1.html
+          name: Mermaid-Adventure-7.2
+          path: Mermaid-Adventure-7.2.html
           if-no-files-found: error
