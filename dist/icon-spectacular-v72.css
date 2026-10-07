@@ -220,3 +220,31 @@
  box-shadow:inset 0 1px #fff9,inset 0 -4px #071d4152,0 4px 0 #0b2145,0 8px 16px #00152d55!important}
 .top-actions button:hover,#pause:hover{filter:brightness(1.12);transform:translateY(-1px)}
 .top-actions .cue-icon,#pause .cue-icon{filter:drop-shadow(0 2px 2px #10234f)}
+
+/* Step 4 — finishing pass across action glyphs, tutorial cards and progress details */
+.cue-icon{fill:currentColor;filter:drop-shadow(0 1px 1px #071b3d66)}
+.tutorial-card{border:1px solid #eaffff80!important;border-radius:26px!important;background:
+ radial-gradient(circle at 10% 3%,#ffffff2b,transparent 29%),linear-gradient(145deg,#154c6aea,#26365fe9 60%,#493369e8)!important;
+ box-shadow:inset 0 1px #fff9,inset 0 -6px #071c4255,0 7px 0 #10224b,0 17px 34px #00152d6b!important}
+#tutorial-icon{display:grid!important;place-items:center!important;min-width:48px;min-height:48px;border-radius:50%!important;background:
+ radial-gradient(circle at 30% 24%,#fff,#dfffff 15%,#70d9d6 45%,#5473b7 72%,#4a356f)!important;border:1.5px solid #fff9d4!important;box-shadow:inset 0 2px #fff8,0 0 15px #8ff9ee65!important}
+.stage-dots i{width:11px!important;height:11px!important;border-radius:50%!important;background:radial-gradient(circle at 30% 28%,#6d8397,#28415e)!important;border:1px solid #dffaff44!important;box-shadow:inset 0 1px #fff2!important}
+.stage-dots i.active{background:radial-gradient(circle at 30% 25%,#fff,#fff1b0 24%,#8ef5e4 55%,#7774d8)!important;border-color:#fff4c4!important;box-shadow:0 0 10px #8ff8e8!important}
+.touch-jump,.touch-dash{
+ border:2px solid #efffff!important;background:radial-gradient(circle at 30% 22%,#fff 0 5%,#c6fff4 13%,#53cbbf 42%,#457bb9 72%,#3f376f 100%)!important;
+ box-shadow:inset 0 3px #fff9,inset 0 -8px #20335b73,0 5px 0 #17254e,0 11px 23px #00152d76!important}
+.touch-jump .cue-icon,.touch-dash .cue-icon{color:#fff8d7;filter:drop-shadow(0 2px 2px #1c2a5c)}
+#energy-wrap,#energy{border-radius:99px!important}
+#energy{background:linear-gradient(90deg,#79f4e7,#81e8ff 48%,#d2a2ff 78%,#ffe28a)!important;box-shadow:0 0 9px #72eee7aa!important}
+.key-cluster kbd,.wide-key,.controls kbd{border:1px solid #dfffff75!important;background:linear-gradient(180deg,#365f7d,#28395f)!important;box-shadow:inset 0 1px #fff6,0 3px 0 #101f43!important}
+.v62-result-badge,.v62-bonus-chip{border-color:#eaffff7a!important;box-shadow:inset 0 1px #fff6,0 4px 10px #00152d4c!important}
+.v62-result-score{border:1px solid #fff0a6b8!important;background:
+ radial-gradient(circle at 8% 0,#ffffff29,transparent 32%),linear-gradient(145deg,#106b8c,#1c3a73 58%,#56367b)!important;
+ box-shadow:inset 0 2px #fff9,inset 0 -8px #0c1d4750,0 6px 0 #29234e,0 14px 28px #00172f66!important}
+.v62-result-score::before{background:radial-gradient(circle at 30% 25%,#fff,#fff7ec 15%,#efdfff 34%,#a9edff 62%,#8875d5)!important;border-color:#fffdf0!important;box-shadow:inset -7px -7px 10px #5c59a544,0 0 18px #8ef7ef99!important}
+.dialogue-panel,.dialogue-card{border-color:#dfffff66!important}
+#dialogue-next,.dialogue-option{border-color:#dfffff68!important;box-shadow:inset 0 1px #fff5,0 4px 10px #00152d43!important}
+@media(prefers-reduced-motion:reduce){
+ .stage-choice,.touch-jump,.touch-dash,.top-actions button,#pause,.combo-meter i,.counter-pill,.bubble-power-hud{transition:none!important}
+ .v72-stage-emblem,.bubble-hud-icon,.score-shell-art,.reward-icon{animation:none!important}
+}
