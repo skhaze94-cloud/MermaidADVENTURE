@@ -46,3 +46,4 @@ jobs:
           node tests/export-standalone.cjs
           node tests/tutorial-v6.cjs
           node tests/clarity-predator-v61.cjs
+          node tests/graphics-scoring-v62.cjs
