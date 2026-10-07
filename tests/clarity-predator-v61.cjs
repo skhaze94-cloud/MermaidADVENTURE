@@ -18,7 +18,7 @@ bossAnnounced=true;rana.state='observe';rana.time=0;boss.x=ranaHomeX();boss.y=57
 for(let i=0;i<120;i++)updateRana(1/60);globalThis.__ranaTracked=boss.x;
 const huntShark=sharks[0];assert.equal(huntShark.hp,4);nessie.x=huntShark.x;nessie.y=huntShark.y;dashTime=.2;sharkState(huntShark,'patrol');updateReefSharks(.016);globalThis.__afterFirst=huntShark.hp;dashTime=.2;updateReefSharks(.016);globalThis.__afterRepeat=huntShark.hp;
 `);
-assert(rt.run('__ranaTracked')>storyStretchX(4300),'Rana follows Sarah well beyond the old arena');
+assert(rt.run('__ranaTracked')>rt.run('storyStretchX(4300)'),'Rana follows Sarah well beyond the old arena');
 assert.equal(rt.run('__afterFirst'),3);assert.equal(rt.run('__afterRepeat'),3,'Stunned shark cannot lose another HP chunk until recovery');
 rt.run(`
 const s=enemies.find(isReefShark);s.facing=1;s.faceHoldUntil=s.clock+1;const oldFace=s.facing;updateSharkFacing(s,180,false);globalThis.__heldFace=[oldFace,s.facing];s.renderAngle=.2;s.vx=200;s.vy=-20;const oldAngle=s.renderAngle;sharkMoveToward(s,s.x+300,s.y,220,.016,1);globalThis.__angleDelta=Math.abs(s.renderAngle-oldAngle);
