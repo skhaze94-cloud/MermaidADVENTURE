@@ -23,6 +23,10 @@ function setupHighland(){highland={fall:null,fallen:false,speech:null,clock:0,ex
   {x:hx(13260),y:280,w:190,h:245},{x:hx(13750),y:705,w:210,h:185}
  );
  enemies=enemies.filter(e=>e.x<2750);
+ // Preserve the opening cast without keeping the old five-enemy pile-up before the waterfall.
+ const opening=enemies.filter(e=>!e.scuttle);
+ const openingLayout=[760,1660,2580,highlandRouteX(7000),highlandRouteX(11150)];
+ for(let i=0;i<opening.length&&i<openingLayout.length;i++){opening[i].x=opening[i].bx=openingLayout[i];opening[i].y=opening[i].by=i%2?440:760;}
  const swimmers=[
   [4450,'jelly',440],[5190,'puffer',610],[5930,'jelly',440],[6470,'puffer',610],
   [7480,'eel',460],[8160,'swordfish',660],[8840,'jelly',430],[9520,'puffer',650],
