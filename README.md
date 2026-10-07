@@ -1,4 +1,4 @@
-# Sarah Maria Family Adventure 7.5 — Painted Worlds
+# Sarah Maria Family Adventure 7.51 — Beautiful Worlds
 
 The 7.5 backgrounds and textures update adds 24 painted scenery pieces derived from the supplied reef, pearl ruin, luminous coral, crystal and sandbank references. Every chapter gains camera-culled parallax gardens, collision-aligned reef materials, and themed set dressing; the tutorial has dedicated relic and royal court landmarks, and the waterfall has scrolling painted walls. Controls, story, route geometry and boss behavior are preserved.
 
@@ -107,3 +107,7 @@ Spark and Storm Eels receive a full presentation/AI polish: facing hysteresis, s
 - Refined Bubble Power, boss HUD, objective/checkpoint, mobile action, tutorial and utility-control icon presentation.
 - Preserved all 7.1 gameplay, stage lengths, Sarah face protection, Mermaid Bubble, Blackwater, Shadow Crab Kingdom and bounded Rana pursuit.
 - 7.2 deliberately reuses existing animation loops and does not introduce a new particle system; reduced-motion fallbacks remain supported.
+
+## 7.51 visual polish
+
+Every chapter gains curated landmarks, softer reef contours, richer parallax and restrained seabed shimmer. Three new painted backdrops give the Shadow Kingdom, Blackwater grotto and Rainbow Temple their own atmosphere. Reef objects no longer have panel-like outline frames. All gameplay routes, controls, dialogue and combat stay intact.

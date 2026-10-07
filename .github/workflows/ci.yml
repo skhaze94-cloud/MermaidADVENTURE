@@ -58,11 +58,11 @@ jobs:
           node tests/adventure-select-v71.cjs
           node tests/icon-spectacular-v72.cjs
 
-      - name: Export standalone 7.5 HTML
-        run: python3 scripts/export-standalone.py Mermaid-Adventure-7.5.html
-      - name: Upload standalone 7.5 HTML
+      - name: Export standalone 7.51 HTML
+        run: python3 scripts/export-standalone.py Mermaid-Adventure-7.51.html
+      - name: Upload standalone 7.51 HTML
         uses: actions/upload-artifact@v4
         with:
-          name: Mermaid-Adventure-7.5
-          path: Mermaid-Adventure-7.5.html
+          name: Mermaid-Adventure-7.51
+          path: Mermaid-Adventure-7.51.html
           if-no-files-found: error
