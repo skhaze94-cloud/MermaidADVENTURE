@@ -2,7 +2,7 @@
 const assert=require('node:assert/strict'),fs=require('fs'),rt=require('./runtime.cjs')();rt.sandbox.assert=assert;
 const html=fs.readFileSync('dist/index.html','utf8'),spark=fs.readFileSync('dist/spark-eel.js','utf8'),highland=fs.readFileSync('dist/highland.js','utf8'),polish=fs.readFileSync('dist/polish.js','utf8');
 assert.match(html,/6\.3 · THE LENGTH UPDATE/);
-assert.match(spark,/STORY_LENGTH_FACTOR=3,EXTENDED_STORY_LENGTH=22800/);
+assert.match(spark,/STORY_LENGTHS=\{1:51000,2:57000,3:64000\}/);
 assert.match(highland,/HIGHLAND_LENGTH=45600/);
 assert.match(highland,/coinSpacing:1680/);
 assert.match(polish,/spacing=4200/);
@@ -19,18 +19,18 @@ assert(maxDensity(d.enemyXs)<=5,'Highland encounters remain spread across screen
 assert(d.obstacleXs.at(-1)>41000);
 
 d=stageSnapshot(1);
-assert.equal(d.W,22800);assert.equal(d.count,96);assert.equal(d.spacing,1110);assert.equal(d.bossX,21000);
+assert.equal(d.W,51000);assert.equal(d.count,96);assert.equal(d.spacing,2483);assert.equal(d.bossX,46974);
 assert(maxDensity(d.enemyXs)<=5,'Stage 2 enemy density stays low');
-assert(d.pads.at(-1)===21120);assert(d.obstacleXs.at(-1)>18000);
+assert(d.pads.at(-1)===47242);assert(d.obstacleXs.at(-1)>40000);
 
 d=stageSnapshot(2);
-assert.equal(d.W,22800);assert.equal(d.count,108);assert.equal(d.spacing,1035);assert.equal(d.bossX,21000);
+assert.equal(d.W,57000);assert.equal(d.count,108);assert.equal(d.spacing,2588);assert.equal(d.bossX,52500);
 assert(maxDensity(d.enemyXs)<=5,'Pearl Palace enemy density stays low');
-assert(rt.run('palaceArenaCenter()')===21000);
+assert(rt.run('palaceArenaCenter()')===52500);
 
 d=stageSnapshot(3);
-assert.equal(d.W,22800);assert.equal(d.count,120);assert.equal(d.spacing,945);
-assert.equal(rt.run('ranaArenaRight()'),21720);assert(maxDensity(d.enemyXs)<=5,'Stage 4 predator density stays readable');
+assert.equal(d.W,64000);assert.equal(d.count,120);assert.equal(d.spacing,2653);
+assert.equal(rt.run('ranaArenaRight()'),60968);assert(maxDensity(d.enemyXs)<=5,'Stage 4 predator density stays readable');
 assert.equal(rt.run('enemies.filter(isReefShark).length'),6);
 
 d=stageSnapshot(-1);
@@ -39,6 +39,6 @@ d=stageSnapshot(1,'trial');
 assert.equal(d.W,3800,'60-second trial remains compact');
 assert.equal(d.count,48);
 
-rt.run("mode='story';stage=1;");assert.equal(rt.run('storyStretchX(7000)'),21000);
+rt.run("mode='story';stage=1;");assert.equal(rt.run('storyStretchX(7000)'),46974);
 assert.equal(rt.run('highlandRouteX(14600)'),45000);
-console.log('6.3 Length Update passed: 3× story routes, unchanged compact modes and low screen-density encounters.');
+console.log('6.3 Length Update passed: sequential 45.6k/51k/57k/64k story routes, unchanged compact modes and low screen-density encounters.');
