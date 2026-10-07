@@ -1,0 +1,23 @@
+name: Export exact 6.2 source
+
+on:
+  push:
+    branches: ["tooling/export-v62-source"]
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Package source
+        run: |
+          zip -qr Sarah-Maria-Family-Adventure-6.2-Exact-Source.zip . \
+            -x '.git/*' '.github/workflows/export-v62-source.yml'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mermaid-v62-exact-source
+          path: Sarah-Maria-Family-Adventure-6.2-Exact-Source.zip
+          compression-level: 0
