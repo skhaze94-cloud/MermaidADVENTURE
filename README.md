@@ -1,4 +1,6 @@
-# Sarah Maria Family Adventure 7.31 — Living Reef
+# Sarah Maria Family Adventure 7.5 — Painted Worlds
+
+The 7.5 backgrounds and textures update adds 24 painted scenery pieces derived from the supplied reef, pearl ruin, luminous coral, crystal and sandbank references. Every chapter gains camera-culled parallax gardens, collision-aligned reef materials, and themed set dressing; the tutorial has dedicated relic and royal court landmarks, and the waterfall has scrolling painted walls. Controls, story, route geometry and boss behavior are preserved.
 
 A shared mesh transform error used a vertical coordinate where a horizontal coordinate was required, distorting animated characters. 7.31 fixes that transform and adds an identity-mesh regression.
 

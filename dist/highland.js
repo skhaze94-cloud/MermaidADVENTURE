@@ -98,6 +98,7 @@ function drawHighlandWorld(t){if(!highland)return;const tick=reducedMotion?0:t;
 }
 function drawHighlandFall(t){const f=highland.fall,tick=reducedMotion?0:t,cx=vw/2,half=Math.min(vw*.40,520),heroY=H*.40,pose=waterfallPose(f,t);ctx.save();ctx.globalAlpha=pose.mix;
  const bg=ctx.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#17697d');bg.addColorStop(.5,'#073d5c');bg.addColorStop(1,'#09233f');ctx.fillStyle=bg;ctx.fillRect(0,0,vw,H);
+ drawWaterfallScenery75(t,f,cx,half);
  // Painted reef walls scroll at different depths around the downward current.
  for(let layer=0;layer<2;layer++){ctx.save();ctx.globalAlpha=pose.mix*(layer?.85:.32);const size=layer?440:590,scroll=f.depth*(layer?1:.42);for(let i=-1;i<4;i++){const yy=i*size-(scroll%size);if(reefArt.complete){ctx.drawImage(reefArt,cx-half-size*.72,yy,size*.95,size*1.2);ctx.save();ctx.translate(cx+half+size*.72,yy);ctx.scale(-1,1);ctx.drawImage(reefArt,0,0,size*.95,size*1.2);ctx.restore();}}ctx.restore();}
  const light=ctx.createLinearGradient(cx-half,0,cx+half,0);light.addColorStop(0,'#031c3800');light.addColorStop(.4,'#8bfff019');light.addColorStop(.55,'#9aeaff30');light.addColorStop(1,'#031c3800');ctx.fillStyle=light;ctx.fillRect(cx-half,0,half*2,H);
