@@ -51,15 +51,16 @@ function spawnReefShark(x,y,phase=0,options={}){
 
 function setupReefSharks(){
   if(mode==='trial'||isTraining())return;
+  const sx=storyStretchX;
   if(stage===0){
     spawnReefShark(8450,520,0);spawnReefShark(12550,690,1);
   }else if(stage===1){
-    spawnReefShark(2780,520,0);spawnReefShark(5900,690,1);
+    spawnReefShark(sx(2780),520,0);spawnReefShark(sx(5900),690,1);
   }else if(stage===2){
-    spawnReefShark(3700,690,0);spawnReefShark(5850,500,1);
+    spawnReefShark(sx(3700),690,0);spawnReefShark(sx(5850),500,1);
   }else if(stage===3){
     const pack=[[3120,500],[3780,705],[4520,455],[5260,690],[6020,500],[6760,710]];
-    for(const [i,p] of pack.entries())spawnReefShark(p[0],p[1],i,{hp:4,aggressive:true,arena:true});
+    for(const [i,p] of pack.entries())spawnReefShark(sx(p[0]),p[1],i,{hp:4,aggressive:true,arena:true});
   }
 }
 
