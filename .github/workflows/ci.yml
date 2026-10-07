@@ -48,3 +48,4 @@ jobs:
           node tests/clarity-predator-v61.cjs
           node tests/graphics-scoring-v62.cjs
           node tests/length-v63.cjs
+          node tests/jump-enemy-v64.cjs
