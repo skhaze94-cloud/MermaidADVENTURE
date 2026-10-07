@@ -10,7 +10,7 @@ assert.match(ranaSrc,/RANA_ARENA_EXPANDED_RIGHT=7240/);assert.match(ranaSrc,/fun
 rt.run(`
 mode='story';stage=3;loadStage();state='playing';dialogueSeen=new Set(Object.keys(conversations));
 assert.equal(W,64000);assert.equal(ranaArenaRight(),60968);
-const sharks=enemies.filter(isReefShark);assert.equal(sharks.length,6);assert(sharks.every(s=>s.maxHp===4&&s.arenaShark&&s.aggressive));
+const sharks=enemies.filter(isReefShark);assert.equal(sharks.length,12);assert(sharks.every(s=>s.maxHp===4&&s.arenaShark&&s.aggressive));
 assert.equal(obstacles.filter(o=>o.huntArena).length,3);assert(launchPads.some(p=>p.x===storyStretchX(7040)));
 nessie.x=storyStretchX(2800);nessie.y=560;updateRana(.016);assert(boss.active);
 nessie.x=storyStretchX(5200);nessie.vx=100;const before=nessie.x;updateExtendedStoryGate();assert.equal(nessie.x,before,'Expanded arena stays open while Rana is active');
@@ -25,4 +25,4 @@ const s=enemies.find(isReefShark);s.facing=1;s.faceHoldUntil=s.clock+1;const old
 `);
 assert.equal(rt.run('__heldFace[0]'),1);assert.equal(rt.run('__heldFace[1]'),1,'Facing hysteresis prevents rapid flip chatter');
 assert(rt.run('__angleDelta')<.08,'Rendered pitch changes smoothly');
-console.log('6.1 clarity/predator arena passed: lower decoration density, six 4-HP hunt sharks, smooth steering, open arena and roaming Rana.');
+console.log('6.1 clarity/predator arena passed: lower decoration density, twelve 4-HP hunt sharks, smooth steering, open arena and roaming Rana.');

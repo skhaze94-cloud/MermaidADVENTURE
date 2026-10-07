@@ -1,4 +1,4 @@
-# Sarah Maria Family Adventure 6.3
+# Sarah Maria Family Adventure 6.4
 
 A static browser game with optional King Daddy training, four story chapters, Sarah and Nessie modes, 60-second coin trials, and embedded browser-generated effects plus the Bubble Bell Adventure soundtrack.
 
@@ -71,3 +71,7 @@ Version 6.2 Treasure + Scoring: a comprehensive reward-graphics pass inspired by
 
 
 Version 6.3 The Length Update: story pacing is deliberately sequential rather than equal-length. Stage 1 is 45,600 world units; Stage 2 is 51,000 (+11.8%); Stage 3 is 57,000 (+11.8%); and Stage 4 is 64,000 (+12.3%). Existing encounters are redistributed across the larger routes instead of multiplying enemy counts, creating longer clean swim/jump stretches, fewer simultaneous enemies, more processing headroom, and a clear sense that every chapter is larger than the last. Tutorial and 60-second trial layouts remain compact.
+
+Version 6.4 Jump + Enemy Overhaul: desktop Jump now has full parity with touch. A permanent in-game desktop Jump button sits beside the Boost instrument, J and either Shift key trigger the same action, the world cue now correctly says J / SHIFT rather than SPACE, and the control reflects live JUMP, SPLASH and SUPER JUMP states plus powered-jump benefits. Main story stages now deliberately double their enemy rosters by inserting the extra encounter into the next large route gap rather than stacking duplicates on top of existing enemies. The long 6.3 maps therefore gain roughly twice the action while keeping readable spacing.
+
+Spark and Storm Eels receive a full presentation/AI polish: facing hysteresis, smoother drift/recovery, stable rendered pitch, richer electric halos and wake arcs, luminous dorsal accents, cleaner charge telegraphs, stun stars and an elite HP strip. Regular enemies now use species-specific movement profiles instead of one shared float routine: swordfish flank and dart, puffers hold distance, jellyfish track vertically, ordinary eels weave, and seahorses orbit. They also gain softer grounding shadows, rim highlights, head glints and species-appropriate trails. Off-screen AI work is reduced to preserve performance with the doubled roster.

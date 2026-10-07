@@ -27,8 +27,10 @@ function installSplashControls(){
  pad.addEventListener('pointerdown',e=>{if(e.target!==pad||state!=='playing')return;e.preventDefault();try{pad.setPointerCapture?.(e.pointerId);}catch{}activeTouchPointers.set(e.pointerId,pad);touchDirections.set(e.pointerId,padDirections(e.clientX,e.clientY,pad.getBoundingClientRect()));syncTouchDirections();});
  pad.addEventListener('pointermove',e=>{if(activeTouchPointers.get(e.pointerId)!==pad)return;touchDirections.set(e.pointerId,padDirections(e.clientX,e.clientY,pad.getBoundingClientRect()));syncTouchDirections();});
  for(const ev of ['pointerup','pointercancel','lostpointercapture'])pad.addEventListener(ev,e=>{if(activeTouchPointers.get(e.pointerId)===pad){activeTouchPointers.delete(e.pointerId);touchDirections.delete(e.pointerId);syncTouchDirections();}});
- $('touch-jump').addEventListener('pointerdown',e=>{e.preventDefault();if(state==='playing')requestJump();});
- $('touch-jump').addEventListener('contextmenu',e=>e.preventDefault());
+ for(const jumpButton of [$('touch-jump'),$('desktop-jump')].filter(Boolean)){
+  jumpButton.addEventListener('pointerdown',e=>{e.preventDefault();if(state==='playing')requestJump();});
+  jumpButton.addEventListener('contextmenu',e=>e.preventDefault());
+ }
 }
 function syncSplashControls(){
  const suspended=state!=='playing';document.querySelector('.game-shell')?.classList.toggle('controls-suspended',suspended);
