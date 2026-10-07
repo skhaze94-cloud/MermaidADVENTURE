@@ -8,7 +8,17 @@ function ranaArenaLeft(){return isExtendedStoryStage()&&stage===3?storyStretchX(
 function ranaArenaRight(){return isExtendedStoryStage()&&stage===3?storyStretchX(RANA_ARENA_EXPANDED_RIGHT):RANA_ARENA_COMPACT_RIGHT;}
 function ranaHomeX(){return isExtendedStoryStage()&&stage===3?storyStretchX(3280):3280;}
 function ranaClampX(x,pad=0){return clamp(x,ranaArenaLeft()+80+pad,ranaArenaRight()-80-pad);}
-function ranaFollowX(){const side=nessie.x<boss.x?1:-1;return ranaClampX(nessie.x+side*285+Math.sin(rana.total*.55)*55,90);}
+function ranaFollowX(dt=0){
+ const d=Math.hypot(nessie.x-boss.x,nessie.y-boss.y);rana.huntRepath=Math.max(0,(rana.huntRepath||0)-dt);
+ if(!rana.huntTarget||rana.huntRepath<=0){if(d<315&&rana.flankCooldown<=0){rana.flank*=-1;rana.flankCooldown=.85;}const catchup=d>900,lead=clamp(nessie.vx*(catchup?.28:.12),-210,210),gap=catchup?300:440;rana.huntTarget={x:ranaClampX(nessie.x+lead+rana.flank*gap+Math.sin(rana.total*.47)*70,90),y:clamp(nessie.y+clamp(nessie.vy*.1,-65,65)+Math.sin(rana.total*.7)*80,445,790)};rana.huntRepath=catchup?.17:.34;}
+ rana.flankCooldown=Math.max(0,(rana.flankCooldown||0)-dt);return rana.huntTarget.x;
+}
+function ranaChaseMove(tx,ty,dt,state){
+ const dx=tx-boss.x,dy=ty-boss.y,d=Math.max(1,Math.hypot(dx,dy)),catchup=d>900,phase=rana.phase||1;
+ const base=phase===1?230:phase===2?270:305,maxSpeed=(catchup?base*1.38:base)*(state==='recover'||state==='vulnerable' ? .55 : 1),accel=(phase===1?520:phase===2?610:700)*(catchup?1.15:1);
+ const tvx=dx/d*Math.min(maxSpeed,d*1.45),tvy=dy/d*Math.min(maxSpeed*.82,d*1.25);
+ rana.chaseVx+=clamp(tvx-rana.chaseVx,-accel*dt,accel*dt);rana.chaseVy+=clamp(tvy-rana.chaseVy,-accel*dt,accel*dt);boss.x+=rana.chaseVx*dt;boss.y+=rana.chaseVy*dt;
+}
 function ranaAvoidObstacles(tx,ty){
  const rx=138,ry=108;let x=ranaClampX(tx,rx),y=clamp(ty,waterSurface()+95,820);
  for(const o of obstacles){if(x+rx<=o.x||x-rx>=o.x+o.w||y+ry<=o.y||y-ry>=o.y+o.h)continue;
@@ -19,7 +29,7 @@ function ranaAvoidObstacles(tx,ty){
  return {x:ranaClampX(x,rx),y:clamp(y,waterSurface()+95,820)};
 }
 
-function resetRana(){const home=ranaHomeX();rana={phase:1,state:'observe',time:0,total:0,queue:[],history:[],sequence:0,hitStop:0,recoil:0,beams:[],rings:[],trails:[],sparks:[],target:{x:home-280,y:570},origin:{x:home,y:570},tongue:null,shot:false,pendingTransition:false,victoryReady:false,winDialogue:false,defeatTime:0,pose:{squash:0,stretch:0,throat:0,blink:0}};finalHazards=[];particles=[];popups=[];hitFlash=0;arenaFlash=0;screenShake=0;bossDefeat=0;if(boss){boss.x=home;boss.y=570;boss.clock=0;boss.vulnerable=false;boss.laserActive=false;boss.shockActive=false;}}
+function resetRana(){const home=ranaHomeX();rana={phase:1,state:'observe',time:0,total:0,queue:[],history:[],sequence:0,hitStop:0,recoil:0,beams:[],rings:[],trails:[],sparks:[],target:{x:home-280,y:570},origin:{x:home,y:570},tongue:null,shot:false,pendingTransition:false,victoryReady:false,winDialogue:false,defeatTime:0,huntTarget:{x:home-360,y:570},huntRepath:0,flank:1,flankCooldown:0,chaseVx:0,chaseVy:0,pose:{squash:0,stretch:0,throat:0,blink:0}};finalHazards=[];particles=[];popups=[];hitFlash=0;arenaFlash=0;screenShake=0;bossDefeat=0;if(boss){boss.x=home;boss.y=570;boss.clock=0;boss.vulnerable=false;boss.laserActive=false;boss.shockActive=false;}}
 function ranaPhase(){return boss.hp>=5?1:boss.hp>=3?2:3;}
 function ranaNext(s){rana.state=s;rana.time=0;rana.shot=false;boss.vulnerable=s==='vulnerable';boss.laserActive=false;boss.shockActive=false;rana.beams=[];rana.tongue=null;
   if(/Charge|Prepare|Command/.test(s)){rana.target={x:ranaClampX(nessie.x,110),y:clamp(nessie.y,waterSurface()+65,820)};rana.origin={x:boss.x,y:boss.y};}
@@ -51,11 +61,11 @@ function updateRana(dt){if(!rana||!boss)return;if(boss.hp<=0){if(rana.state!=='d
  if(nessie.x>storyStretchX(2730)&&!boss.active){boss.active=true;ranaNext('observe');}if(!boss.active)return;if(!bossAnnounced&&!leap.active){bossAnnounced=true;if(mode==='sarah'&&openDialogue('final-boss'))return;}
  rana.total+=dt;boss.clock+=dt;boss.hitCooldown=Math.max(0,boss.hitCooldown-dt);rana.recoil=Math.max(0,rana.recoil-dt*2.2);if(nessie.x<storyStretchX(2650)&&!['stagger','phaseTransition','retaliationCharge','retaliation'].includes(rana.state)){if(rana.state!=='observe'){rana.queue=[];ranaNext('observe');projectiles=[];finalHazards=[];rana.rings=[];}rana.time=0;}else rana.time+=dt;
  const s=rana.state,u=clamp(rana.time/(RANA_TIMES[s]||1),0,1);boss.vulnerable=s==='vulnerable';boss.laserActive=/Sweep|^retaliation$/.test(s);boss.shockActive=s==='shockwave';
- let tx=ranaFollowX(),ty=clamp(nessie.y+Math.sin(rana.total*.9)*72,445,790);
+ let tx=ranaFollowX(dt),ty=rana.huntTarget?.y??clamp(nessie.y+Math.sin(rana.total*.9)*72,445,790);
  if(s==='lungePrepare'){ty+=u*40;tx+=u*45;}if(s==='lunge'){tx=rana.origin.x+(rana.target.x-rana.origin.x)*Math.sin(u*Math.PI/2);ty=rana.origin.y+(rana.target.y-rana.origin.y)*Math.sin(u*Math.PI/2)-Math.sin(u*Math.PI)*48;}
  if(s==='seedOrbit'){tx+=Math.sin(u*Math.PI*2)*65;ty-=Math.sin(u*Math.PI)*55;}if(s==='croakCharge'){ty+=Math.sin(u*Math.PI*.5)*28;}if(s==='discoSweep'){tx+=Math.sin(u*Math.PI*2)*42;ty+=Math.sin(u*Math.PI*2)*25;}if(s==='bellyPrepare')ty-=u*155;if(s==='bellyFlop'){tx=rana.target.x;ty=clamp(420+u*u*390,430,820);if(u>.85&&!rana.shot){rana.shot=true;ranaRing(boss.x,boss.y,-Math.PI/2,.8,360);ranaBurst(boss.x,830,28,'#ffdca6',230);screenShake=.22;}}
  if(s==='stagger'){tx+=Math.sin(u*22)*30;ty+=Math.sin(u*15)*20;}if(s==='phaseTransition')ty+=Math.sin(u*Math.PI)*130;
- const safeTarget=ranaAvoidObstacles(tx,ty);tx=safeTarget.x;ty=safeTarget.y;const speed=s==='lunge'?22:s==='bellyFlop'?18:4;boss.x+=(tx-boss.x)*(1-Math.exp(-dt*speed));boss.y+=(ty-boss.y)*(1-Math.exp(-dt*speed));
+ const safeTarget=ranaAvoidObstacles(tx,ty);tx=safeTarget.x;ty=safeTarget.y;const scripted=s==='lunge'||s==='bellyFlop'||s==='stagger'||s==='phaseTransition';if(scripted){const speed=s==='lunge'?22:s==='bellyFlop'?18:7;boss.x+=(tx-boss.x)*(1-Math.exp(-dt*speed));boss.y+=(ty-boss.y)*(1-Math.exp(-dt*speed));rana.chaseVx*=Math.exp(-dt*6);rana.chaseVy*=Math.exp(-dt*6);}else ranaChaseMove(tx,ty,dt,s);
  if(/laser|disco|retaliation/i.test(s)){const live=boss.laserActive;rana.beams=ranaBeamGeometry(u,live);if(live)for(const b of rana.beams){if(nessie.y>waterSurface()+22&&ranaSegmentDistance(nessie.x,nessie.y,b.x1,b.y1,b.x2,b.y2)<b.width/2+20)hurt(boss.x);}}
  else rana.beams=[];
  if(s==='acidVolley'&&!rana.shot){rana.shot=true;ranaFan('acid',[-.42,-.21,0,.21,.42],rana.phase===1?260:310);if(rana.phase>=2)ranaFan('acid',[-.6,.6],240,'homing');if(rana.phase===3)ranaFan('acid',[-.8,.8],230,'boomerang');ranaBurst(boss.x-80,boss.y-40,12,'#a0ffc0',100);}
