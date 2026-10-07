@@ -114,22 +114,14 @@ function selectStage(next){selectedStartStage=clamp(Number(next),mode==='trial'?
 function chooseMode(next){mode=next;try{localStorage.setItem('nessie-mode',mode);}catch{}for(const m of ['story','trial','sarah']){const btn=$('mode-'+m);btn.classList.toggle('selected',mode===m);btn.setAttribute('aria-pressed',String(mode===m));}document.title='Sarah Maria Family Adventure 6.4';$('brand-title').textContent='SARAH MARIA';$('brand-sub').textContent='JUMP + ENEMY OVERHAUL 6.4';$('hero-name').textContent='Sarah Maria';$('hero-subtitle').textContent='Family Adventure';$('menu-description').textContent=mode==='sarah'?'Dad’s thunderous training. Mum’s fabulous royal test. One completely ridiculous frog.':mode==='story'?'Nessie’s family-sized side quest through four magical worlds.':'Four worlds, one minute each. Find every coin to open the portal.';$('menu-details').textContent=mode==='trial'?'60 seconds per world · Beat your best':'Optional training · 4 chapters · Pick your replies';$('stage-training').style.display=mode==='trial'?'none':'flex';document.querySelector('.game-shell')?.classList.toggle('menu-active',state==='ready');updateStageUI();selectStage(selectedStartStage);}
 function showMenu(){hideRewardBanner(true);bossLessonTime=0;$('boss-lesson').style.display='none';document.querySelector('.game-shell')?.classList.add('menu-active');$('dialogue-panel').style.display='none';document.querySelector('.game-shell')?.classList.remove('intro-active');state='ready';dialogueFlow=null;document.querySelector('.game-shell')?.classList.remove('conversation-active');titleSceneTime=0;resetLeap();motionTrail=[];particles=[];popups=[];keys.clear();$('boss-hud').style.display='none';$('portal-caption').style.display='none';$('overlay').style.display='flex';$('overlay').innerHTML=menuMarkup;bindMenu();chooseMode(mode);}
 function start(){if(!assetsReady)return;hideRewardBanner(true);unlockGameAudio();document.querySelector('.game-shell')?.classList.remove('menu-active');hitFlash=0;boostFlash=0;introTime=0;dialogueSeen=new Set();$('dialogue-panel').style.display='none';document.querySelector('.game-shell')?.classList.remove('intro-active');if(mode==='trial'){startTrial();return;}stage=selectedStartStage;score=0;goldCount=0;chestCount=0;maxCombo=1;clearedStages=stage;loadStage();$('overlay').style.display='none';$('pause').textContent='Ⅱ';$('pause').setAttribute('aria-label','Pause game');canvas.focus();if(mode==='sarah'){state='intro';document.querySelector('.game-shell')?.classList.add('intro-active');return;}state='playing';}
-const LONG_ROUTE_ARCHETYPES={
- seahorse:'coral-sentinel',
- 'pearl-crab':'reef-guard',
- puffer:'bubble-bomber',
- jelly:'moon-jelly',
- eel:'kelp-stalker',
- swordfish:'blue-lancer'
-};
-const ENEMY_ARCHETYPE_NAMES={
- 'coral-sentinel':'Coral Sentinel',
- 'reef-guard':'Reef Guard',
- 'bubble-bomber':'Bubble Bomber',
- 'moon-jelly':'Moon Jelly',
- 'kelp-stalker':'Kelp Stalker',
- 'blue-lancer':'Blue Lancer'
-};
+function longRouteArchetype(kind){return({
+ seahorse:'coral-sentinel','pearl-crab':'reef-guard',puffer:'bubble-bomber',
+ jelly:'moon-jelly',eel:'kelp-stalker',swordfish:'blue-lancer'
+})[kind]||'reef-guard';}
+function enemyArchetypeName(archetype){return({
+ 'coral-sentinel':'Coral Sentinel','reef-guard':'Reef Guard','bubble-bomber':'Bubble Bomber',
+ 'moon-jelly':'Moon Jelly','kelp-stalker':'Kelp Stalker','blue-lancer':'Blue Lancer'
+})[archetype]||'Elite Creature';}
 function cloneEnemyForLongRoute(e,x,index){
  const delta=x-e.x,clone={...e,x,bx:(e.bx??e.x)+delta,phase:(e.phase||0)+.73+index*.19,clock:(e.clock||0)+.91+index*.11,cooldown:Math.max(.65,(e.cooldown||1)+.35),recoil:0,windup:0,collided:false,v64Clone:true};
  if(Number.isFinite(e.by))clone.by=clamp(e.by+(index%2?72:-64),390,810);
@@ -141,7 +133,7 @@ function cloneEnemyForLongRoute(e,x,index){
  if(isSparkEel(e)){clone.sparkState='idle';clone.sparkTime=.12+index*.03;clone.sparkSeq=(e.sparkSeq||0)+1;clone.shot=false;clone.stun=0;clone.lungeVX=0;clone.lungeVY=0;clone.facing=index%2?1:-1;}
  if(isReefShark(e)){clone.sharkState='patrol';clone.sharkTime=.08+index*.04;clone.vx=0;clone.vy=0;clone.biteLatch=false;clone.alert=0;clone.faceHoldUntil=0;clone.steerX=x;clone.steerY=clone.y;clone.renderAngle=0;clone.facing=index%2?1:-1;}
  if(clone.scuttle){clone.min=x-170;clone.max=x+170;clone.dir=index%2?1:-1;}
- if(!isSparkEel(e)&&!isReefShark(e)&&!clone.scuttle){clone.archetype=LONG_ROUTE_ARCHETYPES[clone.kind]||'reef-guard';clone.archetypeName=ENEMY_ARCHETYPE_NAMES[clone.archetype]||'Elite Creature';clone.cooldown=Math.max(.8,clone.cooldown-.18);}
+ if(!isSparkEel(e)&&!isReefShark(e)&&!clone.scuttle){clone.archetype=longRouteArchetype(clone.kind);clone.archetypeName=enemyArchetypeName(clone.archetype);clone.cooldown=Math.max(.8,clone.cooldown-.18);}
  return clone;
 }
 function doubleStoryEnemyRoster(){
