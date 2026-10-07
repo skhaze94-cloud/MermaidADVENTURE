@@ -1,10 +1,11 @@
 'use strict';
 // 5.5 Spark Eel Expansion: electric eel enemy family + story-route expansion helpers.
-const STORY_LENGTH_FACTOR=3,EXTENDED_STORY_LENGTH=22800;
+const STORY_SOURCE_LENGTH=7600,STORY_LENGTHS={1:51000,2:57000,3:64000};
 function isExtendedStoryStage(){return mode!=='trial'&&stage>=1&&stage<=3;}
-function storyStretchX(x){return isExtendedStoryStage()?Math.round(x*STORY_LENGTH_FACTOR):x;}
-const expandedStoryMetaCache=new WeakMap();function expandedStoryMeta(meta){if(!isExtendedStoryStage())return meta;let cached=expandedStoryMetaCache.get(meta);if(!cached){const sourcePads=(stage===1||stage===2)?[...meta.pads,4200,5150,6100,7040]:meta.pads;cached={...meta,count:meta.count*2,coinSpacing:meta.coinSpacing*STORY_LENGTH_FACTOR,pads:sourcePads.map(storyStretchX)};expandedStoryMetaCache.set(meta,cached);}return cached;}
-function storyWorldLength(){return isExtendedStoryStage()?EXTENDED_STORY_LENGTH:3800;}
+function storyWorldLength(){return isExtendedStoryStage()?STORY_LENGTHS[stage]:3800;}
+function storyLengthFactor(){return isExtendedStoryStage()?storyWorldLength()/STORY_SOURCE_LENGTH:1;}
+function storyStretchX(x){return isExtendedStoryStage()?Math.round(x*storyLengthFactor()):x;}
+const expandedStoryMetaCache=new WeakMap();function expandedStoryMeta(meta){if(!isExtendedStoryStage())return meta;let cached=expandedStoryMetaCache.get(meta);if(!cached){const sourcePads=(stage===1||stage===2)?[...meta.pads,4200,5150,6100,7040]:meta.pads;cached={...meta,count:meta.count*2,coinSpacing:Math.round(meta.coinSpacing*storyLengthFactor()),pads:sourcePads.map(storyStretchX)};expandedStoryMetaCache.set(meta,cached);}return cached;}
 function storyBossHomeX(){return stage===1&&isExtendedStoryStage()?storyStretchX(7000):3280;}
 function storyBossTrigger(){return stage===1&&isExtendedStoryStage()?storyStretchX(6420):2730;}
 function isSparkEel(e){return !!e&&(e.kind==='spark-eel'||e.kind==='storm-eel');}
