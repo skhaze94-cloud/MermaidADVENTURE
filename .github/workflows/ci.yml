@@ -50,3 +50,11 @@ jobs:
           node tests/length-v63.cjs
           node tests/jump-enemy-v64.cjs
           node tests/restoration-enemy-v65.cjs
+      - name: Export standalone HTML
+        run: python3 scripts/export-standalone.py Sarah-Maria-Mermaid-Adventure-6.5.html
+      - name: Upload standalone HTML
+        uses: actions/upload-artifact@v4
+        with:
+          name: Sarah-Maria-Mermaid-Adventure-6.5
+          path: Sarah-Maria-Mermaid-Adventure-6.5.html
+          if-no-files-found: error
