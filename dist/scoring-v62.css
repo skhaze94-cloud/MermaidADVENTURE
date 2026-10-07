@@ -108,3 +108,8 @@
 
 .v62-score-card.score-pulse{animation:v62-score-pulse .26s cubic-bezier(.2,1.4,.4,1)}
 @keyframes v62-score-pulse{45%{transform:scale(1.035);filter:brightness(1.12);box-shadow:inset 0 2px #ffffff78,inset 0 -5px #011b3d69,0 6px 0 #04214a,0 0 24px #54edff9e!important}}
+
+.v62-hud .time-track,.coin-objective>div{position:relative;overflow:hidden;border:1px solid #8feeff63!important;background:#001c438f!important;box-shadow:inset 0 2px 4px #00152f8c,0 1px #ffffff20}
+.v62-hud .time-track::after,.coin-objective>div::after{content:'';position:absolute;left:3px;right:3px;top:2px;height:2px;border-radius:4px;background:#ffffff5c;pointer-events:none}
+#timebar,#coin-progress-fill{background:linear-gradient(90deg,#4fe7ff,#8ef8dc 58%,#ffe06b)!important;box-shadow:0 0 10px #60f0e8aa!important;border-radius:99px}
+.coin-objective::before{content:'★';position:absolute;left:-9px;top:-10px;width:26px;height:26px;display:grid;place-items:center;border-radius:50%;background:linear-gradient(#ffd94e,#ed9219);border:2px solid #fff0a8;color:#fff7c9;font-size:14px;box-shadow:0 0 10px #ffd75788;transform:rotate(-8deg)}
