@@ -9,7 +9,7 @@ assert.match(pred,/function drawSharkHealthBar/);assert.match(pred,/HUNT SHARK/)
 assert.match(ranaSrc,/RANA_ARENA_EXPANDED_RIGHT=7240/);assert.match(ranaSrc,/function ranaAvoidObstacles/);
 rt.run(`
 mode='story';stage=3;loadStage();state='playing';dialogueSeen=new Set(Object.keys(conversations));
-assert.equal(W,64000);assert.equal(ranaArenaRight(),60968);
+assert.equal(W,41600);assert.equal(ranaArenaRight(),39629);
 const sharks=enemies.filter(isReefShark);assert.equal(sharks.length,12);assert(sharks.every(s=>s.maxHp===4&&s.arenaShark&&s.aggressive));
 assert.equal(obstacles.filter(o=>o.huntArena).length,3);assert(launchPads.some(p=>p.x===storyStretchX(7040)));
 nessie.x=storyStretchX(2800);nessie.y=560;updateRana(.016);assert(boss.active);

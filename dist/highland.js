@@ -1,9 +1,9 @@
 'use strict';
 // The extended first story chapter is isolated from the tutorial and timed modes.
-const HIGHLAND_LENGTH=45600,HIGHLAND_ROUTE_START=4060,HIGHLAND_SOURCE_BOSS_X=14600,HIGHLAND_BOSS_X=45000,HIGHLAND_BOSS_TRIGGER=44320;
+const HIGHLAND_LENGTH=29640,HIGHLAND_ROUTE_START=4060,HIGHLAND_SOURCE_BOSS_X=14600,HIGHLAND_BOSS_X=29250,HIGHLAND_BOSS_TRIGGER=28570;
 const HIGHLAND_ROUTE_SCALE=(HIGHLAND_BOSS_X-HIGHLAND_ROUTE_START)/(HIGHLAND_SOURCE_BOSS_X-HIGHLAND_ROUTE_START);
 function highlandRouteX(x){return x<=HIGHLAND_ROUTE_START?x:Math.round(HIGHLAND_ROUTE_START+(x-HIGHLAND_ROUTE_START)*HIGHLAND_ROUTE_SCALE);}
-const HIGHLAND_STORY={...STAGES[0],count:144,coinSpacing:1680,pads:[540,1450,2520,...[4400,5300,6230,6900,7820,8840,9860,10880,11900,12920,13840,14520].map(highlandRouteX)],depth:'THE WHISPERING DEPTHS'};
+const HIGHLAND_STORY={...STAGES[0],count:144,coinSpacing:1092,pads:[540,1450,2520,...[4400,5300,6230,6900,7820,8840,9860,10880,11900,12920,13840,14520].map(highlandRouteX)],depth:'THE WHISPERING DEPTHS'};
 const HIGHLAND_ROUTE_ZONES=[
  {name:'Secret Grotto',start:HIGHLAND_ROUTE_START,end:highlandRouteX(6900),tint:'#234f7750'},
  {name:'Kelp Cathedral',start:highlandRouteX(6900),end:highlandRouteX(9300),tint:'#176a6450'},
@@ -45,7 +45,7 @@ function setupHighland(){highland={fall:null,fallen:false,speech:null,clock:0,ex
 }
 function highlandSay(text,life=4){if(highland)highland.speech={text,life};}
 function updateHighland(dt){highland.clock+=dt;highland.exitGlow=Math.max(0,highland.exitGlow-dt);if(highland.speech){highland.speech.life-=dt;if(highland.speech.life<=0)highland.speech=null;}
- for(const e of enemies){if(!e.scuttle||e.hp<=0)continue;e.clock+=dt*2.7;const cycle=(highland.clock+e.phase*.55)%2.8,scamper=cycle>.55&&cycle<2.25;e.vx=scamper?e.dir*275:e.dir*35;e.x+=e.vx*dt;if(e.x<e.min||e.x>e.max){e.x=clamp(e.x,e.min,e.max);e.dir*=-1;}e.facing=-e.dir;e.y=832+Math.sin(e.clock*6)*2;}
+ for(const e of enemies){if(!e.scuttle||e.hp<=0||(e.emergence731??1)<1)continue;e.clock+=dt*2.7;const cycle=(highland.clock+e.phase*.55)%2.8,scamper=cycle>.55&&cycle<2.25;e.vx=scamper?e.dir*275:e.dir*35;e.x+=e.vx*dt;if(e.x<e.min||e.x>e.max){e.x=clamp(e.x,e.min,e.max);e.dir*=-1;}e.facing=-e.dir;e.y=832+Math.sin(e.clock*6)*2;}
  if(!highland.fallen){if(nessie.x>2800&&checkpoint<2700){checkpoint=2770;highlandSay('That current is getting stronger…',3);}if(nessie.x>3330&&leap.active){nessie.x=3330;nessie.vx=Math.min(0,nessie.vx);}if(nessie.x>3010&&!leap.active){beginHighlandFall();return true;}}
  if(highland.fallen&&nessie.x<4060){nessie.x=4060;nessie.vx=Math.max(0,nessie.vx);}
  if(highland.fallen){

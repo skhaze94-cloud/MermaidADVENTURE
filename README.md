@@ -1,4 +1,10 @@
-# Sarah Maria Family Adventure 7.0
+# Sarah Maria Family Adventure 7.31 — Living Reef
+
+A shared mesh transform error used a vertical coordinate where a horizontal coordinate was required, distorting animated characters. 7.31 fixes that transform and adds an identity-mesh regression.
+
+Clean painted crab and electric eel pose strips, a luminous jellyfish sprite, independently moving pincers/legs, flowing eel tails, pulsing jellyfish bells and tentacles, and telegraphed burrowing scuttlers. The Shadow Kingdom uses the new crab artwork, including Duke Claw, whose rendering now scales around his own position. Adventure routes are 35% shorter; tutorial and 60-second time trials retain their original length. All music, controls and story mechanics are preserved.
+
+## Previous releases
 
 A static browser family adventure with Sarah Maria, Mermaid Powers, optional King Daddy training, four full story chapters plus the new Shadow Crab Kingdom intermediate chapter, Sarah and Nessie modes, 60-second coin trials, and the existing embedded soundtrack.
 

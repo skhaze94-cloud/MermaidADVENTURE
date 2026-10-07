@@ -3,7 +3,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('nod
 const game=fs.readFileSync('dist/game.js','utf8'),family=fs.readFileSync('dist/family.js','utf8'),html=fs.readFileSync('dist/index.html','utf8'),mod=fs.readFileSync('dist/shadow-crab-v70.js','utf8');
 new vm.Script(mod);new vm.Script(game);
 assert.match(html,/shadow-crab-v70\.css/);assert.match(html,/shadow-crab-v70\.js/);
-assert.match(mod,/SHADOW_CRAB_LENGTH=22000/,'medium-length kingdom');
+assert.match(mod,/SHADOW_CRAB_LENGTH=14300/,'medium-length kingdom');
 assert.match(mod,/mermaidPowers:\{bubble:false\}/);assert.match(mod,/localStorage\.setItem\('sarah-mermaid-power-bubble-v1','1'\)/);
 assert.match(mod,/function startMermaidBubbleUnlock/);assert.match(mod,/NEW MERMAID POWER!/);assert.match(mod,/function fireMermaidBubble/);assert.match(mod,/\.14:\.42/,'Bubble Rush is exactly 3x fire rate');
 for(const k of ['reef','spear','bubble','armoured','charger','hermit','jump','guard','sneaky','shadow'])assert.match(mod,new RegExp(k+":\\{hp:"));
