@@ -88,3 +88,14 @@ Spark and Storm Eels receive a full presentation/AI polish: facing hysteresis, s
 - Added Baron Bite, a giant boss-scale version of the painted top-hat reef shark with 8 HP, telegraphed locked charges, recovery openings, Bubble support, and a two-tempo wounded phase.
 - Rana Rex now pursues a delayed remembered target with acceleration and speed caps. He can catch up when Sarah creates a large gap, but he no longer mirrors her position every frame.
 - Existing 7.0 Shadow Crab Kingdom, Mermaid Bubble progression, stage lengths, Sarah face restoration and legacy bosses remain intact.
+
+
+## 7.2 Icon Upgrade Spectacular
+
+- Rebuilt Sarah's health display as dimensional pearl-heart medallions with distinct full, empty, damage and heal states.
+- Upgraded score, pearl/chest counters, combo beads, result stars and reward banners into a cohesive sea-glass / shell / pearl HUD language.
+- Added higher-detail canvas models for pearls, star coins, gems, treasure chests, heart pickups, Mermaid Burst crystals and Bubble Rush.
+- Added seven custom Adventure Select SVG emblems for the Family Lagoon, Carlo, Shadow Crab Kingdom, Miguel, Blackwater Tunnel, Pearl Palace and Rana.
+- Refined Bubble Power, boss HUD, objective/checkpoint, mobile action, tutorial and utility-control icon presentation.
+- Preserved all 7.1 gameplay, stage lengths, Sarah face protection, Mermaid Bubble, Blackwater, Shadow Crab Kingdom and bounded Rana pursuit.
+- 7.2 deliberately reuses existing animation loops and does not introduce a new particle system; reduced-motion fallbacks remain supported.
