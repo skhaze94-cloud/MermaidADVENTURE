@@ -50,14 +50,40 @@ function updateTrainingBoss(dt){if(!training||!boss||state!=='playing')return;if
  if(boss.vulnerable)training.move='GREEN GLOW · BOOST NOW';
  if(Math.hypot(nessie.x-boss.x,nessie.y-boss.y)<135&&boss.hitCooldown<=0){if(boss.vulnerable&&dashTime>0){boss.hp--;score+=200;boss.hitCooldown=1;boss.clock=0;boss.vulnerable=false;dashTime=0;invincible=.8;bossLeapReady=true;training.hit=1;training.queenReact=.9;nessie.vx=-250;bossImpact(boss);tutorialSay(boss.hp===2?'Excellent! One extra sky jump. Also: rude to the beard.':boss.hp===1?'Again! Wait for the green glow. Your mother is judging my form.':'That’s my brilliant little mermaid!','daddy',4);if(boss.hp<=0){projectiles=[];training.defeat=0;training.wave=null;training.cloud=null;score+=600;}}else if(!boss.vulnerable)trainingHurt(boss.x);}}
 function resetTrainingRetry(){const previous=training?.step??-2;setupTraining();training.step=previous;training.ring=previous>0?3:0;training.entryDone=previous>=0;training.guideX=previous>=6?6640:Math.max(470,trainingGoal()?.x||470);training.guideY=waterSurface()+140;training.heart=previous>5;training.boost=previous>5;checkpoint=previous>=6?6500:previous>=4?4500:previous>=2?3900:220;if(previous===5){health=4;powerups=[{x:5660,y:490,type:'heart',phase:0,taken:false},{x:5860,y:435,type:'boost',phase:1,taken:false}];}particles=[];popups=[];}
-function palaceArenaCenter(){return isExtendedStoryStage()&&stage===2?7000:3280;}
-function setupPalace(withBoss){const expanded=isExtendedStoryStage()&&stage===2,center=palaceArenaCenter();palace={clock:0,projection:null,projectionSeen:false,gates:[{x:910,y:555,w:80,h:275,phase:0,open:1},{x:1550,y:545,w:90,h:285,phase:1.8,open:1},{x:2250,y:560,w:90,h:270,phase:3.4,open:1}],elevators:[{x:590,y:520,h:350},{x:1700,y:480,h:385}],fountains:[{x:1830,y:700},{x:2500,y:760}],curtains:[{x:1260,y:340},{x:2090,y:330}],mirrors:[{x:1390,y:570},{x:2580,y:490}]};if(expanded){palace.gates.push({x:3520,y:555,w:90,h:275,phase:2.4,open:1},{x:4620,y:545,w:90,h:285,phase:4.1,open:1},{x:5720,y:560,w:90,h:270,phase:5.5,open:1});palace.elevators.push({x:3900,y:500,h:360},{x:5200,y:500,h:360});palace.fountains.push({x:4300,y:740},{x:6100,y:745});palace.curtains.push({x:4050,y:340},{x:5500,y:330});palace.mirrors.push({x:4480,y:540},{x:5980,y:500});}
- obstacles=withBoss?[{x:690,y:760,w:145,h:105,palace:true},{x:1230,y:325,w:145,h:165,palace:true},{x:1940,y:760,w:145,h:105,palace:true},{x:2500,y:330,w:140,h:170,palace:true}]:[];if(withBoss&&expanded)obstacles.push({x:3340,y:760,w:150,h:105,palace:true},{x:4040,y:325,w:145,h:165,palace:true},{x:4880,y:760,w:155,h:105,palace:true},{x:5580,y:330,w:145,h:170,palace:true},{x:6260,y:760,w:145,h:105,palace:true});
- enemies=withBoss?Array.from({length:expanded?12:6},(_,i)=>({kind:['seahorse','pearl-crab','puffer','jelly','eel','swordfish'][i%6],x:780+i*(expanded?480:330),y:450+i%3*155,bx:780+i*(expanded?480:330),by:450+i%3*155,hp:1,cooldown:2.3+i*.13,phase:i,clock:0,charge:false})):[];if(withBoss){boss={name:'Queen Antonella · The Pearl Queen',x:center,y:580,hp:5,max:5,active:false,vulnerable:false,clock:0,hitCooldown:0};resetQueen();}}
+function palaceArenaCenter(){return isExtendedStoryStage()&&stage===2?storyStretchX(7000):3280;}
+function setupPalace(withBoss){
+ const expanded=isExtendedStoryStage()&&stage===2,center=palaceArenaCenter(),sx=x=>expanded?storyStretchX(x):x;
+ palace={clock:0,projection:null,projectionSeen:false,
+  gates:[{x:sx(910),y:555,w:80,h:275,phase:0,open:1},{x:sx(1550),y:545,w:90,h:285,phase:1.8,open:1},{x:sx(2250),y:560,w:90,h:270,phase:3.4,open:1}],
+  elevators:[{x:sx(590),y:520,h:350},{x:sx(1700),y:480,h:385}],
+  fountains:[{x:sx(1830),y:700},{x:sx(2500),y:760}],
+  curtains:[{x:sx(1260),y:340},{x:sx(2090),y:330}],
+  mirrors:[{x:sx(1390),y:570},{x:sx(2580),y:490}]};
+ if(expanded){
+  palace.gates.push({x:sx(3520),y:555,w:90,h:275,phase:2.4,open:1},{x:sx(4620),y:545,w:90,h:285,phase:4.1,open:1},{x:sx(5720),y:560,w:90,h:270,phase:5.5,open:1});
+  palace.elevators.push({x:sx(3900),y:500,h:360},{x:sx(5200),y:500,h:360});
+  palace.fountains.push({x:sx(4300),y:740},{x:sx(6100),y:745});
+  palace.curtains.push({x:sx(4050),y:340},{x:sx(5500),y:330});
+  palace.mirrors.push({x:sx(4480),y:540},{x:sx(5980),y:500});
+ }
+ obstacles=withBoss?[
+  {x:sx(690),y:760,w:145,h:105,palace:true},{x:sx(1230),y:325,w:145,h:165,palace:true},
+  {x:sx(1940),y:760,w:145,h:105,palace:true},{x:sx(2500),y:330,w:140,h:170,palace:true}
+ ]:[];
+ if(withBoss&&expanded)obstacles.push(
+  {x:sx(3340),y:760,w:150,h:105,palace:true},{x:sx(4040),y:325,w:145,h:165,palace:true},
+  {x:sx(4880),y:760,w:155,h:105,palace:true},{x:sx(5580),y:330,w:145,h:170,palace:true},
+  {x:sx(6260),y:760,w:145,h:105,palace:true});
+ enemies=withBoss?Array.from({length:expanded?12:6},(_,i)=>{
+  const sourceX=780+i*(expanded?480:330),x=sx(sourceX);
+  return {kind:['seahorse','pearl-crab','puffer','jelly','eel','swordfish'][i%6],x,y:450+i%3*155,bx:x,by:450+i%3*155,hp:1,cooldown:2.3+i*.13,phase:i,clock:0,charge:false};
+ }):[];
+ if(withBoss){boss={name:'Queen Antonella · The Pearl Queen',x:center,y:580,hp:5,max:5,active:false,vulnerable:false,clock:0,hitCooldown:0};resetQueen();}
+}
 function updatePalaceCurrents(dt){if(!palace)return;palace.clock+=dt;if(leap.active)return;for(const e of palace.elevators){if(Math.abs(nessie.x-e.x)<54&&nessie.y>e.y&&nessie.y<e.y+e.h){const diving=keys.has('ArrowDown')||keys.has('s');nessie.y=clamp(nessie.y-dt*(diving?30:125),waterSurface()+25,870);nessie.vy=Math.min(nessie.vy,diving?100:-40);}}
  for(const f of palace.fountains){if(Math.abs(nessie.x-f.x)<75&&nessie.y>f.y-150){nessie.x=clamp(nessie.x+dt*55,90,W-90);nessie.y=clamp(nessie.y-dt*70,waterSurface()+25,870);}}}
 function updatePalace(dt){if(!palace)return;updatePalaceCurrents(dt);for(const g of palace.gates){const wave=(Math.sin(palace.clock*.9+g.phase)+1)/2;g.open=.48+.52*wave;g.closed=false;}obstacles=obstacles.filter(o=>!o.gate);if(!leap.active)resolvePlatforms(nessie.x-nessie.vx*dt,nessie.y-nessie.vy*dt);
- if(!palace.projectionSeen&&nessie.x>2100&&!leap.active){palace.projectionSeen=true;palace.projection={x:2350,y:480,life:4};popups.push({x:nessie.x,y:nessie.y-120,text:'Acceptable.',life:1.5,color:'#fff1d5'});}if(palace.projection)palace.projection.life-=dt;
+ if(!palace.projectionSeen&&nessie.x>storyStretchX(2100)&&!leap.active){palace.projectionSeen=true;palace.projection={x:storyStretchX(2350),y:480,life:4};popups.push({x:nessie.x,y:nessie.y-120,text:'Acceptable.',life:1.5,color:'#fff1d5'});}if(palace.projection)palace.projection.life-=dt;
  for(const e of enemies){if(e.hp<=0||isSparkEel(e)||isReefShark(e))continue;const oldX=e.x,oldY=e.y;e.clock+=dt;e.cooldown-=dt;e.recoil=Math.max(0,(e.recoil||0)-dt*3);e.facing=nessie.x<e.x?1:-1;const d=Math.hypot(nessie.x-e.x,nessie.y-e.y);if(e.kind==='swordfish'){e.charge=e.clock%4>2.5;e.x=e.bx+(e.charge?-Math.sin((e.clock%4-2.5)/1.5*Math.PI)*125:Math.sin(e.clock)*20);e.y=e.by+Math.sin(e.clock)*20;}else if(e.kind==='jelly'){e.y=e.by+Math.sin(e.clock*1.4+e.phase)*55;e.x=e.bx+Math.sin(e.clock*.5)*25;}else if(e.kind==='eel'){e.x=e.bx+Math.sin(e.clock*.7)*80;e.y=e.by+Math.sin(e.clock*2)*35;}else if(e.kind==='pearl-crab'){e.x=e.bx+Math.sin(e.clock)*50;e.y=820;}else{e.x=e.bx+Math.sin(e.clock*.8+e.phase)*30;e.y=e.by+Math.sin(e.clock*1.2)*35;}
  resolveEnemyScenery(e,oldX,oldY);if(d<560&&e.cooldown<=0&&!e.windup){e.windup=.65;e.aimX=nessie.x;e.aimY=nessie.y;e.cooldown=.8;}if(e.windup>0){e.windup-=dt;if(e.windup<=0){e.windup=0;e.recoil=1;const a=Math.atan2(nessie.y-e.y,nessie.x-e.x),n=e.kind==='puffer'?3:1;for(let j=0;j<n;j++){const angle=a+(j-(n-1)/2)*.3;projectiles.push({x:e.x,y:e.y,vx:Math.cos(angle)*180,vy:Math.sin(angle)*180,type:'royal-pearl',variant:e.kind==='jelly'?'sine':'straight',life:4,age:0,hitRadius:30});}e.cooldown=e.kind==='puffer'?3.4:3.7;}}
  if(d<66){if(dashTime>0){e.hp=0;score+=150;ranaBurst(e.x,e.y,10,'#ffedbc',110);}else hurt(e.x);}}
