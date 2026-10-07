@@ -1,0 +1,154 @@
+/* Mermaid Adventure 7.2 — Icon Upgrade Spectacular
+   Step 1: premium health, score, treasure and reward HUD surfaces. */
+:root{
+  --v72-ink:#07162c;--v72-deep:#0b2747;--v72-sea:#0e5672;--v72-aqua:#72f4ed;
+  --v72-foam:#efffff;--v72-pearl:#fff6e8;--v72-gold:#ffd86d;--v72-rose:#ff8fc9;--v72-violet:#ad8dff;
+}
+.definitive-hud{filter:drop-shadow(0 12px 24px #0013264a)}
+.definitive-hud .mermaid-stat-card{
+  position:relative;overflow:visible;
+  border:1px solid #dfffff78!important;
+  background:
+    radial-gradient(circle at 18% 5%,#ffffff2a 0 14%,transparent 34%),
+    linear-gradient(145deg,#135f78ed 0%,#153e67ef 48%,#2b2d66ec 100%)!important;
+  box-shadow:inset 0 1px #ffffffb0,inset 0 -8px #051f465c,0 7px 0 #071d3d,0 14px 34px #00152d69!important;
+  backdrop-filter:blur(12px) saturate(1.14)
+}
+.definitive-hud .mermaid-stat-card::before{
+  content:"";position:absolute;inset:4px;border-radius:inherit;pointer-events:none;
+  border:1px solid #9fffff2d;box-shadow:inset 0 0 18px #7cf9ef12
+}
+
+/* Score medallion: layered shell with a real pearl core rather than a flat star. */
+.v62-score-card{padding-left:88px!important;border-radius:30px!important}
+.score-shell-art{
+  left:10px!important;top:9px!important;width:66px!important;height:66px!important;border-radius:48% 52% 43% 43%/70% 70% 34% 34%!important;
+  background:
+    radial-gradient(ellipse at 50% 108%,#7b4bb8 0 12%,transparent 13%),
+    repeating-linear-gradient(100deg,#ffcadf 0 7px,#f3c7ff 8px 14px,#c0eaff 15px 21px,#aef9ea 22px 27px)!important;
+  border:2px solid #fff9e9!important;
+  box-shadow:inset 0 7px 12px #ffffff70,inset 0 -12px 14px #5a43804f,0 0 0 3px #7eeeff24,0 0 24px #69eeff75!important;
+  transform:rotate(-7deg)
+}
+.score-shell-art::before{
+  width:31px!important;height:31px!important;left:16px!important;top:28px!important;
+  background:
+    radial-gradient(circle at 28% 24%,#fff 0 9%,#fff9ed 10% 18%,#f4ddff 29%,#aceeff 58%,#927edf 86%,#5f6dba 100%)!important;
+  border:2px solid #fffef3!important;
+  box-shadow:inset -6px -7px 10px #675bb444,0 0 17px #cfffffcc!important
+}
+.score-shell-art::after{content:"";right:-9px!important;top:-9px!important;width:19px;height:19px;border-radius:50%;
+  background:
+    radial-gradient(circle at 35% 35%,#fff 0 10%,transparent 12%),
+    conic-gradient(from 0deg,#fff2a8,#ffb2e1,#a6f8ff,#fff2a8);
+  clip-path:polygon(50% 0,61% 37%,100% 50%,61% 63%,50% 100%,39% 63%,0 50%,39% 37%);
+  filter:drop-shadow(0 0 7px #fff4a8);animation:v72-twinkle 2.8s ease-in-out infinite
+}
+.score-copy strong{letter-spacing:.02em!important;text-shadow:0 3px 0 #102d60,0 0 12px #58ecff!important}
+.score-star{display:inline-grid;place-items:center;width:24px;height:24px;font-size:0!important;border-radius:50%;
+  background:radial-gradient(circle at 30% 25%,#fff9c9,#ffd868 38%,#f49b27 75%,#a8541b);
+  border:1px solid #fff0a3;box-shadow:inset 0 2px #fff8,0 0 10px #ffd85a88
+}
+.score-star::before{content:"";width:12px;height:12px;background:#fff2a2;clip-path:polygon(50% 0,61% 35%,98% 36%,68% 57%,79% 94%,50% 72%,21% 94%,32% 57%,2% 36%,39% 35%)}
+
+/* Treasure capsules */
+.treasure-counters{gap:7px!important}
+.counter-pill{
+  min-width:54px;height:33px!important;padding:0 10px 0 6px!important;border:1px solid #e8ffff88!important;
+  background:
+    linear-gradient(180deg,#ffffff17 0 26%,transparent 27%),
+    linear-gradient(145deg,#624cc8 0%,#3a368e 52%,#183e7c 100%)!important;
+  box-shadow:inset 0 1px #fff9,inset 0 -4px #0c214a55,0 3px 0 #111e4f,0 6px 14px #00162e55!important
+}
+.counter-pill i{width:23px!important;height:23px!important}
+.pearl-pill i{
+  border:1.5px solid #fffef1!important;
+  background:radial-gradient(circle at 28% 24%,#fff 0 11%,#fff8f1 16%,#eddfff 36%,#9fe9ff 63%,#8374d6 88%,#5864b5 100%)!important;
+  box-shadow:inset -4px -5px 7px #5c56a541,0 0 11px #caffffbf!important
+}
+.pearl-pill i::before{content:"";position:absolute;left:4px;top:4px;width:6px;height:4px;border-radius:50%;background:#fff;transform:rotate(-28deg);opacity:.88}
+.chest-pill{background:linear-gradient(145deg,#0dbace,#1d72b1 55%,#3a3b8d)!important}
+.chest-pill i::before{left:1px!important;right:1px!important;bottom:1px!important;height:14px!important;border-radius:3px!important;
+  background:linear-gradient(90deg,#8e4f22,#d79034 28%,#f0ad42 55%,#9a5424)!important;border:1px solid #ffe295!important;box-shadow:inset 0 2px #fff3a64c}
+.chest-pill i::after{left:2px!important;right:2px!important;top:1px!important;height:10px!important;
+  background:linear-gradient(#ffd670,#d9892d)!important;border:1px solid #fff0a5!important;box-shadow:inset 0 2px #fff8}
+
+/* Pearl-heart health medallions */
+.timer-tile{min-width:225px!important;padding-bottom:10px!important}
+.health-shells{gap:7px!important;min-height:31px;align-items:center}
+.health-shells i{
+  position:relative!important;width:31px!important;height:29px!important;flex:0 0 31px;border:none!important;border-radius:50%!important;
+  background:
+    radial-gradient(circle at 31% 22%,#ffffff7d 0 8%,transparent 9%),
+    radial-gradient(circle at 48% 46%,#8190ae 0 42%,#4d617c 70%,#31445e 100%)!important;
+  box-shadow:inset 0 2px #ffffff44,inset 0 -5px #172a455c,0 3px 8px #0014275e!important;
+  opacity:.56;transform:none!important;transition:transform .22s,filter .22s,opacity .22s!important
+}
+.health-shells i::before{
+  content:"";position:absolute;left:5px;top:5px;width:21px;height:20px;
+  background:linear-gradient(145deg,#9aa8bd,#62738e);
+  clip-path:path("M10.5 19 C8 16.2 1.5 12.5 1.5 7.1 C1.5 2.5 7.1 1.1 10.5 5.3 C13.9 1.1 19.5 2.5 19.5 7.1 C19.5 12.5 13 16.2 10.5 19 Z");
+  filter:drop-shadow(0 1px #1e2b42)
+}
+.health-shells i::after{
+  content:"";position:absolute;left:9px;top:7px;width:7px;height:4px;border-radius:50%;background:#fff;opacity:.22;transform:rotate(-28deg)
+}
+.health-shells i.filled{
+  opacity:1!important;
+  background:
+    radial-gradient(circle at 31% 22%,#fff 0 7%,transparent 8%),
+    radial-gradient(circle at 42% 38%,#ffe9f6 0 20%,#ffadd6 42%,#f35ca9 70%,#b52172 100%)!important;
+  box-shadow:inset 0 3px #fff8,inset 0 -7px #8a1d6258,0 0 0 2px #ffdff173,0 4px 10px #3e123b70,0 0 14px #ff75bd6d!important
+}
+.health-shells i.filled::before{background:linear-gradient(145deg,#fff5fb,#ff9ed0 38%,#f23d9b 72%,#b21e70);filter:drop-shadow(0 2px #8d1655) drop-shadow(0 0 3px #ffc5e8)}
+.health-shells i.filled::after{opacity:.92}
+.health-shells.low-health i.filled{animation:v72-heart-warning .9s ease-in-out infinite alternate}
+.health-shells.health-heal i.filled{animation:v72-heart-heal .45s cubic-bezier(.2,1.7,.35,1)}
+.health-shells.health-hit i{animation:v72-heart-hit .34s ease-out}
+#timer{font-family:var(--story-font)!important;color:#fff5e0!important;text-shadow:0 2px 0 #2d285e,0 0 8px #7cefff69}
+#timer.urgent{color:#ffd0e7!important;text-shadow:0 2px 0 #77234f,0 0 13px #ff5fb0!important}
+
+/* Combo becomes a strand of enchanted pearl beads. */
+.combo-meter{height:12px!important;padding:2px!important;border-radius:9px!important;background:#021832a8!important;gap:4px!important}
+.combo-meter i{height:6px;align-self:center;border-radius:50%!important;background:radial-gradient(circle at 30% 28%,#658099,#31455e 70%)!important;box-shadow:inset 0 1px #fff2!important}
+.combo-meter i.filled{background:radial-gradient(circle at 28% 24%,#fff,#e5dcff 25%,#85efff 60%,#a56beb 100%)!important;box-shadow:0 0 9px #8ef5ff!important;transform:scale(1.23)!important}
+.multiplier-shells b{position:relative;overflow:hidden;border-radius:48% 48% 40% 40%/66% 66% 35% 35%!important}
+.multiplier-shells b::after{content:"";position:absolute;left:5px;right:5px;top:3px;height:2px;border-radius:50%;background:#fff8;opacity:.65}
+
+/* Reward cards now share the same premium shell/pearl material system. */
+.reward-banner{border-radius:30px!important;border:1px solid #efffffba!important;
+  background:
+    radial-gradient(circle at 10% 5%,#ffffff2f,transparent 29%),
+    linear-gradient(145deg,#0d7296f0,#183c79f2 54%,#493279ed)!important;
+  box-shadow:inset 0 2px #ffffffa0,inset 0 -7px #081f4d55,0 6px 0 #15204e,0 16px 38px #00152d7d!important
+}
+.reward-icon{border:2px solid #fffde8!important;background:radial-gradient(circle at 28% 23%,#fff 0 10%,#fff8ed 15%,#eadcff 35%,#9ceaff 62%,#8a72de 100%)!important;
+  box-shadow:inset -7px -8px 11px #5d58a847,0 0 0 3px #8ff9ff2b,0 0 22px #78efffb3!important}
+.reward-icon::after{content:"";width:17px;height:17px;right:-7px;top:-7px;background:conic-gradient(#fff3a6,#ffb5e5,#9af8ff,#fff3a6);clip-path:polygon(50% 0,61% 37%,100% 50%,61% 63%,50% 100%,39% 63%,0 50%,39% 37%);filter:drop-shadow(0 0 7px #fff2ac)}
+.reward-copy b{letter-spacing:.01em;text-shadow:0 3px 0 #3d245e,0 0 10px #ffffff2f!important}
+
+/* Results stars are jewel-stars rather than font-only flat shapes. */
+.v62-stars i{position:relative;display:grid;place-items:center;width:52px;height:52px;font-size:0!important;border-radius:50%;
+  background:radial-gradient(circle at 31% 25%,#1b5278,#12385d 66%,#0a2444);border:1px solid #8eefff44;box-shadow:inset 0 2px #fff2,0 4px 12px #00152e66}
+.v62-stars i::before{content:"";width:29px;height:29px;background:#244f72;clip-path:polygon(50% 0,61% 35%,98% 36%,68% 57%,79% 94%,50% 72%,21% 94%,32% 57%,2% 36%,39% 35%)}
+.v62-stars i.earned{background:radial-gradient(circle at 31% 24%,#fff7c3,#ffd763 35%,#df8723 76%,#874613)!important;border-color:#fff0a8!important;box-shadow:inset 0 2px #fff9,0 0 18px #ffd65f8c!important}
+.v62-stars i.earned::before{background:linear-gradient(145deg,#fff9ca,#ffd659 56%,#f09b27);filter:drop-shadow(0 2px #9c5316)}
+
+/* Personal-best charm: dimensional sea-star medallion */
+.charm-starfish{width:31px!important;height:31px!important;background:radial-gradient(circle,#ffcc89 0 20%,#f28969 55%,#bd5268 100%)!important;clip-path:polygon(50% 0,61% 35%,96% 24%,70% 53%,96% 72%,61% 67%,50% 100%,39% 67%,4% 72%,30% 53%,4% 24%,39% 35%)!important;filter:drop-shadow(0 3px 3px #4e1b3d) drop-shadow(0 0 5px #ffc98d88)!important}
+.charm-starfish::after{content:"";position:absolute;inset:8px;border-radius:50%;background:#ffe4ad;box-shadow:0 0 5px #fff1c4}
+
+@keyframes v72-twinkle{0%,70%,100%{transform:scale(.85) rotate(0);opacity:.55}82%{transform:scale(1.18) rotate(45deg);opacity:1}}
+@keyframes v72-heart-warning{from{filter:brightness(.9) saturate(.9);transform:scale(.96)}to{filter:brightness(1.17) saturate(1.15);transform:scale(1.05)}}
+@keyframes v72-heart-heal{0%{transform:scale(.75)}60%{transform:scale(1.26)}100%{transform:scale(1)}}
+@keyframes v72-heart-hit{0%{transform:translateX(0)}30%{transform:translateX(-3px) rotate(-5deg)}65%{transform:translateX(3px) rotate(4deg)}100%{transform:translateX(0)}}
+
+@media(max-width:760px){
+ .v62-score-card{padding-left:72px!important}.score-shell-art{width:52px!important;height:52px!important}.score-shell-art::before{width:24px!important;height:24px!important;left:13px!important;top:22px!important}
+ .health-shells{gap:4px!important}.health-shells i{width:27px!important;height:25px!important;flex-basis:27px}.health-shells i::before{transform:scale(.85);transform-origin:center}
+}
+@media(max-width:540px){
+ .v62-score-card{padding-left:59px!important}.score-shell-art{width:43px!important;height:43px!important;left:7px!important}.score-shell-art::before{width:19px!important;height:19px!important;left:11px!important;top:19px!important}
+ .timer-tile{min-width:185px!important}.health-shells i{width:24px!important;height:23px!important;flex-basis:24px}.health-shells i::before{left:2px;top:2px}
+}
+@media(prefers-reduced-motion:reduce){.score-shell-art::after,.health-shells.low-health i.filled,.health-shells.health-heal i.filled,.health-shells.health-hit i{animation:none!important}}
