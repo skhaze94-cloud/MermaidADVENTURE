@@ -1,7 +1,7 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('fs'),rt=require('./runtime.cjs')();rt.sandbox.assert=assert;
 const game=fs.readFileSync('dist/game.js','utf8'),polish=fs.readFileSync('dist/polish.js','utf8'),pred=fs.readFileSync('dist/predators-v56.js','utf8'),ranaSrc=fs.readFileSync('dist/rana.js','utf8'),html=fs.readFileSync('dist/index.html','utf8');
-assert.match(html,/6\.\d+ · /);
+assert.match(html,/(?:6\.\d+|7\.0) · /);
 for(const token of ['for(let i=0;i<34;i++)fish.push','for(let i=0;i<36;i++)bubbles.push','for(let i=0;i<24;i++)','nessie.y>730?.18:.34'])assert(game.includes(token),token);
 assert.match(polish,/ctx\.globalAlpha=\.26;envDraw\(4/);
 assert.match(polish,/const center=palaceArenaCenter\(\),x=center-camera/);

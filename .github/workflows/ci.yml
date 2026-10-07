@@ -50,3 +50,15 @@ jobs:
           node tests/length-v63.cjs
           node tests/jump-enemy-v64.cjs
           node tests/restoration-enemy-v65.cjs
+          node tests/shadow-crab-v70.cjs
+          node tests/shadow-crab-runtime-v70.cjs
+          node tests/polish-v70.cjs
+
+      - name: Export standalone 7.0 HTML
+        run: python3 scripts/export-standalone.py Mermaid-Adventure-7.0.html
+      - name: Upload standalone 7.0 HTML
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mermaid-Adventure-7.0
+          path: Mermaid-Adventure-7.0.html
+          if-no-files-found: error

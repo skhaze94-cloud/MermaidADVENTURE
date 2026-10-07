@@ -7,6 +7,8 @@ const MUSIC_TRACKS={
  tutorial:{src:'assets/bubble-bell-adventure.mp3',plannedTrack:'tutorial-friendly-regal-groove.mp3',label:'Tutorial · Friendly Regal Groove',gain:.82},
  stage1:{src:'assets/bubble-bell-adventure.mp3',plannedTrack:'stage-1-buoyant-splash.mp3',label:'Stage 1 · Buoyant Splash',gain:.84},
  stage1Boss:{src:'assets/bubble-bell-adventure.mp3',plannedTrack:'stage-1-boss-crab-kingdom.mp3',label:'Stage 1 Boss · Crab Kingdom',gain:.9},
+ shadowKingdom:{src:'assets/bubble-bell-adventure.mp3',plannedTrack:'shadow-crab-kingdom.mp3',label:'Shadow Crab Kingdom · Kingdom Below',gain:.82},
+ shadowBoss:{src:'assets/bubble-bell-adventure.mp3',plannedTrack:'shadow-crab-duo-boss.mp3',label:'Shadow Crab + Dolphin · Double Trouble',gain:.91},
  stage2:{src:'assets/bubble-bell-adventure.mp3',plannedTrack:'stage-2-king-pancake-ray.mp3',label:'Stage 2 · King Pancake the Ray',gain:.84},
  stage2Boss:{src:'assets/bubble-bell-adventure.mp3',plannedTrack:'stage-2-boss-final-impact.mp3',label:'Stage 2 Boss · Final Impact',gain:.9},
  stage3:{src:'assets/bubble-bell-adventure.mp3',plannedTrack:'stage-3-mock-solemn-chant.mp3',label:'Stage 3 · The Mock-Solemn Chant',gain:.82},
@@ -58,7 +60,7 @@ function setDeckLevel(a,v){
 function silenceDeck(a){if(!a)return;if(!a.paused)a.pause();if(a._musicGain){a._musicLevel=0;try{a._musicGain.gain.cancelScheduledValues?.(0);}catch{}a._musicGain.gain.value=0;}else a.volume=0;}
 
 // ---- Scene selection ---------------------------------------------------------
-function desiredMusicKey(){try{if(state==='ready'||state==='intro')return'opening';if(isTraining())return'tutorial';if(stage===0)return boss?.active&&boss.hp>0?'stage1Boss':'stage1';if(stage===1)return boss?.active&&boss.hp>0?'stage2Boss':'stage2';if(stage===2)return boss?.active&&boss.hp>0?'stage3Boss':'stage3';if(stage===3){if(isNessieFinal()&&nessieTwist&&!nessieTwist.ready)return'nessieBoss';if(isRana()&&boss?.active&&boss.hp>0)return'stage4Boss';return'stage4';}}catch{}return'opening';}
+function desiredMusicKey(){try{if(state==='ready'||state==='intro')return'opening';if(isTraining())return'tutorial';if(typeof isShadowCrabKingdom==='function'&&isShadowCrabKingdom())return boss?.active&&boss.hp>0?'shadowBoss':'shadowKingdom';if(stage===0)return boss?.active&&boss.hp>0?'stage1Boss':'stage1';if(stage===1)return boss?.active&&boss.hp>0?'stage2Boss':'stage2';if(stage===2)return boss?.active&&boss.hp>0?'stage3Boss':'stage3';if(stage===3){if(isNessieFinal()&&nessieTwist&&!nessieTwist.ready)return'nessieBoss';if(isRana()&&boss?.active&&boss.hp>0)return'stage4Boss';return'stage4';}}catch{}return'opening';}
 function currentMusicLabel(){return MUSIC_TRACKS[musicIncomingKey||musicKey||desiredMusicKey()]?.label||'Sarah Maria soundtrack';}
 function soundLabel(){const b=$('sound');if(!b)return;b.classList.toggle('music-playing',audioOn&&musicUnlocked&&!musicBlocked&&!document.hidden);b.setAttribute('aria-pressed',String(audioOn));b.setAttribute('aria-label',audioOn?'Mute music and sound effects':'Enable music and sound effects');b.title=currentMusicLabel()+' · Music & effects';const label=b.querySelector('span');if(label)label.textContent=audioOn?(musicBlocked?'Tap for sound':'Sound on'):'Sound off';}
 

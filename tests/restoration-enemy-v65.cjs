@@ -2,7 +2,7 @@
 const assert=require('node:assert/strict'),fs=require('fs'),rt=require('./runtime.cjs')();rt.sandbox.assert=assert;
 const html=fs.readFileSync('dist/index.html','utf8'),game=fs.readFileSync('dist/game.js','utf8'),polish=fs.readFileSync('dist/polish.js','utf8');
 
-assert.match(html,/6\.5 · RESTORATION \+ ENEMY POLISH/);
+assert.match(html,/(?:6\.5 · RESTORATION \+ ENEMY POLISH|7\.0 · FANTASTIC DEFINITIVE FAMILY UPDATE)/);
 for(const token of ["drawIdentitySafeSarah","art===sarahArt","imageSmoothingQuality='high'","ctx.drawImage(art,-w/2,-h/2,w,h)"])assert(polish.includes(token),token);
 for(const token of ["longRouteArchetype","coral-sentinel","reef-guard","bubble-bomber","moon-jelly","kelp-stalker","blue-lancer"])assert(game.includes(token),token);
 for(const token of ["ENEMY_ARCHETYPE_VISUALS","ENEMY_ARCHETYPE_TUNE"])assert(polish.includes(token),token);
