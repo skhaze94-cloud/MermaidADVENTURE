@@ -1,0 +1,10 @@
+/* 7.0 cohesive family-spectacular finish: dimensional but readable, no developer-like chrome. */
+.game-shell{--v70-pearl:#eaffff;--v70-aqua:#76ebea;--v70-violet:#b79cff;--v70-gold:#ffe49b}
+.definitive-hud .mermaid-stat-card{border-color:#d9ffff55;box-shadow:inset 0 1px #ffffff66,0 10px 26px #00162b40;background:linear-gradient(145deg,#153e58d9,#1d2f5bd4 52%,#33275cc9)}
+.top-actions button,.pause-actions button{border-radius:18px;border-color:#cfffff55;background:linear-gradient(155deg,#24536fe6,#24355fe8);box-shadow:inset 0 1px #fff6,0 5px 14px #00172e40}
+.stage-card,.mode-card{box-shadow:inset 0 1px #fff5,0 12px 28px #00152d35}.stage-card.selected,.mode-card.selected{box-shadow:0 0 0 2px #8fffe766,0 12px 30px #00152d48,inset 0 1px #fff8}
+.reward-banner{backdrop-filter:blur(10px);border-color:#efffff66;box-shadow:inset 0 1px #fff8,0 14px 38px #00142d66}
+.health-shells i,.counter-pill,.multiplier-shells b{filter:drop-shadow(0 3px 5px #001a3348)}
+.boss-hud{border-color:#e8ffff55;box-shadow:inset 0 1px #fff5,0 12px 30px #00152d55}.boss-hud.vulnerable{box-shadow:0 0 24px #8fffd055,inset 0 1px #fff8}
+.build-tag{border:1px solid #bff9ff42;background:#101d3bc9;backdrop-filter:blur(8px)}
+@media(prefers-reduced-motion:reduce){.stage-card,.mode-card,.reward-banner,.boss-hud{transition:none!important}}

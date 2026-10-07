@@ -2,7 +2,7 @@
 const assert=require('node:assert/strict'),fs=require('fs'),rt=require('./runtime.cjs')();rt.sandbox.assert=assert;
 const html=fs.readFileSync('dist/index.html','utf8'),game=fs.readFileSync('dist/game.js','utf8'),controls=fs.readFileSync('dist/controls-v64.css','utf8'),spark=fs.readFileSync('dist/spark-eel.js','utf8'),polish=fs.readFileSync('dist/polish.js','utf8');
 
-assert.match(html,/(?:6\.4 · JUMP \+ ENEMY OVERHAUL|6\.5 · RESTORATION \+ ENEMY POLISH)/);
+assert.match(html,/(?:6\.4 · JUMP \+ ENEMY OVERHAUL|6\.5 · RESTORATION \+ ENEMY POLISH|7\.0 · FANTASTIC DEFINITIVE FAMILY UPDATE)/);
 assert.match(html,/id="desktop-jump"/);assert.match(html,/controls-v64\.css/);
 assert.match(game,/J \/ SHIFT/);assert.match(game,/jumpKey=key==='j'/);assert.match(game,/function doubleStoryEnemyRoster/);
 assert.match(controls,/desktop-jump-action/);assert.match(controls,/bounce-ready/);assert.match(controls,/double-ready/);

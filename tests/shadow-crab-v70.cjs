@@ -1,0 +1,14 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const game=fs.readFileSync('dist/game.js','utf8'),family=fs.readFileSync('dist/family.js','utf8'),html=fs.readFileSync('dist/index.html','utf8'),mod=fs.readFileSync('dist/shadow-crab-v70.js','utf8');
+new vm.Script(mod);new vm.Script(game);
+assert.match(html,/shadow-crab-v70\.css/);assert.match(html,/shadow-crab-v70\.js/);
+assert.match(mod,/SHADOW_CRAB_LENGTH=22000/,'medium-length kingdom');
+assert.match(mod,/mermaidPowers:\{bubble:false\}/);assert.match(mod,/localStorage\.setItem\('sarah-mermaid-power-bubble-v1','1'\)/);
+assert.match(mod,/function startMermaidBubbleUnlock/);assert.match(mod,/NEW MERMAID POWER!/);assert.match(mod,/function fireMermaidBubble/);assert.match(mod,/\.14:\.42/,'Bubble Rush is exactly 3x fire rate');
+for(const k of ['reef','spear','bubble','armoured','charger','hermit','jump','guard','sneaky','shadow'])assert.match(mod,new RegExp(k+":\\{hp:"));
+assert.match(mod,/function updateShadowEnemy/);for(const s of ['idle','notice','approach','telegraph','attack','retreat','reposition'])assert.match(mod,new RegExp("'"+s+"'"));
+assert.match(mod,/Duke Claw & Flip the Dolphin/);assert.match(mod,/phase=total>.66\?1:total>.3\?2:3/);assert.match(mod,/COMEDY COLLISION!/);
+assert.match(mod,/bubble-rush/);assert.match(mod,/Royal Market checkpoint/);assert.match(mod,/switches=/);assert.match(mod,/secrets=/);
+assert.match(game,/startMermaidBubbleUnlock\(\)/);assert.match(game,/updateMermaidBubble\(dt\)/);assert.match(game,/isShadowCrabKingdom\(\)/);assert.match(game,/fireMermaidBubble\(\)/);assert.match(family,/shadowCrabStageMeta/);
+console.log('7.0 core expansion regression passed: permanent Bubble, 3x Bubble Rush, ten crab variants, medium kingdom, checkpoint and three-phase duo boss.');
