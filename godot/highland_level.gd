@@ -354,6 +354,9 @@ func _sync_native_visuals() -> void:
     var faded := 1.0 if invulnerable <= 0.0 else 0.65 + 0.35 * absf(sin(time * 13.0))
     native_rig.set_motion(velocity, facing, boost_time > 0.0 or waterfall_boost > 0.0, jump_time > 0.0, faded)
     native_rig.rotation = clampf(velocity.y / 1150.0, -0.26, 0.26) * facing
+    # Depth shaders affect scenery without refracting Sarah or covering the HUD.
+    # During the waterfall, render the refractive field in front of the shaft.
+    native_fx.z_index = 1 if waterfall_active else -1
     native_fx.set_motion(pos, velocity, jump_time <= 0.0)
     if is_instance_valid(world_depth):
         world_depth.visible = not waterfall_active
