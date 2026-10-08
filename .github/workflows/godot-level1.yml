@@ -42,7 +42,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          godot --headless --path . --script res://godot/level1_smoke_test.gd 2>&1 | tee /tmp/godot-logic.log
+          timeout -k 3s 45s godot --headless --path . --quit-after 240 --script res://godot/level1_smoke_test.gd 2>&1 | tee /tmp/godot-logic.log
           grep -q 'GODOT LEVEL 1 LOGIC TEST PASSED' /tmp/godot-logic.log
           if grep -E 'SCRIPT ERROR|Parse Error|Compile Error|^ERROR:' /tmp/godot-logic.log; then
             echo "Godot gameplay smoke test emitted errors"
