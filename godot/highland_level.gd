@@ -68,6 +68,7 @@ var native_rig: Node2D
 var native_fx: Node2D
 var native_boss: Node2D
 var premium_hud: CanvasLayer
+var water_surface: Node2D
 var world_depth: Node2D
 var foreground_depth: Node2D
 var relief_obstacles: Node2D
@@ -95,6 +96,7 @@ func _ready() -> void:
     native_rig = get_node("SarahAtlasRig")
     native_boss = get_node("CarloNativeBoss")
     premium_hud = get_node("PremiumHud")
+    water_surface = get_node("PaintedWaterSurface")
     world_depth = get_node("PaintedWorldDepth")
     foreground_depth = get_node("SparseForegroundDepth")
     relief_obstacles = get_node("ReliefReefObstacles")
@@ -387,6 +389,8 @@ func _sync_native_visuals() -> void:
         foreground_depth.set_camera(camera, not waterfall_active, reduced_fx)
     if is_instance_valid(relief_obstacles):
         relief_obstacles.set_camera(camera, not waterfall_active)
+    if is_instance_valid(water_surface):
+        water_surface.set_scene(camera, not waterfall_active, reduced_fx)
     native_fx.set_depth_profile(fallen)
     if is_instance_valid(premium_hud):
         premium_hud.update_hud(_hud_snapshot())
@@ -709,7 +713,7 @@ func _draw_world(s: Vector2) -> void:
     # The backdrop and gardens now come from the GPU-shaded, depth-separated
     # Godot world plane; never repaint its source image as a second ghost layer.
     draw_rect(Rect2(0, WATER_SURFACE, s.x, s.y - WATER_SURFACE), Color(0.01, 0.17, 0.28, 0.075))
-    draw_line(Vector2(0, WATER_SURFACE), Vector2(s.x, WATER_SURFACE), Color("#c5ffed"), 3.0)
+    # PaintedWaterSurface draws the 3-frequency animated specular waterline.
     for i in range(20):
         var x := fposmod(float(i) * 223.0 - camera * 0.37 + time * (9.0 + float(i % 4)), s.x + 120.0) - 50.0
         var y := WATER_SURFACE + 80.0 + fmod(float(i) * 133.0, maxf(10.0, s.y - WATER_SURFACE - 90.0))
