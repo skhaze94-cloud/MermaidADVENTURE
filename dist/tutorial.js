@@ -11,7 +11,7 @@ const TUTORIAL_LESSONS=[
  ['shield','The royal practice parade','Boost-boop the three silly practice creatures. Then dodge Daddy’s ridiculous moves and hit him when he glows GREEN.','Boost-boop the three silly practice creatures. Then dodge Daddy’s ridiculous moves and tap BOOST into him when he glows GREEN.']
 ];
 let tutorialUiKey='',tutorialSpeechKey='';
-function syncTutorialUi(){const card=$('tutorial-card'),speech=$('tutorial-speech'),visible=isTraining()&&!!training&&state==='playing';card.hidden=!visible;speech.hidden=!visible||!training?.speech;if(!visible)return;
+function syncTutorialUi(){const card=$('tutorial-card'),speech=$('tutorial-speech'),visible=isTraining()&&!!training&&state==='playing';card.hidden=!visible||training.step<0||!!training.victoryReady;speech.hidden=!visible||!training?.speech;if(!visible)return;
  const touch=window.matchMedia('(pointer:coarse)').matches,step=training.step,lesson=TUTORIAL_LESSONS[step],done=training.victoryReady;
  let title=step===-2?'Just you and the lagoon':step===-1?'A little thunder…':done?'Adventure awaits!':lesson?.[1]||'Keep swimming';
  let instruction=step===-2?(touch?'Explore with the direction buttons. Follow your curiosity!':'Use WASD or the arrow keys. Explore and get comfortable swimming.') :step===-1?'Here comes the Lord of Thunder & Bedtime.':done?'Swim right into the glowing portal to begin your adventure.':lesson?.[touch?3:2]||'';

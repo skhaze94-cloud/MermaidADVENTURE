@@ -1,0 +1,30 @@
+/* 8.0 Treasure Edition — live text layered over transparent painted artwork. */
+@font-face{font-family:TreasureDisplay;src:url('fonts/treasure-display.ttf') format('truetype');font-weight:300 700;font-display:swap}
+.title-content .title-actions button,.title-content .menu-description,.score-copy strong,.combo-readout,.counter-pill,.reward-copy b,.v62-result-score,.result-title{font-family:TreasureDisplay,Nunito,sans-serif!important;font-variant-numeric:tabular-nums}
+.title-content .title-actions button{letter-spacing:.2px;box-shadow:inset 0 2px #ffffff8a,0 5px 0 #073e55,0 10px 22px #00152e55!important;border-color:#ddfff6!important}
+.title-content .title-actions button:hover{filter:brightness(1.1)}
+.title-content .title-actions button:focus-visible{outline:3px solid #fff1a7;outline-offset:5px}
+.title-content .menu-description{line-height:1.55!important;font-size:15px!important;font-weight:400!important}
+.edition-seal{color:#fff3bf!important;background:linear-gradient(130deg,#173b5eee,#365574ee)!important;border-color:#ddcba8!important}
+.edition-seal span{letter-spacing:2px!important}.edition-seal b{font-family:TreasureDisplay,Nunito,sans-serif!important}
+.opening-logo{filter:drop-shadow(0 3px 0 #153c60) drop-shadow(0 0 18px #8df2d52b)}
+.v62-score-card{border-color:#b5ede7!important;background:linear-gradient(145deg,#11647aed,#092e54f5 65%,#1b3057f2)!important}
+.score-copy strong{font-weight:600!important;letter-spacing:.5px!important}.score-copy .mini{letter-spacing:2.5px!important;color:#c7f4ea!important}
+.score-shell-art{background:transparent url('assets/treasures-v8.webp') 66.6667% 66.6667% /400% 400%!important;border:0!important;border-radius:0!important;box-shadow:none!important;transform:rotate(-10deg)}
+.score-shell-art::before,.score-shell-art::after{display:none!important}
+.counter-pill i{background:transparent url('assets/treasures-v8.webp') 0 0 /400% 400%!important;border:0!important;box-shadow:none!important;border-radius:0!important;transform:none!important}
+.counter-pill i::before,.counter-pill i::after{display:none!important}.chest-pill i{background-position:33.3333% 33.3333%!important}
+.counter-pill{font-weight:500!important;border-color:#acd8d655!important}
+#health-shells i{background:transparent url('assets/treasures-v8.webp') 66.6667% 33.3333% /400% 400%!important;border:0!important;border-radius:0!important;box-shadow:none!important;filter:grayscale(1) brightness(.65);opacity:.6}
+#health-shells i.filled{filter:none;opacity:1}#health-shells i::before,#health-shells i::after{display:none!important}
+.combo-readout{font-weight:500!important}.multiplier-shells b{font-family:TreasureDisplay,Nunito,sans-serif!important}
+.reward-banner{padding:17px 24px!important;border-color:#b2f7e6!important;background:linear-gradient(140deg,#125266f5,#10274bef)!important;box-shadow:inset 0 2px #fff5,0 8px 28px #00152770!important}
+.reward-icon{background:transparent url('assets/treasures-v8.webp') 0 0 /400% 400%!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+.reward-icon::before,.reward-icon::after{display:none!important}.kind-heart .reward-icon{background-position:66.6667% 33.3333%!important}.kind-treasure .reward-icon{background-position:33.3333% 33.3333%!important}.kind-perfect .reward-icon{background-position:66.6667% 100%!important}.kind-combo .reward-icon{background-position:0 66.6667%!important}.kind-time .reward-icon{background-position:100% 33.3333%!important}
+.reward-copy b{font-size:25px!important;font-weight:600!important}.reward-copy small{letter-spacing:1px!important}
+.v62-stars i{background:transparent url('assets/treasures-v8.webp') 0 66.6667% /400% 400%;width:56px;height:56px;font-size:0!important;filter:grayscale(1) brightness(.65);opacity:.55}.v62-stars i.earned{filter:none;opacity:1}
+.v62-result-score{font-weight:600!important;letter-spacing:1px!important}.v62-bonus-chip{border-color:#a3dfd78a!important;background:#124456c9!important}
+#objective-label{display:none}.game-shell.story .coin-objective{opacity:.85}
+#tutorial-card{border-color:#b5f1df!important;background:linear-gradient(130deg,#0d4d5eea,#15315aea)!important}#tutorial-title{font-family:TreasureDisplay,Nunito,sans-serif!important;font-weight:600!important}#tutorial-instruction{line-height:1.5!important}
+@media(max-width:540px){.reward-copy b{font-size:21px!important}.v62-stars i{width:44px;height:44px}.title-content .menu-description{font-size:13px!important}}
+@media(prefers-reduced-motion:reduce){.title-content .title-actions button,.score-shell-art{transition:none!important;transform:none!important}}

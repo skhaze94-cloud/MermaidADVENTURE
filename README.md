@@ -1,4 +1,8 @@
-# Sarah Maria Family Adventure 7.51 — Beautiful Worlds
+# Sarah Maria Family Adventure 8.0 — Treasure Edition
+
+8.0 adds painted pearls, gems, shells, hearts, stars, chests and boost crystals; three distinct tutorial relics; exact live reward numbers; calmer exploration prompts and a rounded display font. Controls, level layouts, dialogue, bosses, movement and scoring values remain as before. Power-ups are protected against duplicate collection, and standalone exports share CSS artwork with the JavaScript asset registry rather than repeating image payloads.
+
+See [8.0 release notes](docs/release-8.0.md) for the artwork and validation details.
 
 The 7.5 backgrounds and textures update adds 24 painted scenery pieces derived from the supplied reef, pearl ruin, luminous coral, crystal and sandbank references. Every chapter gains camera-culled parallax gardens, collision-aligned reef materials, and themed set dressing; the tutorial has dedicated relic and royal court landmarks, and the waterfall has scrolling painted walls. Controls, story, route geometry and boss behavior are preserved.
 

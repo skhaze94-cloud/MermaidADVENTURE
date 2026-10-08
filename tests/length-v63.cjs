@@ -1,7 +1,7 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('fs'),rt=require('./runtime.cjs')();rt.sandbox.assert=assert;
 const html=fs.readFileSync('dist/index.html','utf8'),spark=fs.readFileSync('dist/spark-eel.js','utf8'),highland=fs.readFileSync('dist/highland.js','utf8'),polish=fs.readFileSync('dist/polish.js','utf8');
-assert.match(html,/(?:6\.\d+|7\.\d+) · /);
+assert.match(html,/(?:6\.\d+|[78]\.\d+) · /);
 assert.match(spark,/STORY_LENGTHS=\{1:33150,2:37050,3:41600\}/);
 assert.match(highland,/HIGHLAND_LENGTH=29640/);
 assert.match(highland,/coinSpacing:1092/);
