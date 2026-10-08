@@ -1,6 +1,8 @@
-# Sarah Maria Family Adventure 8.3 — Controls & Animations
+# Sarah Maria Family Adventure 8.4 — The Jump Update
 
-8.3 adds a short jump-input buffer, safer keyboard/touch cleanup, velocity-aware airborne turns, and character-specific spring transitions for every articulated boss. See [8.3 release notes](docs/controls-animation-v83.md).
+8.4 rotates through six distinct ordinary jump routines with matching trails and landing flourishes. See [8.4 release notes](docs/jump-update-v84.md).
+
+8.3 added a short jump-input buffer, safer keyboard/touch cleanup, velocity-aware airborne turns, and character-specific spring transitions for every articulated boss. See [8.3 release notes](docs/controls-animation-v83.md).
 
 8.2 added a graceful corkscrew jump, coordinated takeoff/tuck/re-entry poses, softer swimming strokes, turning follow-through and slightly fuller proportions. See [8.2 release notes](docs/definitive-sarah-v82.md).
 

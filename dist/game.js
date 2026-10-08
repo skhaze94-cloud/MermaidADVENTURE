@@ -302,7 +302,7 @@ function jumpProfile(pad,allowBoss=true){
 function launchFromPad(pad,allowBoss=true,free=false){
   const profile=jumpProfile(pad,allowBoss);if(profile.variant==='boss')bossLeapReady=false;
   if(!free&&boostUnlimited<=0&&profile.variant!=='boss')energy=Math.max(0,energy-.4);
-  leap={...profile,active:true,breached:false,time:0,airTime:0,cooldown:.2,padId:pad.id};
+  leap={...profile,active:true,breached:false,time:0,airTime:0,cooldown:.2,padId:pad.id};assignJump84(leap);profile.color=leap.color;
   if(isTraining()&&training)training.jumpStart=nessie.x;nessie.face=profile.dir;nessie.vx=0;nessie.vy=-Math.sqrt(2*profile.gravity*(nessie.y-(waterSurface()-profile.height)));
   if(mode!=='trial')invincible=Math.max(invincible,.18);dashTime=.18;dashCooldown=.55;boostFlash=.2;heroStretch=1.12;
   for(let i=0;i<22;i++)particles.push({x:nessie.x+(Math.random()-.5)*55,y:nessie.y+20,vx:(Math.random()-.5)*95,vy:65+Math.random()*100,life:.6,max:1,r:2+Math.random()*4,color:profile.color,bubble:true});
@@ -311,7 +311,7 @@ function launchFromPad(pad,allowBoss=true,free=false){
 function updateSwimmer(dt,dx,dy){if(updateSplashBounce(dt,dx))return;const line=waterSurface(),px=nessie.x,py=nessie.y;leap.cooldown=Math.max(0,leap.cooldown-dt);for(const r of surfaceRipples)r.life-=dt;surfaceRipples=surfaceRipples.filter(r=>r.life>0);if(leap.active){leap.time+=dt;const gravity=(leap.gravity||1200)*(dy>0?1.46:1);if(leap.breached){leap.airTime=(leap.airTime||0)+dt;const limit=Math.max(520,(leap.speed||440)*1.12);nessie.vx=clamp(nessie.vx+dx*620*dt,-limit,limit);if(!dx&&leap.variant!=='boss')nessie.vx*=Math.exp(-dt*.09);}else nessie.vx=0;const nextY=nessie.y+nessie.vy*dt+gravity*dt*dt*.5;nessie.vy+=gravity*dt;nessie.x=clamp(nessie.x+nessie.vx*dt,90,W-90);nessie.y=nextY;leap.skimming=false;if(mode!=='trial'&&leap.breached&&nessie.vy>0){for(const o of obstacles){const top=o.y-42;if(o.y<=line+40&&nessie.x>o.x-58&&nessie.x<o.x+o.w+58&&py<=top+2&&nessie.y>=top){nessie.y=top;nessie.vy=0;leap.skimming=true;if(leap.variant==='boss'&&leap.target!==null){nessie.vx=(leap.target-nessie.x)/Math.sqrt(2*(line+25-top)/gravity);}if(Math.abs(nessie.vx)<180)nessie.vx=(nessie.x<o.x+o.w/2?-1:1)*180;break;}}}if(!leap.breached&&py>=line&&nessie.y<line){leap.breached=true;leap.airTime=0;leap.airStartVy=nessie.vy;nessie.vx=leap.dir*(leap.speed||440);dashTime=0;surfaceSplash(nessie.x,line,false);document.querySelector('.game-shell')?.classList.add('airborne');}if(!leap.breached&&nessie.vy>=0){landLeap();return;}if(leap.breached)jumpParticles(dt);if(leap.breached&&nessie.vy>0&&nessie.y>=line+25)landLeap();if(nessie.y<85){nessie.y=85;nessie.vy=Math.max(0,nessie.vy);}return;}
 if(dashTime<=0){const rate=1-Math.exp(-dt*7);nessie.vx+=(dx*360-nessie.vx)*rate;nessie.vy+=(dy*330-nessie.vy)*rate;}const flow=currentStage().current;nessie.x=clamp(nessie.x+(nessie.vx+Math.sin(nessie.y*.012+elapsed*1.1)*flow)*dt,90,W-90);nessie.y=clamp(nessie.y+(nessie.vy+Math.cos(nessie.x*.005+elapsed*.8)*flow*.6)*dt,line+25,870);if(mode!=='trial')resolvePlatforms(px,py);const pad=nearLaunchPad();if(pad){energy=Math.min(1,energy+dt*.95);}}
 function landLeap(){const line=waterSurface(),splash=leap.breached;nessie.y=Math.max(line+25,nessie.y);nessie.vy=Math.min(280,Math.max(100,nessie.vy*.32));nessie.vx*=.78;leap.active=false;leap.breached=false;dashTime=0;dashCooldown=Math.max(.2,dashCooldown);if(mode!=='trial')invincible=Math.max(invincible,.45);if(splash)surfaceSplash(nessie.x,line,true);document.querySelector('.game-shell')?.classList.remove('airborne');tone(140,.18,.04);noteSplashLanding(splash);}
-function surfaceSplash(x,y,landing){surfaceRipples.push({x,y,life:1,max:1,landing});if(surfaceRipples.length>8)surfaceRipples.shift();for(let i=0;i<(landing?34:24);i++){const a=Math.PI+Math.random()*Math.PI,v=90+Math.random()*220;particles.push({x:x+(Math.random()-.5)*45,y:y+4,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:.65+Math.random()*.25,max:1,r:2+Math.random()*4,color:i%2?'#cefff6':'#90eaff',waterDrop:true});}}
+function surfaceSplash(x,y,landing){surfaceRipples.push({x,y,life:1,max:1,landing,style84:jumpStyle84()?leap.style84:null});if(surfaceRipples.length>8)surfaceRipples.shift();for(let i=0;i<(landing?34:24);i++){const a=Math.PI+Math.random()*Math.PI,v=90+Math.random()*220;particles.push({x:x+(Math.random()-.5)*45,y:y+4,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:.65+Math.random()*.25,max:1,r:2+Math.random()*4,color:i%2?'#cefff6':'#90eaff',waterDrop:true});}}
 function updateLeapHud(){
   const charged=energy>=.4||boostUnlimited>0||bossLeapReady,ready=state==='playing'&&!leap.active&&leap.cooldown<=0&&charged,bounce=landingSoon()||elapsed-splashLandingAt<=SPLASH_LATE;
   const powered=boostUnlimited>0,comboPower=powered&&heartJumpTime>0;
@@ -338,7 +338,7 @@ function updateBossLesson(){
   if(show){const coarse=window.matchMedia?.('(pointer: coarse)').matches;$('boss-lesson').classList.toggle('touch-lesson',!!coarse);}
 }
 function drawLaunchPads(t){}
-function drawSurfaceRipples(){ctx.save();for(const r of surfaceRipples){const p=1-r.life;ctx.globalAlpha=r.life*.8;ctx.strokeStyle='#c3fff4';ctx.lineWidth=2.5*r.life;for(let i=0;i<2;i++){ctx.beginPath();ctx.ellipse(r.x-camera,r.y,25+p*(r.landing?140:110)+i*15,4+p*12+i*3,0,0,Math.PI*2);ctx.stroke();}}ctx.restore();}
+function drawSurfaceRipples(){ctx.save();for(const r of surfaceRipples){drawJumpLanding84(r);const p=1-r.life;ctx.globalAlpha=r.life*.8;ctx.strokeStyle='#c3fff4';ctx.lineWidth=2.5*r.life;for(let i=0;i<2;i++){ctx.beginPath();ctx.ellipse(r.x-camera,r.y,25+p*(r.landing?140:110)+i*15,4+p*12+i*3,0,0,Math.PI*2);ctx.stroke();}}ctx.restore();}
 
 // Shared hand-drawn action glyphs: the world and HUD use the same visual language.
 function drawCueBadge(x,y,icon,lit,t){drawReleaseBadge(x,y,icon,lit,t);}
@@ -360,7 +360,7 @@ function jumpParticles(dt){
   leap.particleClock=(leap.particleClock||0)+dt;if(leap.particleClock<.035)return;leap.particleClock=0;
   const variant=leap.variant;if(!variant||reducedMotion)return;
   const t=leap.airTime||0,angle=t*9,r=variant==='boss'?44:28;
-  const color=variant==='boss'?['#ffbadf','#e3baff','#b1f6ff','#ffedab'][Math.floor(t*24)%4]:variant==='combo'||variant==='heart'?'#ffafda':'#c5fff1';
+  const style84=jumpStyle84(),color=style84&&variant!=='boss'?style84.color:variant==='boss'?['#ffbadf','#e3baff','#b1f6ff','#ffedab'][Math.floor(t*24)%4]:variant==='combo'||variant==='heart'?'#ffafda':'#c5fff1';
   const x=nessie.x+Math.cos(angle)*r,y=nessie.y+Math.sin(angle)*r;
   particles.push({x,y,vx:-nessie.vx*.12,vy:25,life:.65,max:.65,r:variant==='boss'?5:3,color});
   if((variant==='combo'||variant==='heart')&&!reducedMotion&&Math.floor(t*24)%4===0)particles.push({x,y,vx:-nessie.vx*.1,vy:-20,life:.7,max:.7,r:4,color,heart:true});
@@ -368,7 +368,7 @@ function jumpParticles(dt){
 
 function drawJumpRibbon(){
   if(!leap.active||!leap.breached||reducedMotion||!leap.trace?.length)return;
-  const colors=leap.variant==='boss'?['#ffb7df','#debaff','#a7edff']:leap.variant==='combo'?['#ff9dcd','#ffe7ad']:leap.variant==='heart'?['#ffb2d2']:['#bbfff0'];
+  const colors=jumpPalette84()|| (leap.variant==='boss'?['#ffb7df','#debaff','#a7edff']:leap.variant==='combo'?['#ff9dcd','#ffe7ad']:leap.variant==='heart'?['#ffb2d2']:['#bbfff0']);
   ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
   for(let band=0;band<colors.length;band++)for(let i=1;i<leap.trace.length;i++){
     const a=leap.trace[i-1],b=leap.trace[i],fade=i/leap.trace.length;
@@ -380,6 +380,7 @@ function drawJumpRibbon(){
 registerAdventureTools();
 
 function drawJumpTwist(front){
+ if(drawJumpFlourish84(front))return;
  if(!leap.active||!leap.breached||reducedMotion||state==='portal')return;
  const p=clamp(leap.airTime/(leap.airDuration||1.05),0,1),fade=Math.sin(p*Math.PI),variant=leap.variant;
  if(fade<.05)return;
