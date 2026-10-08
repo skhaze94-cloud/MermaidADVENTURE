@@ -67,6 +67,9 @@ var music_player: AudioStreamPlayer
 var native_rig: Node2D
 var native_fx: Node2D
 var native_boss: Node2D
+var world_depth: Node2D
+var foreground_depth: Node2D
+var high_depth_quality := true
 var reduced_fx := false
 var music_muted := false
 var joy_last: Dictionary = {}
@@ -89,6 +92,9 @@ func _ready() -> void:
     native_fx = get_node("NativeUnderwaterFX")
     native_rig = get_node("SarahAtlasRig")
     native_boss = get_node("CarloNativeBoss")
+    world_depth = get_node("PaintedWorldDepth")
+    foreground_depth = get_node("SparseForegroundDepth")
+    native_fx.set_quality(high_depth_quality)
     _sync_native_visuals()
     queue_redraw()
 
@@ -124,7 +130,12 @@ func _input(event: InputEvent) -> void:
                 native_fx.set_reduced_motion(reduced_fx)
                 native_rig.reduced_motion = reduced_fx
                 native_boss.reduced_motion = reduced_fx
+                _sync_native_visuals()
                 _say("Visual effects " + ("reduced" if reduced_fx else "enabled"), 1.5)
+            KEY_F4:
+                high_depth_quality = not high_depth_quality
+                native_fx.set_quality(high_depth_quality)
+                _say("3D depth effects " + ("high" if high_depth_quality else "economy"), 1.7)
             KEY_ENTER:
                 if state == "victory":
                     _restart()
@@ -342,6 +353,12 @@ func _sync_native_visuals() -> void:
     native_rig.set_motion(velocity, facing, boost_time > 0.0 or waterfall_boost > 0.0, jump_time > 0.0, faded)
     native_rig.rotation = clampf(velocity.y / 1150.0, -0.26, 0.26) * facing
     native_fx.set_motion(pos, velocity, jump_time <= 0.0)
+    if is_instance_valid(world_depth):
+        world_depth.visible = not waterfall_active
+        world_depth.set_camera(camera, fallen, reduced_fx)
+    if is_instance_valid(foreground_depth):
+        foreground_depth.set_camera(camera, not waterfall_active, reduced_fx)
+    native_fx.set_depth_profile(fallen)
     if is_instance_valid(native_boss):
         var boss_x := Highland.BOSS_X - camera
         var boss_y := 570.0 + sin(boss_clock * 1.3) * 67.0
@@ -644,7 +661,10 @@ func _restart() -> void:
 
 func _draw() -> void:
     var s := get_viewport_rect().size
-    draw_rect(Rect2(Vector2.ZERO, s), Color("#09283f"))
+    # Godot's native PaintedWorldDepth is the opaque 2.5D underlay.
+    # Keep the solid colour as a fallback if the compositor is absent.
+    if not is_instance_valid(world_depth):
+        draw_rect(Rect2(Vector2.ZERO, s), Color("#09283f"))
     if waterfall_phase == "descent" or waterfall_phase == "pull" or waterfall_phase == "outflow":
         _draw_waterfall(s)
     else:
@@ -656,18 +676,15 @@ func _draw() -> void:
         _draw_overlay(s)
 
 func _draw_world(s: Vector2) -> void:
-    # Painted, parallax-scrolling world remains opaque rather than layering ghost images.
-    draw_texture_rect(BACKGROUND, Rect2(-35.0 - camera * 0.013, -36.0, s.x + 94.0, s.y + 70.0), false)
-    draw_rect(Rect2(0, WATER_SURFACE, s.x, s.y - WATER_SURFACE), Color(0.01, 0.17, 0.28, 0.18))
+    # The backdrop and gardens now come from the GPU-shaded, depth-separated
+    # Godot world plane; never repaint its source image as a second ghost layer.
+    draw_rect(Rect2(0, WATER_SURFACE, s.x, s.y - WATER_SURFACE), Color(0.01, 0.17, 0.28, 0.075))
     draw_line(Vector2(0, WATER_SURFACE), Vector2(s.x, WATER_SURFACE), Color("#c5ffed"), 3.0)
     for i in range(20):
         var x := fposmod(float(i) * 223.0 - camera * 0.37 + time * (9.0 + float(i % 4)), s.x + 120.0) - 50.0
         var y := WATER_SURFACE + 80.0 + fmod(float(i) * 133.0, maxf(10.0, s.y - WATER_SURFACE - 90.0))
         draw_circle(Vector2(x, y), 2.5 + float(i % 3), Color(0.72, 1.0, 0.97, 0.34))
-    for i in range(8):
-        var fx := float(i) * 360.0 - fposmod(camera * 0.24, 360.0)
-        var rect := Rect2(fx, s.y - 195.0 + sin(time * 0.9 + i) * 6.0, 325.0, 245.0)
-        draw_texture_rect(FLORA, rect, false, Color(1, 1, 1, 0.20))
+    # Far and medium garden textures are rendered by PaintedWorldDepth.
     for index in range(obstacles.size()):
         var r := obstacles[index]
         var x := r.position.x - camera
@@ -821,7 +838,7 @@ func _draw_hud(s: Vector2) -> void:
     _draw_text(Vector2(30, 46), "HIGHLAND GOLD", 27, Color("#fff2d2"))
     _draw_text(Vector2(30, 76), "Carlo's Cold Kingdom", 18, Color("#b4edee"))
     if s.x >= 1100:
-        _draw_text(Vector2(s.x - 340, 72), "F3: FX   M: MUSIC", 15, Color("#b4edee"))
+        _draw_text(Vector2(s.x - 380, 72), "F3: MOTION   F4: DEPTH   M: MUSIC", 14, Color("#b4edee"))
     for i in range(MAX_HEALTH):
         draw_circle(Vector2(315.0 + float(i) * 29.0, 43.0), 11.0, Color("#ff8eb9") if i < health else Color("#465568"))
     _draw_text(Vector2(490, 48), "SCORE  " + str(score), 23, Color("#fff1bc"))
