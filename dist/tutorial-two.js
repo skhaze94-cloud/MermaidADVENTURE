@@ -15,7 +15,8 @@ function drawTutorialGardens(t){const tick=reducedMotion?0:t;
  const gardens=[
   {x:1180,y:740,portal:false},{x:2280,y:470,portal:true},{x:4020,y:760,portal:false},{x:5050,y:500,portal:true},{x:6260,y:760,portal:false}
  ];
- for(const [gi,g] of gardens.entries()){const x=g.x-camera;if(x<-330||x>vw+330)continue;ctx.save();ctx.globalAlpha=.45;envDraw(4,x-150,g.y+55,300,115,tick+gi,true);ctx.globalAlpha=.7;for(let j=0;j<7;j++){const a=j/7*Math.PI*2+tick*.28,r=45+(j%2)*18;tutorialPearl(x+Math.cos(a)*r,g.y+Math.sin(a)*r*.45,4+j%3,tick,.45);}ctx.restore();if(g.portal){ctx.save();ctx.globalAlpha=.36;drawOrnatePortal(x,g.y-35,175,tick,false);ctx.restore();}else{ctx.save();ctx.globalAlpha=.72;drawRelicArtwork(x,g.y-20,92,gi);ctx.restore();}}
+ for(const [gi,g] of gardens.entries()){const x=g.x-camera;if(x<-330||x>vw+330)continue;ctx.save();ctx.globalAlpha=.45;envDraw(4,x-150,g.y+55,300,115,tick+gi,true);ctx.globalAlpha=.7;for(let j=0;j<7;j++){const a=j/7*Math.PI*2+tick*.28,r=45+(j%2)*18;tutorialPearl(x+Math.cos(a)*r,g.y+Math.sin(a)*r*.45,4+j%3,tick,.45);}ctx.restore();}
+
 
  for(const r of training.relics){const x=r.x-camera;if(x<-160||x>vw+160)continue;ctx.save();const glow=ctx.createRadialGradient(x,r.y,5,x,r.y,105);glow.addColorStop(0,r.taken?'#a8ffdd17':'#ffe69b35');glow.addColorStop(1,'#b9ffe700');ctx.fillStyle=glow;ctx.fillRect(x-105,r.y-105,210,210);envDraw(0,x-85,r.y+28,170,110,tick);if(!r.taken){if(!drawRelicArtwork(x,r.y-18,125,training.relics.indexOf(r)))drawCueBadge(x,r.y-15,'compass',true,tick);for(let j=0;j<4;j++){const a=j*Math.PI/2+tick*.7;paintedBubble(x+Math.cos(a)*55,r.y-18+Math.sin(a)*30,4,.65);}}ctx.restore();}
  // Antonella now reacts, gestures and participates in the lesson rather than floating as static set dressing.
@@ -34,9 +35,14 @@ function installTutorialTwoDialogue(){conversations['antonella-welcome']={speake
 function buildTutorialReefRoute(){return [
  {x:760,y:785,w:280,h:105,tutorialTile:0},
  {x:1340,y:765,w:180,h:125,tutorialTile:3},
+ {x:1160,y:425,w:200,h:170,tutorialTile:1},
+ {x:1880,y:waterSurface()+30,w:260,h:190,tutorialTile:2},
+ {x:1080,y:125,w:220,h:72,tutorialSky:true,tutorialTile:0},
+ {x:5180,y:110,w:230,h:92,tutorialSky:true,tutorialTile:0},
+ {x:5530,y:90,w:190,h:88,tutorialSky:true,tutorialTile:0},
  {x:2180,y:795,w:360,h:95,tutorialTile:0},
  {x:3270,y:waterSurface()+24,w:235,h:160,tutorialTile:2},
- {x:3600,y:620,w:150,h:200,trainingRock:true,tutorialTile:1},
+ {x:3600,y:650,w:220,h:220,trainingRock:true,tutorialTile:1},
  {x:3890,y:778,w:310,h:112,tutorialTile:3},
  {x:4260,y:waterSurface()+30,w:235,h:185,tutorialTile:2},
  {x:4410,y:765,w:210,h:125,tutorialTile:0},

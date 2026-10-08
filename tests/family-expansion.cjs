@@ -1,12 +1,14 @@
 const assert=require('node:assert/strict'),rt=require('./runtime.cjs')();rt.sandbox.assert=assert;
 rt.run(`
+function visitNextLesson85(){const q=training.pendingLesson;if(!q)return;nessie.x=Math.max(nessie.x,q.minX);dashTime=0;for(let i=0;i<150&&training.pendingLesson;i++)updateTraining(1/60);}
+
 assert.equal(selectedStartStage,-1);
 mode='story';stage=-1;loadStage();state='playing';training.step=0;training.entryDone=true;
-for(const ring of TRAINING_RINGS){nessie.x=ring.x;nessie.y=ring.y;updateTraining(.016);}assert.equal(training.step,1);
-nessie.x=3830;updateTraining(.016);assert.equal(training.step,2);nessie.x=3990;dashTime=.2;updateTraining(.016);assert.equal(training.step,3);
-leap.breached=true;leap.active=true;updateTraining(.016);leap.active=false;leap.breached=false;updateTraining(.016);assert.equal(training.step,4);
-training.jumpStart=4540;nessie.x=4830;leap.breached=true;leap.active=true;updateTraining(.016);nessie.x=4930;leap.active=false;leap.breached=false;updateTraining(.016);assert.equal(training.step,5);
-health=4;for(const p of powerups)collectPowerup(p);assert.equal(health,5);assert(boostUnlimited>0);leap.variant='combo';leap.breached=true;leap.active=true;updateTraining(.016);leap.active=false;leap.breached=false;updateTraining(.016);assert.equal(training.step,6);assert.equal(checkpoint,6500);
+for(const ring of TRAINING_RINGS){nessie.x=ring.x;nessie.y=ring.y;updateTraining(.016);}assert.equal(training.step,1);visitNextLesson85();
+nessie.x=3910;updateTraining(.016);assert.equal(training.step,2);visitNextLesson85();nessie.x=3990;dashTime=.2;updateTraining(.016);assert.equal(training.step,3);visitNextLesson85();
+leap.breached=true;leap.active=true;updateTraining(.016);leap.active=false;leap.breached=false;updateTraining(.016);assert.equal(training.step,4);visitNextLesson85();
+training.jumpStart=4540;nessie.x=4830;leap.breached=true;leap.active=true;updateTraining(.016);nessie.x=4930;leap.active=false;leap.breached=false;updateTraining(.016);assert.equal(training.step,5);visitNextLesson85();
+health=4;for(const p of powerups)collectPowerup(p);assert.equal(health,5);assert(boostUnlimited>0);leap.variant='combo';leap.breached=true;leap.active=true;updateTraining(.016);leap.active=false;leap.breached=false;updateTraining(.016);assert.equal(training.step,6);visitNextLesson85();assert.equal(checkpoint,6500);
 for(const e of training.practiceEnemies){nessie.x=e.x;nessie.y=e.y;dashTime=.2;updateTrainingBoss(.016);}assert(training.practiceCleared);nessie.x=6700;nessie.y=400;updateTrainingBoss(.016);for(let i=0;i<250;i++)updateTrainingBoss(1/60);assert(boss.active);
 for(let hit=0;hit<3;hit++){boss.clock=9;boss.hitCooldown=0;nessie.x=boss.x;nessie.y=boss.y;dashTime=.2;updateTrainingBoss(.016);assert.equal(boss.hp,2-hit);assert(bossLeapReady);}
 assert(!familyPortalOpen());for(let i=0;i<230;i++)updateTrainingBoss(1/60);assert(familyPortalOpen());nessie.x=7430;nessie.y=540;updateStory(.016);assert.equal(state,'portal');updatePortal(3.5);assert.equal(stage,0);updatePortal(3.6);assert.equal(state,'playing');

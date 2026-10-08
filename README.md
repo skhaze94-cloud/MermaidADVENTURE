@@ -1,6 +1,6 @@
-# Sarah Maria Family Adventure 8.4 — The Jump Update
+# Sarah Maria Family Adventure 8.5 — Ultimate Fun Tutorial Revamp
 
-8.4 rotates through six distinct ordinary jump routines with matching trails and landing flourishes. See [8.4 release notes](docs/jump-update-v84.md).
+The Ultimate Fun Tutorial Revamp gives King Daddy a connected royal rig, smooth neck tracking and expressive poses, with a painted thunder-and-parting-water entrance. Sarah learns through solid coral bends, safe sky reefs and spaced teaching bays. The six 8.4 jump routines and other chapters remain intact. See [8.5 tutorial details](docs/tutorial-revamp-v85.md).
 
 8.3 added a short jump-input buffer, safer keyboard/touch cleanup, velocity-aware airborne turns, and character-specific spring transitions for every articulated boss. See [8.3 release notes](docs/controls-animation-v83.md).
 

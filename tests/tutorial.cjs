@@ -1,17 +1,19 @@
 'use strict';
 const assert=require('node:assert/strict'),rt=require('./runtime.cjs')();rt.sandbox.assert=assert;
 rt.run(`
+function visitNextLesson85(){const q=training.pendingLesson;if(!q)return;nessie.x=Math.max(nessie.x,q.minX);dashTime=0;for(let i=0;i<150&&training.pendingLesson;i++)updateTraining(1/60);}
+
 mode='sarah';selectedStartStage=-1;start();introTime=entranceDuration();updateIntro(.016);assert.equal(state,'playing');assert.equal(training.step,-2);
 assert.equal(W,7600);nessie.x=1800;updateTraining(.016);assert.equal(nessie.x,1800);nessie.x=4200;updateTraining(.016);assert.equal(nessie.x,4200);nessie.x=220;for(let i=0;i<240;i++)updateTraining(1/60);assert.equal(training.swimSeconds,0);assert.equal(training.entryDone,false);
 nessie.vx=100;for(let i=0;i<715;i++)updateTraining(1/60);assert.equal(training.step,-2);for(let i=0;i<10;i++)updateTraining(1/60);assert.equal(training.step,-1);assert(!dialogueSeen.has('daddy-intro'));
 for(let i=0;i<210;i++)updateTraining(1/60);assert.equal(training.entryDone,true);assert.equal(training.step,0);assert.equal(state,'dialogue');assert.equal(activeDialogueId,'daddy-intro');finishDialogue();
-for(const ring of TRAINING_RINGS){nessie.x=ring.x;nessie.y=ring.y;updateTraining(.016);}assert.equal(training.step,1);assert.equal(activeDialogueId,'daddy-rock');finishDialogue();
-nessie.x=3840;updateTraining(.016);assert.equal(training.step,2);finishDialogue();keys.add('ArrowRight');burst();updateTraining(.016);assert.equal(training.step,3);assert.equal(activeDialogueId,'daddy-jump');finishDialogue();
+for(const ring of TRAINING_RINGS){nessie.x=ring.x;nessie.y=ring.y;updateTraining(.016);}assert.equal(training.step,1);visitNextLesson85();assert.equal(activeDialogueId,'daddy-rock');finishDialogue();
+nessie.x=3910;updateTraining(.016);assert.equal(training.step,2);visitNextLesson85();finishDialogue();keys.add('ArrowRight');burst();updateTraining(.016);assert.equal(training.step,3);visitNextLesson85();assert.equal(activeDialogueId,'daddy-jump');finishDialogue();
 // Use real physics, not manually toggled leap flags, for each lesson.
 function jumpToRight(){elapsed+=.3;energy=1;dashCooldown=0;leap.cooldown=0;keys.clear();keys.add('ArrowUp');keys.add('ArrowRight');requestJump();assert(leap.active);keys.delete('ArrowUp');let guard=0;while(leap.active&&guard++<350){updateSwimmer(1/60,1,0);updateTraining(1/60);}assert(guard<350);keys.clear();}
-nessie.x=4090;nessie.y=440;jumpToRight();assert.equal(training.step,4);finishDialogue();tutorialResetPosition();assert.equal(nessie.x,4540);jumpToRight();assert.equal(training.step,5);assert.equal(health,4);assert.equal(activeDialogueId,'antonella-welcome');finishDialogue();
+nessie.x=4090;nessie.y=440;jumpToRight();assert.equal(training.step,4);visitNextLesson85();finishDialogue();tutorialResetPosition();assert.equal(nessie.x,4540);jumpToRight();assert.equal(training.step,5);visitNextLesson85();assert.equal(health,4);assert.equal(activeDialogueId,'antonella-welcome');finishDialogue();
 for(const p of powerups.filter(p=>!p.sky))collectPowerup(p);assert.equal(health,5);assert(training.heart&&training.boost);assert(boostUnlimited>0);
-boostUnlimited=0;updateTraining(.016);assert(powerups.find(p=>p.type==='boost'&&!p.sky).taken===false);collectPowerup(powerups.find(p=>p.type==='boost'&&!p.sky));nessie.x=5760;nessie.y=440;jumpToRight();assert.equal(training.step,6);assert.equal(activeDialogueId,'daddy-trial');finishDialogue();
+boostUnlimited=0;updateTraining(.016);assert(powerups.find(p=>p.type==='boost'&&!p.sky).taken===false);collectPowerup(powerups.find(p=>p.type==='boost'&&!p.sky));nessie.x=5760;nessie.y=440;jumpToRight();assert.equal(training.step,6);visitNextLesson85();assert.equal(activeDialogueId,'daddy-trial');finishDialogue();
 for(const e of training.practiceEnemies){nessie.x=e.x;nessie.y=e.y;dashTime=.2;updateTrainingBoss(.016);}assert(training.practiceCleared);assert.equal(training.practiceHits,3);
 nessie.x=6600;const gx=training.guideX,gy=training.guideY;updateTrainingBoss(.001);assert(boss.active);assert(Math.abs(boss.x-gx)<1);assert(Math.abs(boss.y-gy)<1);for(let i=0;i<130;i++)updateTrainingBoss(1/60);assert(training.bossEntry>=2);
 for(let i=0;i<3;i++){boss.clock=9;boss.hitCooldown=0;nessie.x=boss.x;nessie.y=boss.y;dashTime=.2;updateTrainingBoss(.016);assert.equal(boss.hp,2-i);assert(bossLeapReady);}

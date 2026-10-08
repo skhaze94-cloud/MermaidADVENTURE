@@ -1,7 +1,7 @@
 'use strict';
 const assert=require('node:assert/strict'),rt=require('./runtime.cjs')();rt.sandbox.assert=assert;
 rt.run(`mode='sarah';stage=-1;loadStage();state='playing';
-assert.equal(obstacles.length,11);assert.equal(new Set(obstacles.map(o=>o.tutorialTile)).size,4);
+assert.equal(obstacles.length,16);assert.equal(new Set(obstacles.map(o=>o.tutorialTile)).size,4);
 assert(obstacles.every(o=>o.x<5900),'Practice parade and arena remain open');
 assert(obstacles.filter(o=>o.y<500).length>=3,'Route includes overhead passages');
 assert.equal(TUTORIAL_REEF_CROPS.length,4);assert.equal(TUTORIAL_FACE_CROPS.length,4);

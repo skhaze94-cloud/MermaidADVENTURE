@@ -3,7 +3,7 @@ const assert=require('node:assert/strict'),fs=require('fs'),rt=require('./runtim
 const tutorial=fs.readFileSync('dist/tutorial-two.js','utf8'),polish=fs.readFileSync('dist/polish.js','utf8'),html=fs.readFileSync('dist/index.html','utf8');
 assert.match(tutorial,/const shoals=/);
 assert.match(tutorial,/const gardens=/);
-assert.match(tutorial,/drawOrnatePortal\(x,g\.y-35,175,tick,false\)/);
+assert.doesNotMatch(tutorial,/drawOrnatePortal\(x,g\.y-35,175,tick,false\)/,'8.5 leaves the real farewell portal unambiguous');
 assert.match(polish,/if\(small\)\{warpedSprite/);
 assert.match(html,/\d+\.\d+ · /);
 rt.run(`

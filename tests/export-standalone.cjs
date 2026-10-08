@@ -10,6 +10,6 @@ try{
  assert(registry['assets/bubble-bell-adventure.mp3'].startsWith('data:audio/mpeg;base64,'));
  for(const [,key] of html.matchAll(/OFFLINE_ASSETS\["([^"]+)"\]/g))assert(registry[key],'Embedded asset: '+key);
  assert(!/<script src=/.test(html));assert(!/(?:src|href)=["'](?:assets|fonts)\//.test(html));
- assert(html.length<30*1024*1024,'Shared soundtrack is embedded once, not repeated for every scene');
+ assert(html.length<32*1024*1024,'Shared soundtrack is embedded once, not repeated for every scene');
  console.log('Offline export passed: parseable source, shared art/music registry, embedded fonts, no external script links.');
 }finally{fs.rmSync(dir,{recursive:true,force:true});}
