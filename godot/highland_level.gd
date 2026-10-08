@@ -66,6 +66,7 @@ var touches: Dictionary = {}
 var music_player: AudioStreamPlayer
 var native_rig: Node2D
 var native_fx: Node2D
+var native_boss: Node2D
 var reduced_fx := false
 var music_muted := false
 var joy_last: Dictionary = {}
@@ -87,6 +88,7 @@ func _ready() -> void:
     # Godot editor-authored child scenes, ready before the level controller.
     native_fx = get_node("NativeUnderwaterFX")
     native_rig = get_node("SarahAtlasRig")
+    native_boss = get_node("CarloNativeBoss")
     _sync_native_visuals()
     queue_redraw()
 
@@ -121,6 +123,7 @@ func _input(event: InputEvent) -> void:
                 reduced_fx = not reduced_fx
                 native_fx.set_reduced_motion(reduced_fx)
                 native_rig.reduced_motion = reduced_fx
+                native_boss.reduced_motion = reduced_fx
                 _say("Visual effects " + ("reduced" if reduced_fx else "enabled"), 1.5)
             KEY_ENTER:
                 if state == "victory":
@@ -339,6 +342,10 @@ func _sync_native_visuals() -> void:
     native_rig.set_motion(velocity, facing, boost_time > 0.0 or waterfall_boost > 0.0, jump_time > 0.0, faded)
     native_rig.rotation = clampf(velocity.y / 1150.0, -0.26, 0.26) * facing
     native_fx.set_motion(pos, velocity, jump_time <= 0.0)
+    if is_instance_valid(native_boss):
+        var boss_x := Highland.BOSS_X - camera
+        var boss_y := 570.0 + sin(boss_clock * 1.3) * 67.0
+        native_boss.set_boss_state(boss_hp, _boss_vulnerable(), boss_clock, boss_x, boss_y, get_viewport_rect().size.x)
 
 func _update_swimming(dt: float) -> void:
     var input_dir := _input_vector()
@@ -487,11 +494,14 @@ func _update_boss(dt: float) -> void:
             _say("Carlo hit! " + str(boss_hp) + " hearts remaining.", 1.8)
             native_fx.splash(boss_pos - Vector2(camera, 0), Color("#fff1a4"), 32)
             native_fx.flash(Color("#ffffc1"), 0.17, 0.22)
+            native_boss.play_hit()
             _vibrate(0.32, 0.40, 0.22)
             if boss_hp == 0:
                 score += 1000
                 bubble_unlocked = true
                 _say("Carlo defeated! Mermaid Bubble unlocked. Find the portal!", 7.0)
+                native_boss.defeat()
+                native_fx.splash(boss_pos - Vector2(camera, 0), Color("#b5ffdc"), 48)
         elif boost_time <= 0.0:
             _damage(boss_pos)
     if boss_hp > 0 and fmod(boss_clock, 6.0) > 4.9 and player.distance_to(boss_pos) < 450.0:
@@ -617,6 +627,8 @@ func _restart() -> void:
     boss_clock = 0.0
     boss_hp = BOSS_MAX_HEALTH
     boss_hit_cooldown = 0.0
+    if is_instance_valid(native_boss):
+        native_boss.sprite.modulate.a = 1.0
     bubble_unlocked = false
     bubble_shots.clear()
     fallen = false
@@ -742,7 +754,8 @@ func _draw_boss() -> void:
     var y := 570.0 + sin(boss_clock * 1.3) * 67.0
     var glow := Color(0.28, 1.0, 0.58, 0.22) if _boss_vulnerable() else Color(1.0, 0.44, 0.47, 0.18)
     draw_circle(Vector2(x, y), 180.0, glow)
-    draw_texture_rect(CARLO, Rect2(x - 162, y - 180, 324, 352), false)
+    if not is_instance_valid(native_boss):
+        draw_texture_rect(CARLO, Rect2(x - 162, y - 180, 324, 352), false)
     draw_rect(Rect2(x - 140, y - 206, 280, 15), Color("#123349"))
     draw_rect(Rect2(x - 140, y - 206, 280.0 * float(boss_hp) / BOSS_MAX_HEALTH, 15), Color("#80ffc8") if _boss_vulnerable() else Color("#ffba8a"))
     _draw_text(Vector2(x - 90, y - 220), "CARLO", 25, Color("#fff0d1"))
