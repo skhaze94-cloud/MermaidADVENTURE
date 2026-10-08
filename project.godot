@@ -1,0 +1,25 @@
+; Engine configuration file.
+; Open the REPOSITORY ROOT in Godot 4.4+ so the existing dist/assets are imported.
+config_version=5
+
+[application]
+config/name="Sarah Maria — Highland Gold (Godot Prototype)"
+run/main_scene="res://godot/highland_level.tscn"
+config/description="First story level ported from Sarah Maria Family Adventure 9.1."
+
+[display]
+window/size/viewport_width=1400
+window/size/viewport_height=960
+window/stretch/mode="canvas_items"
+window/size/resizable=true
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/default_filters/use_nearest_mipmap_filter=false
+
+[physics]
+common/physics_ticks_per_second=60
+
+[audio]
+buses/default_bus_layout="res://godot/default_bus_layout.tres"
