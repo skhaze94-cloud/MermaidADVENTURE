@@ -158,3 +158,4 @@ footer .definitive-controls{gap:18px;padding:12px 0;opacity:.85}.definitive-cont
 @media(max-height:550px) and (orientation:landscape){.game-shell .hud .stage-hud{position:relative;left:auto;right:auto;bottom:auto}.hud .stage-copy{flex-direction:column;gap:2px}}
 .game-shell .hud .stage-hud{top:auto!important}
 @media(max-height:550px) and (orientation:landscape){.title-screen .edition-seal{display:none}}
+.game-shell .hud .mermaid-stat-card::before,.game-shell .hud .mermaid-stat-card::after{display:none!important;content:none!important}
