@@ -1,0 +1,7 @@
+# Godot editor-created cache; generated on every editor import.
+.godot/
+# Native Godot export artifacts.
+*.pck
+*.exe
+*.x86_64
+*.app/
