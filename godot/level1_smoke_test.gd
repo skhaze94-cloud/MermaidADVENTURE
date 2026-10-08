@@ -19,6 +19,26 @@ func _run_checks() -> void:
     _check(level.native_rig.get_node("Torso/HeadNeck") is Node2D, "Native face joint missing")
     _check(level.native_rig.get_node("Torso/NearArm") is Node2D, "Native arm joint missing")
     _check(level.native_fx.water_overlay.material is ShaderMaterial, "Water GPU shader missing")
+    # 0.3: all depth planes and passes must be native render resources.
+    _check(level.world_depth.background.material is ShaderMaterial, "Painted background shader missing")
+    _check(level.world_depth.far_entries.size() == 25, "Far garden plane missing")
+    _check(level.world_depth.middle_entries.size() == 33, "Mid garden plane missing")
+    _check(level.foreground_depth.entries.size() == 18, "Foreground parallax silhouettes missing")
+    _check(level.native_fx.refract_overlay.material is ShaderMaterial, "GPU refraction shader missing")
+    _check(level.native_fx.mist_overlay.material is ShaderMaterial, "Volumetric depth mist shader missing")
+    level.world_depth.set_camera(3900.0, true, false)
+    var depth_entry: Dictionary = level.world_depth.middle_entries[0]
+    var far_entry: Dictionary = level.world_depth.far_entries[0]
+    _check(is_equal_approx(float(level.world_depth.background_material.get_shader_parameter("grotto_mix")), 1.0), "Grotto tint not updating")
+    _check(float(depth_entry["factor"]) > float(far_entry["factor"]), "Parallax order incorrect")
+    level.foreground_depth.set_camera(3900.0, false, false)
+    _check(not level.foreground_depth.visible, "Foreground must disappear during waterfall")
+    level.foreground_depth.set_camera(3900.0, true, false)
+    level.native_fx.set_quality(false)
+    _check(not level.native_fx.refract_overlay.visible, "Economy mode should disable refraction")
+    level.native_fx.set_quality(true)
+    _check(level.native_fx.refract_overlay.visible, "High mode should restore refraction")
+
     _check(level.native_fx.trail is CPUParticles2D, "Native particle trail missing")
     _check(level.native_boss.sprite is Sprite2D, "Godot Carlo sprite missing")
     _check(level.native_boss.light is PointLight2D, "Carlo vulnerability light missing")
