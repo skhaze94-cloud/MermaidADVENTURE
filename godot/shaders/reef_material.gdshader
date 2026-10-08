@@ -8,9 +8,11 @@ uniform float distance_fog : hint_range(0.0, 0.8) = 0.22;
 uniform float relief : hint_range(0.0, 0.3) = 0.09;
 
 void fragment() {
-    vec4 painted = texture(TEXTURE, UV);
+    // In Godot 4, fragment COLOR already contains the texture * sprite modulate.
+    // Sampling TEXTURE and multiplying COLOR again would square the alpha.
+    vec4 painted = COLOR;
     float side = clamp(0.5 + 0.5 * sin(UV.x * 9.0 + UV.y * 5.0), 0.0, 1.0);
     float light = 1.0 + relief * (side - 0.5);
-    vec3 graded = mix(painted.rgb * light, water_tint.rgb, distance_fog);
-    COLOR = vec4(graded, painted.a) * COLOR;
+    vec3 graded = mix(painted.rgb * light, water_tint.rgb * painted.a, distance_fog);
+    COLOR = vec4(graded, painted.a);
 }
