@@ -7,11 +7,13 @@ on:
     paths:
       - "project.godot"
       - "godot/**"
+      - "dist/assets/*.import"
       - ".github/workflows/godot-level1.yml"
   pull_request:
     paths:
       - "project.godot"
       - "godot/**"
+      - "dist/assets/*.import"
       - ".github/workflows/godot-level1.yml"
 
 jobs:
@@ -27,7 +29,21 @@ jobs:
           include-templates: false
       - name: Verify Godot
         run: godot --version
-      - name: Import original art and Godot scenes
-        run: godot --headless --editor --path . --quit
+      - name: Import existing artwork and compile Godot scripts
+        shell: bash
+        run: |
+          set -o pipefail
+          godot --headless --editor --path . --quit 2>&1 | tee /tmp/godot-import.log
+          if grep -E 'SCRIPT ERROR|Parse Error|Compile Error|^ERROR:' /tmp/godot-import.log; then
+            echo "Godot editor emitted errors"
+            exit 1
+          fi
       - name: Launch first level headless
-        run: godot --headless --path . --quit-after 8
+        shell: bash
+        run: |
+          set -o pipefail
+          godot --headless --path . --quit-after 16 2>&1 | tee /tmp/godot-startup.log
+          if grep -E 'SCRIPT ERROR|Parse Error|Compile Error|^ERROR:' /tmp/godot-startup.log; then
+            echo "Godot runtime emitted errors"
+            exit 1
+          fi
