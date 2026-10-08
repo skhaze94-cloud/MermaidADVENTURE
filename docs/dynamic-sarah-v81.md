@@ -15,7 +15,7 @@ Sarah now has matching independently animated painted parts, replacing the singl
 
 ## Artwork and implementation
 
-`dist/assets/sarah-parts-v81.webp` contains 16 isolated padded sprite parts. `dist/sarah-dynamic-v81.js` defines normalized crops, parented joints and bounded animation curves. The atlas is included in the artwork loading gate and offline HTML registry. Small reusable meshes bend only hair, scales and fins; their dimensions are fixed even when Sarah is shown larger on the opening screen.
+`dist/assets/sarah-parts-v81.webp` contains 16 isolated padded sprite parts, with the segmented arm cells superseded by `dist/assets/sarah-arms-refined-v81.webp`, two continuous arm silhouettes. `dist/sarah-dynamic-v81.js` defines normalized crops, parented joints and bounded animation curves. The atlas is included in the artwork loading gate and offline HTML registry. Small reusable meshes bend only hair, scales and fins; their dimensions are fixed even when Sarah is shown larger on the opening screen.
 
 Built-in image generation used the existing `sarah-mermaid.webp` as the identity reference. Prompt set:
 
@@ -26,6 +26,10 @@ The result was mechanically cropped, resized and packed as a transparent WebP; n
 
 ## Verification
 
-All 35 focused regression checks and JavaScript syntax checks pass. The new regression covers independent animation channels, boost transitions, face protection, pause/reduced-motion behaviour, missing-art fallback, bounded drawing and unchanged gameplay state. Native canvas visual checks cover enlarged swimming/look/boost/airborne poses, the in-level model, boost afterimages and the opening scene. Offline HTML embeds all 38 shared assets plus fonts and soundtrack, parses all embedded source and remains below 30 MiB.
+The arm refinement removes visible shoulder/elbow/wrist cut-piece seams. Continuous painted arms use soft blended elbow and wrist skinning, gentler strokes and calibrated near/far proportions, while retaining the separate motion channels. Both arms preserve their full fingers and remain attached through swimming and boost poses.
 
-The native canvas development rig benchmark measured a 0.68ms median render and under 1 MiB of reusable mesh textures in this environment. Native canvas development timings are not physical-device performance guarantees. Physical iPad touch testing was not performed for this character-only change.
+A further built-in image-generation prompt used the original Sarah image: two complete isolated arms, smooth natural child proportions, tapered wrists, moderate soft open hands, lavender short sleeves, no segmented tubes, sockets, caps or elbow/wrist outlines; transparent background. The result was mechanically cropped and packed into a padded 1024×512 WebP. The generated full arm span is calibrated to 69/64 game units; continuous arm skinning has dedicated joint-continuity and size checks.
+
+All 35 focused regression checks and JavaScript syntax checks pass. The new regression covers independent animation channels, boost transitions, face protection, pause/reduced-motion behaviour, missing-art fallback, bounded drawing and unchanged gameplay state. Native canvas visual checks cover enlarged swimming/look/boost/airborne poses, the in-level model, boost afterimages and the opening scene. Offline HTML embeds all 39 shared assets plus fonts and soundtrack, parses all embedded source and remains below 30 MiB.
+
+The native canvas development rig benchmark measured a 1.1ms median render and approximately 1 MiB of reusable mesh textures in this environment. Native canvas development timings are not physical-device performance guarantees. Physical iPad touch testing was not performed for this character-only change.
