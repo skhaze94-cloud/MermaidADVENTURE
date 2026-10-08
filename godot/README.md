@@ -1,51 +1,75 @@
-# Godot 4 — Highland Gold Level 1 (first playable port)
+# Sarah Maria — Highland Gold, Godot 4 (native upgrade v0.2)
 
-This is an **independent Godot gameplay prototype** of the first story chapter of Sarah Maria Family Adventure 9.1. The HTML game in `dist/` has not been replaced. The project is deliberately located at the **repository root** (see `project.godot`) so Godot can import the original `dist/assets/*.webp` and `*.mp3` directly without doubling the artwork in Git.
+This project is the **Godot-native vertical slice** of Mermaid Sarah's first story chapter, built from the existing HTML 9.1 repository. It is a real Godot scene and scripts rather than a webpage embedded in a Godot window. The browser version in `dist/` remains available and unchanged. Godot loads the existing artwork and MP3 directly from `res://dist/assets/`.
 
-## Open and run
-1. Clone or download the **whole repository**, including the `dist/assets` directory. Do **not** import just the `godot/` folder.
-2. Install Godot 4.4 or newer (standard edition; **no .NET SDK** required).
-3. Godot Project Manager → Import → browse to the root `project.godot` → Import & Edit.
-4. Let textures and the MP3 import, then press **F6** on `godot/highland_level.tscn` or **F5** for the project.
-5. Best played in a landscape window. For desktop: arrows/WASD swim, Space/Shift boosts, J jumps, P/Esc pauses, R restarts. Bubble attack is B/Z after defeating Carlo. Touch D-pad and actions are drawn on touchscreen devices.
+## Open the project
 
-## What is already playable
-- The 20,748-unit Highland Gold story route and camera follow.
-- Painted Highlands, Sarah artwork, reefs, flora, crabs, eels, jellyfish, Carlo, and original MP3 from the HTML repository.
-- Four-direction swimming; 40%-energy boosts; steerable sky jumps; energy recharge.
-- The 1.8-second waterfall entry, 17-second descent, 1.6-second outflow, four-direction steering, boost dodging, three timed eel hazards, twelve total timed hazards and 22 pearl opportunities.
-- Post-fall obstacle geometry, moving enemy encounters, chest/pearl/heart/boost pickups, score, health, respawn checkpoints.
-- A simplified, multi-hit Carlo fight with readable green damage windows, Mermaid Bubble unlock and exit portal.
-- Simple desktop/touch controls, pause, reset, victory panel and music loop.
+1. Download/clone the full `godot/highland-gold-level-1-prototype` branch, including `dist/assets`.
+2. Open **Godot 4.4+** (standard edition, not .NET required).
+3. Import **`project.godot` at the repository root**, not the `godot/` directory.
+4. Allow asset import, then press **F5**. You can inspect `godot/highland_level.tscn` and its native child nodes in the scene editor.
+5. Play in landscape orientation. Current project window is 1400 × 960 with stretch scaling.
 
-## Port status (important)
-This is a **new Godot implementation**, not a one-to-one engine conversion. It intentionally ships as a playable *vertical slice*, not a finished replacement for HTML 9.1. The first level's route dimensions, major milestones and waterfall timing derive from `dist/highland.js`. Some source details have been deliberately simplified:
-- Sarah's intricate 16-part 8.1 articulated mesh is replaced with her complete painted sprite and basic tilt/float animation.
-- The current enemy cast is a hand-selected source roster (not the full 68 enemies), without every original telegraph/attack or AI behaviour.
-- Carlo's original 2D articulated boss rig, dialogue sequences and his exact attack pattern are **not** reproduced; the port uses a simplified encounter.
-- Some terrain skins are stretched from the existing transparent painted images. Background crop and scene lighting need editor-side visual polish.
-- Source game music is reused, but HTML's Web Audio fades and dynamic cues are not yet ported.
-- The existing HTML version's later chapters, menus, Shadow Kingdom transition and tutorial are outside this Level 1 prototype.
-- **GitHub Actions validates this project with Godot 4.4.1 headless editor import, scene launch and gameplay assertions** (waterfall duration and transitions, pickups, route geometry, Carlo state and portal victory). The game has **not** been visually or interactively play-tested in a native window; animation, mobile controls, audio and performance still require hands-on QA.
+## v0.2: actual Godot engine advantages
 
-## Layout
+| System | Engine-native improvement |
+| --- | --- |
+| **Sarah character** | Native layered `Sprite2D` atlas regions, parent-child head/arms/hair/tail/fin joints, procedural swimming motion, smooth directional turns, boost pose and rigid painted facial artwork |
+| **Underwater lighting** | `ShaderMaterial` applied to a `ColorRect`: animated caustics, waterline fade and depth-dependent light; effect runs in Godot's shader renderer rather than per-particle Canvas JavaScript |
+| **Underwater atmosphere** | `CPUParticles2D` swim bubbles and one-shot burst emitters on impacts, treasure and boosts, with a generated soft bubble texture |
+| **Boss feedback** | Carlo has his own `Sprite2D`, `PointLight2D` vulnerability tint, a hit scale `Tween` and an animated defeat |
+| **Controls** | Analogue gamepad thumbstick with radial dead zone; D-pad and A/B/X/Start buttons; optional gamepad rumble on boost, collision and boss hits; existing keyboard/touch remain |
+| **Presentation** | Look-ahead camera smoothing, tweened impact flashes and native music ducking during waterfall entry/outflow |
+| **Authoring** | Independent, editor-visible `NativeUnderwaterFX`, `SarahAtlasRig`, and `CarloNativeBoss` nodes in the main scene |
+
+The animated rig uses the **original Sarah body, hair, tail, fin and arm artwork** but does not yet reproduce all of the browser version's custom 16-part mesh deformation. It is a native joint-based foundation for further rigging work.
+
+## Current gameplay
+
+The current playable Level 1 retains the full 20,748-unit Highland Gold route, the 1.8-second waterfall entry, 17-second four-direction descent, 1.6-second outflow, 12 timed waterfall hazards (including eels), 22 timed waterfall pearls, Carlo's boss area, post-fall obstacle geometry, pickups, checkpoints, health and portal completion. The boss attacks and overall enemy roster are still simplified relative to the HTML release.
+
+## Controls
+
+| Input | Action |
+| --- | --- |
+| WASD / arrow keys | Swim in four directions |
+| Space / Shift | Boost |
+| J | Leap from underwater |
+| B / Z | Mermaid Bubble (after Carlo) |
+| P / Esc | Pause |
+| R | Restart |
+| M | Mute / unmute music |
+| F3 | Reduce / restore animated effects |
+| Controller left stick / D-pad | Analogue movement |
+| Controller A | Jump |
+| Controller B | Boost |
+| Controller X | Mermaid Bubble |
+| Controller Start | Pause |
+| Touchscreen | D-pad plus on-screen actions |
+
+## Files and editing
 
 ```
-project.godot                   # Import this root in Godot
-dist/assets/                    # Existing painted artwork and MP3
-godot/highland_level.tscn       # Start scene
-godot/highland_level.gd         # Input, draw, gameplay, boss, waterfall, UI
-godot/highland_data.gd          # Route locations and enemy/treasure manifests
-godot/default_bus_layout.tres   # Audio
+project.godot                       # Import the repository root
+godot/highland_level.tscn           # Real Godot scene and native editable child nodes
+godot/highland_level.gd             # Level progression, combat and gameplay state
+godot/highland_data.gd              # Geometry and source-driven enemy/treasure timings
+godot/sarah_rig.gd                  # Sprite2D/AtlasTexture procedural skeletal rig
+godot/native_fx.gd                  # Shader layer, CPUParticles2D, Tween feedback
+godot/carlo_boss.gd                 # Boss sprite, native 2D light, hit/defeat animation
+godot/shaders/underwater_caustics.gdshader
+godot/level1_smoke_test.gd         # Godot engine integration checks
+dist/assets/                        # Original textures/soundtrack; NOT duplicated
 ```
 
-## Next milestones
-1. Run the Godot editor locally, inspect the Debugger panel and test movement/gamepad/touch rendering in an actual window.
-2. Capture screenshot and compare the first 4,060 units, waterfall, grotto and Carlo with HTML 9.1.
-3. Convert Sarah's painted 16-part rig into an AnimationTree or skeletal animation scene.
-4. Port the source's full enemy roster, AI, dialogue, particle effects and quest/bubble unlock sequences.
-5. Split this initial self-contained Node2D into separately reusable Player, Enemy, Waterfall, Boss, World, and HUD scenes.
-6. Build/export smoke tests for desktop and Android.
+## Testing and known limitations
+
+GitHub Actions runs Godot 4.4.1 in headless editor mode, imports assets and scripts, tests waterfall/pickups/victory, verifies the native shader, rig joints, particle and boss light nodes, and launches the game scene. Automated success means compilation and gameplay logic are validated; **it is not a substitute for visual inspection on a GPU or a physical Android device**.
+
+The current project is a **prototype**, not yet a faithful full-feature replacement for HTML 9.1. Its enemy roster and AI, detailed Carlo attack sequencing, hand-painted scenery alignment, dialogue, all story panels, full sprite-deformation rig, menu UX and native release packaging still need porting and QA. Physics/collisions still use the source-inspired gameplay implementation rather than fully separate Godot `CharacterBody2D` / `Area2D` components. Music uses the source MP3 with limited tweens, not a full adaptive audio mixer.
+
+Recommended next phases: visually test the shader and rig in a Godot editor window; separate collision/player/enemy scenes and introduce `CharacterBody2D` where gameplay parity can be maintained; convert detailed animation curves to `AnimationPlayer` / `AnimationTree`; re-create all enemy attack telegraphs and Carlo phases; then package Windows and Android exports.
 
 ## Credits
-All artwork/music derives from assets already committed to this repository. Copyright and license of those assets are unchanged. Godot Engine is MIT licensed.
+
+Artwork and soundtrack derive from assets already in this repository. Their copyright status does not change. Godot Engine is MIT-licensed.
