@@ -38,6 +38,12 @@ func _capture() -> void:
         level.queue_redraw()
         for frame in range(3):
             await process_frame
+        # Avoid carrying an unrelated previous checkpoint caption into the
+        # waterfall/Carlos' scene capture when reusing this one level instance.
+        level.message_time = 0.0
+        level.premium_hud.update_hud(level._hud_snapshot())
+        level.queue_redraw()
+        await process_frame
         await RenderingServer.frame_post_draw
         var image := root.get_texture().get_image()
         if image.is_empty():
