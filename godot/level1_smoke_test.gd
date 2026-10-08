@@ -58,7 +58,7 @@ func _run_checks() -> void:
     _check(level.water_surface.foam.size() == 32, "Wave foam highlights not initialized")
     _check(level.native_fx.cinematic_overlay.material is ShaderMaterial,
         "Cinematic depth edge grade shader missing")
-    var sample := level._hud_snapshot()
+    var sample: Dictionary = level._hud_snapshot()
     _check(int(sample.get("health", -1)) == 5, "HUD health snapshot mismatched")
     level.premium_hud.update_hud(sample)
     _check(level.premium_hud.info.has("progress"), "HUD missing level progress")
