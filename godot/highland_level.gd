@@ -911,30 +911,52 @@ func _draw_hero(pos: Vector2) -> void:
             draw_circle(pos - boost_direction * float(25 + i * 25), float(12 - i), Color(0.7, 1.0, 1.0, 0.23))
 
 func _draw_waterfall(s: Vector2) -> void:
-    draw_texture_rect(BACKGROUND, Rect2(0, 0, s.x, s.y), false, Color("#a4c7e2"))
-    draw_rect(Rect2(0, 0, s.x, s.y), Color(0.012, 0.11, 0.23, 0.72))
+    draw_texture_rect(BACKGROUND, Rect2(0, 0, s.x, s.y), false, Color("#a7d9e8"))
+    draw_rect(Rect2(0, 0, s.x, s.y), Color(0.018, 0.14, 0.22, 0.60))
     var half := minf(s.x * 0.40, 520.0)
     var cx := s.x * 0.5
-    # Opaque rock banks use existing painted reef material, split into three
-    # natural-height sections instead of one visibly stretched billboard.
     var cliff := clampf(s.x * 0.085, 75.0, 122.0)
-    draw_rect(Rect2(cx - half - cliff, 0, cliff, s.y), Color("#123946"))
-    draw_rect(Rect2(cx + half, 0, cliff, s.y), Color("#123946"))
-    var piece_height := s.y / 3.0 + 8.0
-    for i in range(3):
-        var y := float(i) * (s.y / 3.0) - 4.0
-        var tint := Color(0.46, 0.78, 0.77, 0.44 - float(i) * 0.055)
-        draw_texture_rect(REEF, Rect2(cx - half - cliff, y, cliff, piece_height), false, tint)
-        draw_texture_rect(REEF, Rect2(cx + half, y, cliff, piece_height), false, tint)
-    draw_line(Vector2(cx - half, 0), Vector2(cx - half, s.y), Color(0.67, 0.98, 0.94, 0.29), 4.0)
-    draw_line(Vector2(cx + half, 0), Vector2(cx + half, s.y), Color(0.67, 0.98, 0.94, 0.29), 4.0)
-    # Distant shafts pass behind hazards and pearls; no duplicate transparent walls.
-    for i in range(7):
-        var fraction := float(i + 1) / 8.0
+    # Organic chasm silhouettes replace the previous ruler-straight wall columns.
+    # The original painted Highlands stay visible between irregular rock edges.
+    for side in [-1, 1]:
+        var edge_x := cx + float(side) * half
+        var rock := PackedVector2Array()
+        var outer := edge_x + float(side) * cliff * 1.6
+        rock.append(Vector2(outer, -20.0))
+        for i in range(11):
+            var fy := -15.0 + float(i) * (s.y + 30.0) / 10.0
+            var notch := sin(float(i) * 2.34 + float(side) * 0.48) * 9.0
+            rock.append(Vector2(edge_x + float(side) * notch, fy))
+        rock.append(Vector2(outer, s.y + 20.0))
+        draw_colored_polygon(rock, Color("#143e4b"))
+        # Only fragments of the existing reef artwork are laid over the
+        # painted chasm. Low opacity avoids billboard seams and tiled pillars.
+        for i in range(4):
+            var fy := float(i) * s.y / 4.0 + float(i % 2) * 22.0
+            var tx := edge_x + float(side) * (cliff * 0.69)
+            var tint := Color(0.48, 0.77, 0.73, 0.105 + float(i % 2) * 0.025)
+            draw_texture_rect(REEF,
+                Rect2(tx - cliff * 0.30, fy, cliff * 0.60, s.y * 0.19),
+                false, tint)
+        for i in range(8):
+            var fy := 35.0 + float(i) * s.y / 8.0
+            var ix := edge_x + float(side) * (12.0 + float(i % 3) * 8.0)
+            draw_line(Vector2(ix, fy), Vector2(ix + float(side) * 11.0, fy + 39),
+                Color(0.57, 0.88, 0.79, 0.13), 1.7)
+        draw_line(Vector2(edge_x, -5), Vector2(edge_x, s.y + 5),
+            Color(0.56, 0.97, 0.91, 0.16), 2.0)
+    # Veiled currents are light, narrow and staggered. Avoid opaque overlays.
+    for i in range(8):
+        var fraction := float(i + 1) / 9.0
         var xx := cx + (fraction * 2.0 - 1.0) * half
-        var alpha := 0.027 + float(i % 3) * 0.013
-        draw_line(Vector2(xx, 30), Vector2(xx + sin(time * 0.7 + i) * 18.0, s.y),
-            Color(0.72, 1.0, 0.98, alpha), 17.0 if i % 2 == 0 else 10.0)
+        var alpha := 0.036 + float(i % 3) * 0.014
+        draw_line(Vector2(xx, -25), Vector2(xx + sin(time * 0.7 + float(i)) * 22.0, s.y + 25),
+            Color(0.56, 0.99, 0.96, alpha), 14.0 if i % 2 == 0 else 8.0)
+    # Subtle horizontal translucency hints at distance within the waterfall.
+    for i in range(4):
+        var yy := float(i) * s.y * 0.26
+        draw_line(Vector2(cx - half * 0.8, yy), Vector2(cx + half * 0.8, yy + 45.0),
+            Color(0.34, 0.81, 0.85, 0.045), 3.0)
     for i in range(33):
         var xx := cx + sin(float(i) * 6.2) * half * 0.93
         var yy := fposmod(float(i) * 91.0 - waterfall_time * 260.0, s.y + 100.0) - 50.0
