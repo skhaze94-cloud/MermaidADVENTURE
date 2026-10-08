@@ -32,9 +32,19 @@ jobs:
       - name: Render four Level 1 visual checkpoints
         run: |
           mkdir -p godot/visual-previews
-          LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a -s "-screen 0 1400x960x24" \
+          GODOT_CAPTURE_PREVIEW=1 LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a -s "-screen 0 1400x960x24" \
             godot --path . --script res://godot/capture_level1_previews.gd
           ls -lh godot/visual-previews/
+      - name: Publish compact real-render preview thumbnails in logs
+        run: |
+          python3 - <<'PY'
+          import base64
+          from pathlib import Path
+          for prefix in ["01-highland-entry", "03-waterfall-descent"]:
+              path = Path("godot/visual-previews") / (prefix + "-review.jpg")
+              if path.exists():
+                  print("PREVIEW_B64_"+prefix+"="+base64.b64encode(path.read_bytes()).decode())
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
