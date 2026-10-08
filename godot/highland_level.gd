@@ -630,13 +630,6 @@ func _update_waterfall(dt: float) -> void:
     waterfall_y = clampf(waterfall_y + waterfall_velocity.y * dt, -145.0, 205.0)
     var hero_x := get_viewport_rect().size.x * 0.5 + waterfall_x * half
     var hero_y := 384.0 + waterfall_y
-    # Dispersed spray and foam respond to the shaft's downward current.
-    for i in range(18):
-        var shift := sin(float(i) * 8.7) * half * 0.87
-        var yy := fposmod(float(i) * 71.0 + waterfall_time * 240.0, s.y + 100.0) - 50.0
-        var spray_x := cx + shift + sin(time * 1.6 + float(i)) * 8.0
-        draw_circle(Vector2(spray_x, yy), 2.0 + float(i % 3),
-            Color(0.83, 1.0, 0.98, 0.12 + 0.08 * float(i % 2)))
     for hazard in waterfall_hazards:
         if hazard["passed"]:
             continue
@@ -946,6 +939,13 @@ func _draw_waterfall(s: Vector2) -> void:
         var xx := cx + sin(float(i) * 6.2) * half * 0.93
         var yy := fposmod(float(i) * 91.0 - waterfall_time * 260.0, s.y + 100.0) - 50.0
         draw_line(Vector2(xx, yy), Vector2(xx + sin(time * 2.0 + float(i)) * 8.0, yy + 55), Color(0.73, 1.0, 1.0, 0.20 if i % 3 else 0.40), 2.0)
+    # Dispersed spray and foam respond to the shaft's downward current.
+    for i in range(18):
+        var shift := sin(float(i) * 8.7) * half * 0.87
+        var yy := fposmod(float(i) * 71.0 + waterfall_time * 240.0, s.y + 100.0) - 50.0
+        var spray_x := cx + shift + sin(time * 1.6 + float(i)) * 8.0
+        draw_circle(Vector2(spray_x, yy), 2.0 + float(i % 3),
+            Color(0.83, 1.0, 0.98, 0.12 + 0.08 * float(i % 2)))
     for hazard in waterfall_hazards:
         if hazard["passed"]:
             continue
