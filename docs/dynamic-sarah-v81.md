@@ -33,3 +33,7 @@ A further built-in image-generation prompt used the original Sarah image: two co
 All 35 focused regression checks and JavaScript syntax checks pass. The new regression covers independent animation channels, boost transitions, face protection, pause/reduced-motion behaviour, missing-art fallback, bounded drawing and unchanged gameplay state. Native canvas visual checks cover enlarged swimming/look/boost/airborne poses, the in-level model, boost afterimages and the opening scene. Offline HTML embeds all 39 shared assets plus fonts and soundtrack, parses all embedded source and remains below 30 MiB.
 
 The native canvas development rig benchmark measured a 1.1ms median render and approximately 1 MiB of reusable mesh textures in this environment. Native canvas development timings are not physical-device performance guarantees. Physical iPad touch testing was not performed for this character-only change.
+
+### Shoulder and collar alignment
+
+Restored the painted arm aspect ratios instead of flattening them vertically. The near sleeve now covers the original torso sleeve at the shoulder socket. Both arms, the collar, head and front hair share the torso transform so gentle body motion does not pull the joints apart. The neck is anchored at the centre of the collar and turns around that point, with smaller look and boost angles. Reviewed enlarged swimming, boost and airborne poses, both directions and the opening scene. Tail motion remains unchanged.
