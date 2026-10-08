@@ -20,6 +20,7 @@ z_index = -1
 script = ExtResource("7_obstacles")
 
 [node name="NativeUnderwaterFX" type="Node2D" parent="."]
+z_index = -1
 script = ExtResource("2_effects")
 
 [node name="SarahAtlasRig" type="Node2D" parent="."]
