@@ -764,37 +764,123 @@ func _draw_world(s: Vector2) -> void:
     draw_rect(Rect2(0, s.y - 60, s.x, 60), Color(0.02, 0.14, 0.24, 0.24))
 
 func _draw_collectible(pos: Vector2, kind: String) -> void:
-    match kind:
-        "heart":
-            draw_circle(pos, 26.0, Color("#ff7cac"))
-            draw_circle(pos + Vector2(-8, -5), 6.0, Color("#ffe2f0"))
-        "boost":
-            draw_circle(pos, 29.0, Color("#38e9d1"))
-            draw_line(pos + Vector2(-12, 12), pos + Vector2(12, -12), Color("#edffff"), 6.0)
-        "chest":
-            draw_rect(Rect2(pos + Vector2(-29, -19), Vector2(58, 42)), Color("#9b542f"))
-            draw_rect(Rect2(pos + Vector2(-30, -25), Vector2(60, 16)), Color("#ffcf65"))
-            draw_rect(Rect2(pos + Vector2(-5, -24), Vector2(10, 40)), Color("#fff0ae"))
-        _:
-            draw_circle(pos, 23.0, Color(0.60, 0.90, 1.0, 0.30))
-            draw_circle(pos, 16.0, Color("#ebfaff"))
-            draw_circle(pos + Vector2(-5, -5), 5.0, Color("#ffffff"))
+    var pulse := 1.0 + sin(time * 3.1 + pos.x * 0.015) * 0.065
+    var r := 21.0 * pulse
+    if kind == "heart":
+        draw_circle(pos, r + 7.0, Color(0.93, 0.39, 0.67, 0.14))
+        draw_circle(pos + Vector2(-9, -5), 15.0, Color("#f580a8"))
+        draw_circle(pos + Vector2(9, -5), 15.0, Color("#f580a8"))
+        draw_colored_polygon(PackedVector2Array([
+            pos + Vector2(-24, -2), pos + Vector2(24, -2),
+            pos + Vector2(0, 28)]), Color("#f580a8"))
+        draw_circle(pos + Vector2(-10, -10), 5, Color(1.0, 0.93, 0.98, 0.72))
+        draw_arc(pos, 31.0, time * 0.4, time * 0.4 + PI * 0.78, 19,
+            Color(1, 0.84, 0.94, 0.35), 2.0, true)
+    elif kind == "boost":
+        draw_circle(pos, r + 13.0, Color(0.15, 0.96, 0.83, 0.16))
+        draw_colored_polygon(PackedVector2Array([
+            pos + Vector2(0, -29), pos + Vector2(24, -5), pos + Vector2(0, 29),
+            pos + Vector2(-24, -5)]), Color("#41d9d6"))
+        draw_colored_polygon(PackedVector2Array([
+            pos + Vector2(0, -24), pos + Vector2(0, 25),
+            pos + Vector2(18, -4)]), Color("#c3fff3"))
+        draw_line(pos + Vector2(-4, -19), pos + Vector2(9, -9), Color.WHITE, 3)
+        draw_arc(pos, 32.0, time * 1.4, time * 1.4 + PI * 0.5, 15,
+            Color(0.61, 1.0, 0.95, 0.66), 2.0, true)
+    elif kind == "chest":
+        draw_circle(pos, 45.0, Color(1.0, 0.72, 0.35, 0.12))
+        draw_rect(Rect2(pos + Vector2(-31, -15), Vector2(62, 43)), Color("#623b36"))
+        draw_rect(Rect2(pos + Vector2(-33, -28), Vector2(66, 24)), Color("#e5a854"))
+        draw_rect(Rect2(pos + Vector2(-30, -24), Vector2(60, 7)), Color("#ffe1a2"))
+        draw_rect(Rect2(pos + Vector2(-6, -19), Vector2(12, 47)), Color("#eec775"))
+        draw_circle(pos + Vector2(0, 4), 6, Color("#fff0bd"))
+        draw_line(pos + Vector2(-24, 17), pos + Vector2(24, 17), Color("#d89c56"), 3)
+    else:
+        draw_circle(pos, r + 7, Color(0.22, 0.78, 1.0, 0.18))
+        draw_circle(pos, r, Color(0.70, 0.93, 1.0, 0.73))
+        draw_circle(pos, r * 0.72, Color("#e6faff"))
+        draw_circle(pos + Vector2(-6, -7), 5, Color(1, 1, 1, 0.87))
+        draw_arc(pos, r + 3, PI * 0.9, PI * 1.65, 14, Color("#fff7dd"), 2)
+    # Sparse four-point sparkle reads better than dozens of particle sprites.
+    if int(floor(time * 1.8 + pos.x * 0.007)) % 4 == 0:
+        var sp := pos + Vector2(r + 13, -r - 7)
+        draw_line(sp + Vector2(-6, 0), sp + Vector2(6, 0), Color(1, 1, 1, 0.69), 2)
+        draw_line(sp + Vector2(0, -6), sp + Vector2(0, 6), Color(1, 1, 1, 0.69), 2)
 
 func _draw_enemy(enemy: Dictionary, pos: Vector2) -> void:
     var kind: String = enemy["kind"]
+    var ph := time * 3.0 + float(enemy["phase"])
     if kind == "crab" or kind == "eel":
         var texture: Texture2D = CRAB if kind == "crab" else EEL
         var frame := int(time * (6.0 if kind == "crab" else 4.0) + float(enemy["phase"])) % 4
         var cell_width := float(texture.get_width()) / 4.0
-        var src := Rect2(float(frame) * cell_width, 0, cell_width, texture.get_height())
+        var source := Rect2(float(frame) * cell_width, 0, cell_width, texture.get_height())
         var w := 155.0 if kind == "crab" else 185.0
         var h := 124.0 if kind == "crab" else 110.0
-        draw_texture_rect_region(texture, Rect2(pos.x - w * 0.5, pos.y - h * 0.5, w, h), src)
+        draw_circle(pos, 81.0 if kind == "crab" else 94.0,
+            Color(0.96, 0.51, 0.33, 0.075) if kind == "crab" else Color(0.25, 0.95, 1.0, 0.08))
+        draw_texture_rect_region(texture,
+            Rect2(pos.x - w * 0.5, pos.y - h * 0.5 + sin(ph) * 2.0, w, h), source)
+        if kind == "eel":
+            draw_arc(pos, 95.0, -0.62, 0.75, 22, Color(0.48, 1.0, 1.0, 0.23), 2.0)
     elif kind == "jelly":
+        var halo := 0.08 + 0.034 * sin(ph)
+        draw_circle(pos + Vector2(0, -9), 68.0, Color(0.71, 0.64, 1.0, halo))
         draw_texture_rect(JELLY, Rect2(pos.x - 48, pos.y - 72, 96, 144), false)
+        draw_arc(pos + Vector2(0, -16), 42.0, -PI * 0.8, -PI * 0.1, 20,
+            Color(0.82, 0.95, 1.0, 0.32), 2.0)
+    elif kind == "puffer":
+        _draw_puffer(pos, ph)
+    elif kind == "swordfish":
+        _draw_swordfish(pos, ph)
     else:
-        draw_circle(pos, 45.0, Color("#90e4c7") if kind == "puffer" else Color("#b2caff"))
-        draw_circle(pos + Vector2(15, -12), 7.0, Color("#1d3448"))
+        _draw_puffer(pos, ph)
+
+func _draw_puffer(pos: Vector2, phase: float) -> void:
+    var wobble := sin(phase) * 0.07
+    draw_set_transform(pos, wobble, Vector2.ONE)
+    draw_circle(Vector2.ZERO, 62.0, Color(0.23, 0.86, 0.84, 0.11))
+    # Finlets and soft coral quills, all sharing the same anatomical silhouette.
+    for i in range(10):
+        var theta := TAU * float(i) / 10.0 + 0.12
+        var a := Vector2(cos(theta), sin(theta))
+        var b := Vector2(-a.y, a.x)
+        var base := a * 36.0
+        draw_colored_polygon(PackedVector2Array([
+            base + b * 8.0, base + a * 15.0, base - b * 8.0]), Color("#b0d99b"))
+    draw_circle(Vector2(0, 3), 43.0, Color("#399f9d"))
+    draw_circle(Vector2(-4, -2), 36.0, Color("#a6e2bd"))
+    draw_circle(Vector2(9, 14), 23.0, Color("#e7d9a5"))
+    draw_circle(Vector2(20, -15), 9.0, Color("#f5fff0"))
+    draw_circle(Vector2(23, -15), 4.4, Color("#1b4657"))
+    draw_circle(Vector2(24, -16), 1.5, Color.WHITE)
+    draw_circle(Vector2(35, 7), 4.1, Color("#6a5362"))
+    draw_circle(Vector2(-22, 8), 8.0, Color("#58bdb6"))
+    draw_arc(Vector2(-6, -14), 18.0, PI * 1.13, PI * 1.65, 14,
+        Color(1, 1, 1, 0.39), 3.0)
+    draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
+
+func _draw_swordfish(pos: Vector2, phase: float) -> void:
+    var bank := sin(phase * 0.8) * 0.07
+    draw_set_transform(pos, bank, Vector2.ONE)
+    draw_circle(Vector2(-3, 0), 78.0, Color(0.28, 0.71, 1.0, 0.07))
+    draw_colored_polygon(PackedVector2Array([
+        Vector2(-60, -15), Vector2(-92, -36), Vector2(-77, 0),
+        Vector2(-96, 32), Vector2(-54, 18)]), Color("#3c99b7"))
+    draw_colored_polygon(PackedVector2Array([
+        Vector2(-27, -23), Vector2(-9, -50), Vector2(14, -20)]), Color("#367eaa"))
+    draw_colored_polygon(PackedVector2Array([
+        Vector2(-61, -21), Vector2(12, -32), Vector2(54, -10),
+        Vector2(62, 6), Vector2(12, 29), Vector2(-55, 18)]), Color("#2788a9"))
+    draw_colored_polygon(PackedVector2Array([
+        Vector2(-53, 4), Vector2(26, 5), Vector2(58, 1),
+        Vector2(10, 24), Vector2(-51, 16)]), Color("#b3e1c8"))
+    draw_colored_polygon(PackedVector2Array([
+        Vector2(45, -9), Vector2(115, -15), Vector2(46, 1)]), Color("#8cd5e9"))
+    draw_circle(Vector2(39, -9), 6.5, Color("#e6ffff"))
+    draw_circle(Vector2(42, -9), 3.5, Color("#163a51"))
+    draw_line(Vector2(-38, -19), Vector2(21, -23), Color(0.93, 1.0, 0.95, 0.33), 2.0)
+    draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
 
 func _draw_boss() -> void:
     if boss_hp <= 0:
