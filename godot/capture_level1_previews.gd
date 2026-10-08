@@ -49,6 +49,14 @@ func _capture() -> void:
             push_error("VISUAL PREVIEW FAILED: cannot write " + path)
         else:
             print("VISUAL PREVIEW CAPTURED: " + path)
+            # Small actual-render JPGs can be inspected directly in CI logs;
+            # full-resolution lossless PNGs remain available as artifacts.
+            var thumbnail := image.duplicate()
+            thumbnail.resize(560, 384, Image.INTERPOLATE_LANCZOS)
+            var jpg_path := ProjectSettings.globalize_path(
+                output + "/" + String(shot["name"]) + "-review.jpg")
+            thumbnail.save_jpg(jpg_path, 0.55)
+
     level.get_parent().remove_child(level)
     level.free()
     quit(0)
