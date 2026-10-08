@@ -75,7 +75,10 @@ func _ready() -> void:
     if music_player.stream is AudioStreamMP3:
         music_player.stream.loop = true
     add_child(music_player)
-    music_player.play()
+    # Headless Godot 4.4 has an MP3 playback shutdown leak. Play only with a real display.
+    # This does not mute desktop, Android or browser releases.
+    if DisplayServer.get_name() != "headless":
+        music_player.play()
     queue_redraw()
 
 func _exit_tree() -> void:
