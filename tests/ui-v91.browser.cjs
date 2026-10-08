@@ -18,6 +18,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
   await page.locator('#chapter-drawer summary').click();await page.locator('#stage-3').scrollIntoViewIfNeeded();assert(await page.locator('#stage-3').isVisible());
   await page.evaluate(()=>{mode='sarah';stage=0;loadStage();state='playing';score=123456;V70.mermaidPowers.bubble=true;$('overlay').style.display='none';const shell=document.querySelector('.game-shell');shell.classList.remove('menu-active','intro-active');syncBubbleUi();hud();syncSplashControls();});
   await page.screenshot({path:`qa/ui-v91/${device.name}-game.png`});
+  assert(await page.evaluate(()=>['#score','.stage-hud b'].every(s=>getComputedStyle(document.querySelector(s)).fontFamily.includes('Nunito'))),device.name+' shared UI font');
   const boxes=await page.evaluate(()=>{
    const box=s=>{const e=document.querySelector(s),r=e.getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height,visible:getComputedStyle(e).display!=='none'&&getComputedStyle(e).visibility!=='hidden'};};
    return {shell:box('.game-shell'),hud:box('.hud'),score:box('.score-tile'),health:box('.timer-tile'),pause:box('#pause'),pad:box('.dpad'),actions:box('.splash-actions'),boost:box('.touch-dash'),jump:box('#touch-jump'),bubble:box('#touch-bubble'),meter:box('.dash-meter')};
