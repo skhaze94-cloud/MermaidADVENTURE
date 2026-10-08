@@ -31,6 +31,7 @@ jobs:
           node tests/tutorial-revamp-v85.cjs
           node tests/world-polish-v86.cjs
           node tests/world-art-v90.cjs
+          node tests/ui-v91.cjs
           node tests/adventure-tools.cjs
           node tests/performance-v5.cjs
           node tests/treasure-ui-v8.cjs
@@ -69,11 +70,26 @@ jobs:
           node tests/adventure-select-v71.cjs
           node tests/icon-spectacular-v72.cjs
 
-      - name: Export standalone 9.0 HTML
-        run: python3 scripts/export-standalone.py Mermaid-Adventure-9.0.html
-      - name: Upload standalone 9.0 HTML
+      - name: Install browser QA
+        run: |
+          npm install --prefix /tmp/mermaid-browser --no-save --ignore-scripts playwright@1.56.1
+          /tmp/mermaid-browser/node_modules/.bin/playwright install --with-deps chromium
+      - name: Verify responsive UI in Chromium
+        run: |
+          python3 -m http.server 8765 --directory dist > /tmp/mermaid-http.log 2>&1 &
+          NODE_PATH=/tmp/mermaid-browser/node_modules node tests/ui-v91.browser.cjs
+      - name: Upload UI screenshots
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Mermaid-Adventure-9.0
-          path: Mermaid-Adventure-9.0.html
+          name: Mermaid-Adventure-9.1-UI-review
+          path: qa/ui-v91
+          if-no-files-found: ignore
+      - name: Export standalone 9.1 HTML
+        run: python3 scripts/export-standalone.py Mermaid-Adventure-9.1.html
+      - name: Upload standalone 9.1 HTML
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mermaid-Adventure-9.1
+          path: Mermaid-Adventure-9.1.html
           if-no-files-found: error

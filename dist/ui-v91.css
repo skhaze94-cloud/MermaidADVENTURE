@@ -1,0 +1,115 @@
+/* 9.1 · One quiet, readable interface over the painted world. */
+:root{--ui-font:Nunito,system-ui,sans-serif;--ui-ink:#f0fcfa;--ui-muted:#b9d8d9;--ui-panel:#0b293beb;--ui-line:#bbf1e340;--ui-gold:#ffdc91}
+.game-shell button,.hud,.stage-hud,.dash-meter,.tutorial-card,.title-action,.chapter-drawer,.dialogue-card,.reward-banner{font-family:var(--ui-font)!important}
+.game-shell button{font-weight:800;touch-action:manipulation}
+.game-shell button:focus-visible,.chapter-drawer summary:focus-visible{outline:3px solid var(--ui-gold)!important;outline-offset:3px}
+/* A shared glass rail replaces independently decorated stat cards. */
+.game-shell .hud{top:max(12px,env(safe-area-inset-top));left:16px;right:16px;display:flex;align-items:center;gap:22px;padding:10px 14px;min-height:68px;background:var(--ui-panel);border:1px solid var(--ui-line);border-radius:18px;box-shadow:0 5px 18px #00152230;backdrop-filter:blur(12px);pointer-events:none}
+.game-shell .hud .mermaid-stat-card{background:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;backdrop-filter:none!important;padding:0!important;min-height:0!important;animation:none!important;transform:none!important}
+.hud .score-shell-art,.hud .hud-charm,.hud .score-star,.hud .combo-meter,.hud .multiplier-shells,.stage-dots,.boost-charm,.boost-bubbles,.boss-leap-key,.touch-zone-label{display:none!important}
+.game-shell .hud .score-tile{display:flex!important;flex-direction:row;align-items:center;gap:14px;min-width:0!important;width:auto!important}
+.hud .score-copy{display:flex;flex-direction:column;gap:2px}
+.game-shell .hud .mini{font:800 11px/1.2 var(--ui-font)!important;letter-spacing:.6px;color:var(--ui-muted)}
+.game-shell .hud .score-tile strong,.game-shell .hud #score{font:900 25px/1 var(--ui-font)!important;color:var(--ui-ink);text-shadow:none!important;letter-spacing:0}
+.game-shell .hud .treasure-counters{position:static;display:flex;gap:6px;margin:0}
+.game-shell .hud .counter-pill{background:#ffffff0c!important;border:0!important;padding:4px 6px;gap:4px;min-width:0;border-radius:8px;box-shadow:none!important}
+.hud .counter-pill b,.game-shell .hud #combo{font:800 13px/1 var(--ui-font)!important;text-shadow:none!important}
+.game-shell .hud .combo-readout{position:static;margin:0;display:flex;min-height:0;gap:0}
+.game-shell .hud #combo{min-width:0;color:var(--ui-gold);padding:5px;background:#ffdc9114;border-radius:7px}
+.game-shell .hud .stage-hud{position:static;flex:1;min-width:0;padding:0;background:none!important;border:0!important;box-shadow:none!important;gap:3px;text-shadow:none}
+.hud .stage-hud>span{font:800 10px/1.2 var(--ui-font);letter-spacing:.7px;color:var(--ui-muted)}
+.hud .stage-hud b{font:800 15px/1.2 var(--ui-font);color:var(--ui-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.game-shell .hud .timer-tile{width:auto;height:auto;min-width:115px;display:flex;flex-direction:column;gap:6px;align-items:center}
+.game-shell .hud #timer{font:900 24px/1 var(--ui-font)!important;text-shadow:none}
+.game-shell .hud .health-shells{gap:4px;margin:0;padding:0;min-height:22px}
+.game-shell .hud .health-shells i{width:20px;height:20px;filter:none}
+.game-shell .hud .time-track{width:100px;height:3px;margin:0}
+.game-shell .hud .right-hud{margin:0;display:flex;gap:14px;align-items:center}
+.hud .best{order:-1;text-align:right;min-width:0!important}
+.hud .best b{font:800 16px/1.3 var(--ui-font)}
+.game-shell .hud #pause{pointer-events:auto;width:44px;height:44px;padding:0;display:grid;place-items:center;border:1px solid var(--ui-line);border-radius:12px;background:#ffffff0c;box-shadow:none;color:var(--ui-ink);font-size:22px}
+.game-shell .coin-objective{top:92px;right:22px;background:var(--ui-panel);border:1px solid var(--ui-line);padding:7px 10px;min-width:0;border-radius:10px;box-shadow:none}
+.game-shell .coin-objective b{font:800 14px/1.3 var(--ui-font)!important}
+.game-shell .coin-objective>div{height:3px}
+.game-shell .boss-hud{top:92px!important;bottom:auto!important;left:50%!important;right:auto!important;transform:translateX(-50%)!important;width:min(320px,60%);padding:8px 12px;background:var(--ui-panel);border:1px solid var(--ui-line);border-radius:12px;box-shadow:none}
+.game-shell .boss-hud b{font:800 14px/1.3 var(--ui-font)!important}
+/* Desktop actions and their energy meter share one compact baseline. */
+.game-shell .dash-meter{right:18px;bottom:18px;min-width:0;width:180px;padding:10px 12px;gap:8px;display:flex;align-items:center;flex-wrap:wrap;background:var(--ui-panel)!important;border:1px solid var(--ui-line)!important;border-radius:14px;box-shadow:none!important;transform:none!important;animation:none!important}
+.dash-meter .cue-icon{width:22px!important;height:22px!important;flex:0 0 22px}
+.dash-meter .boost-copy{min-width:0}.dash-meter #boost-label{font:800 14px/1 var(--ui-font)!important;letter-spacing:0}
+.dash-meter .boost-copy small{display:none!important}
+.game-shell .dash-meter .boost-track{order:5;flex:1 0 100%;width:100%;height:5px;margin:0;border:0;box-shadow:none;background:#ffffff22;border-radius:4px}
+.game-shell .dash-meter .boost-key{margin-left:auto;padding:3px 5px;min-width:0;font:800 10px var(--ui-font);background:#ffffff12;box-shadow:none;border:0}
+.game-shell .dash-meter #boost-status{font:800 12px var(--ui-font);padding:0;min-width:0}
+.game-shell .desktop-jump-action{right:210px;bottom:18px;min-width:0;width:150px;height:60px;padding:8px 10px;gap:8px;transform:none!important;background:var(--ui-panel);border:1px solid var(--ui-line);border-radius:14px;box-shadow:none}
+.desktop-jump-action .desktop-jump-orb{width:28px;height:28px;flex:0 0 28px;background:none!important;border:0;box-shadow:none!important}
+.desktop-jump-action .desktop-jump-copy{min-width:0;flex:1}.desktop-jump-copy b{font:800 12px var(--ui-font)!important;letter-spacing:0}.desktop-jump-copy small{display:none}.desktop-jump-action kbd{font:800 11px var(--ui-font);min-width:22px;box-shadow:none}
+.game-shell .bubble-power-hud{top:auto;bottom:90px;right:18px;min-width:0;padding:8px 12px;transform:none;background:var(--ui-panel);border:1px solid var(--ui-line);border-radius:12px;box-shadow:none}
+.bubble-power-hud[hidden]{display:none!important}.bubble-power-hud .bubble-hud-icon,.bubble-power-hud strong{display:none}.bubble-power-hud small{font:800 12px var(--ui-font)!important;letter-spacing:0}
+/* Short lesson cues; speech uses restrained subtitles rather than oversized cards. */
+.game-shell .tutorial-card,.game-shell .waterfall-help{top:96px;left:50%;right:auto;transform:translateX(-50%);width:max-content;max-width:calc(100% - 32px);padding:9px 14px;background:var(--ui-panel);border:1px solid var(--ui-line);border-radius:12px;box-shadow:none;text-align:center}
+.tutorial-card .tutorial-heading{gap:0}.tutorial-card .tutorial-heading>span,.tutorial-card #tutorial-count,.tutorial-card #tutorial-instruction,.tutorial-card .tutorial-progress,.tutorial-card #tutorial-reset{display:none!important}
+.game-shell .tutorial-card #tutorial-title{margin:0;color:var(--ui-ink);font:800 15px/1.3 var(--ui-font)!important}
+.game-shell .waterfall-help>span,.game-shell .waterfall-help>div{display:none}.game-shell .waterfall-help b{font:800 14px/1.4 var(--ui-font)}
+.game-shell .tutorial-speech,.game-shell .highland-caption{width:max-content;max-width:min(380px,75%);padding:8px 12px;background:var(--ui-panel);color:var(--ui-ink);border:1px solid var(--ui-line);border-radius:12px;box-shadow:none}
+.tutorial-speech::after{display:none}.game-shell .tutorial-speech b,.game-shell .highland-caption b{font:800 11px/1.3 var(--ui-font);color:var(--ui-gold);margin-bottom:3px;letter-spacing:.2px}.game-shell .tutorial-speech span,.game-shell .highland-caption span{font:700 14px/1.4 var(--ui-font)}
+.game-shell .highland-caption{bottom:100px}.game-shell .boss-lesson{bottom:94px;padding:8px 12px;gap:8px;background:var(--ui-panel);border:1px solid var(--ui-line);border-radius:12px;box-shadow:none}.boss-lesson .lesson-halo,.boss-lesson .lesson-arrow{display:none}.boss-lesson .lesson-caption{font:800 14px var(--ui-font)!important}
+.game-shell .toast{top:96px;font:800 14px/1.4 var(--ui-font);padding:9px 14px;background:var(--ui-panel);border:1px solid var(--ui-line);border-radius:12px;box-shadow:none;max-width:80%}
+.game-shell .reward-banner{padding:9px 14px;border-radius:14px;background:var(--ui-panel);border:1px solid #ffdc9160;box-shadow:none;max-width:80%}.reward-banner .reward-splash{display:none}.game-shell .reward-banner #reward-title{font:900 18px/1.2 var(--ui-font)!important}.game-shell .reward-banner #reward-sub{font:700 12px/1.4 var(--ui-font)!important}
+/* Quiet menu hierarchy; the painted scenery remains the hero. */
+.title-screen .title-content{width:min(440px,46%);max-height:100%;overflow-y:auto;padding:20px 18px;scrollbar-width:thin;scrollbar-color:#a9d5d34d transparent;overscroll-behavior:contain}
+.title-screen .studio-credit{font:800 10px var(--ui-font);letter-spacing:2px;color:#b9d8d9;margin-bottom:12px}.title-screen h1{margin:0 0 12px}.title-screen .opening-logo{animation:none!important;filter:drop-shadow(0 3px 8px #001b30)}
+.title-screen .edition-seal{position:static;display:flex;justify-content:center;align-items:center;gap:8px;margin:0 0 20px;padding:0;border:0!important;background:none!important;box-shadow:none;transform:none}.edition-seal span{font:700 10px var(--ui-font)!important;letter-spacing:1.2px}.edition-seal b{font:800 11px var(--ui-font)!important;padding:3px 7px;border-radius:6px;background:#ffffff12}
+.title-screen .title-actions{gap:10px;max-width:320px;margin:auto}.title-screen .title-action{min-height:52px;padding:12px 18px;border-radius:14px;border:1px solid #c2f2e84d;background:#0b293be8;color:var(--ui-ink);font:800 16px var(--ui-font)!important;box-shadow:0 4px 14px #00182c33!important;text-shadow:none;letter-spacing:0;transform:none}
+.title-screen .title-action.primary{background:linear-gradient(135deg,#d9fff0,#8bdcca);color:#123d49;border-color:#e8fff7;box-shadow:0 4px 16px #00182c44!important}.title-screen .title-action .cue-icon{width:23px;height:23px}.title-screen .title-action:hover{filter:brightness(1.08)}
+.title-screen .chapter-drawer{max-width:360px;margin:16px auto 0}.chapter-drawer summary{min-height:44px;padding:12px;font:800 13px var(--ui-font);color:#d7eeeb;letter-spacing:0}.chapter-drawer .chapter-panel{padding:12px;background:var(--ui-panel);border:1px solid var(--ui-line);border-radius:14px}.chapter-drawer .stage-choice{border-radius:10px;padding:10px;min-height:74px;background:#ffffff06;box-shadow:none}.chapter-drawer .stage-choice.selected{background:#8bdcca1a;border-color:#8bdcca}.chapter-drawer .stage-choice span{font:800 10px/1.4 var(--ui-font)!important;letter-spacing:.3px}.chapter-drawer .stage-choice b{font:800 13px/1.3 var(--ui-font)!important}.chapter-drawer .stage-choice small{display:none}.chapter-drawer .v72-stage-emblem{display:none!important}
+.game-shell .play,.game-shell .dialogue-options button{border-radius:12px;font:800 15px/1.4 var(--ui-font)!important;min-height:44px;box-shadow:none}.game-shell .dialogue-card{border:1px solid var(--ui-line);border-radius:22px;background:#0b293bf5;box-shadow:0 18px 60px #00111e55;padding:24px;color:var(--ui-ink)}.dialogue-card #dialogue-line,.dialogue-card #dialogue-response{font:700 17px/1.55 var(--ui-font);color:var(--ui-ink)}.dialogue-card #dialogue-speaker{font:900 23px/1.2 var(--ui-font)}.dialogue-card #dialogue-kicker,.dialogue-card #dialogue-hint{font:700 12px/1.4 var(--ui-font);letter-spacing:.4px;color:var(--ui-muted)}
+footer .definitive-controls{gap:18px;padding:12px 0;opacity:.85}.definitive-controls .control-label,.definitive-controls .key-cluster.arrows,.definitive-controls small{display:none}.definitive-controls b{font:700 12px var(--ui-font)}.definitive-controls kbd{box-shadow:none;border:1px solid #ffffff25;font:800 11px var(--ui-font)}
+/* Mobile: 50px direction targets, with three equal 58px action buttons. */
+@media(any-pointer:coarse){
+ .game-shell .definitive-touch{left:max(12px,env(safe-area-inset-left));right:max(12px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom));align-items:flex-end;justify-content:space-between;gap:12px}
+ .game-shell .definitive-touch .dpad{display:grid;grid-template-columns:repeat(3,50px);grid-template-rows:repeat(3,50px);gap:3px;padding:0;background:none;border:0;box-shadow:none;border-radius:0}
+ .definitive-touch .dpad::before,.definitive-touch .dpad::after,.definitive-touch button::before{display:none!important}
+ .game-shell .definitive-touch .dpad button{width:50px;height:50px;min-height:50px;padding:0;border:1px solid #c2f2e85c;border-radius:14px;background:#0b293bdb;color:#e7fff6;box-shadow:0 3px 10px #00182c30;backdrop-filter:blur(8px);font-size:24px;touch-action:none;transform:none}
+ .game-shell .definitive-touch .dpad .cue-icon{width:23px;height:23px}
+ .game-shell .definitive-touch .splash-actions{display:flex;flex-direction:row;align-items:center;gap:7px;padding:0}
+ .game-shell .definitive-touch .splash-actions button{position:relative;width:58px;height:58px;min-width:58px;min-height:58px;align-self:auto;margin:0;padding:5px 3px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:1px solid #c2f2e870;border-radius:17px;background:#10394ee8;color:#effff8;box-shadow:0 3px 10px #00182c33;animation:none!important;filter:none;transform:none;touch-action:none}
+ .game-shell .definitive-touch .touch-bubble:not(.available){display:none}
+ .game-shell .definitive-touch .splash-actions .touch-dash{background:#f2d390f5;color:#153c48;border-color:#fff0ba}
+ .game-shell .definitive-touch .splash-actions .touch-bubble{background:#514c87ed;border-color:#d9d2ff;color:#fff}
+ .game-shell .definitive-touch .splash-actions .cue-icon{position:static;width:24px;height:24px;transform:none;filter:none}
+ .game-shell .definitive-touch .splash-actions b,.game-shell .definitive-touch .touch-dash::after{position:static;display:block;content:'BOOST';font:900 10px/1 var(--ui-font)!important;letter-spacing:.2px;color:inherit;text-shadow:none;transform:none;inset:auto}
+ .game-shell .definitive-touch .bubble-emblem{width:30px;height:25px;transform:scale(.75);transform-origin:center;margin:-3px 0}
+ .game-shell .definitive-touch button.is-pressed,.game-shell .definitive-touch button:active{background:#d1fced!important;color:#123d49!important;border-color:#fff!important;box-shadow:0 0 0 2px #b9fff640!important}
+ .game-shell .definitive-touch .touch-jump.double-ready{border-color:#e8c3ff;box-shadow:0 0 0 2px #e8c3ff33}.game-shell .definitive-touch .touch-jump.bounce-ready{border-color:var(--ui-gold)}.game-shell .definitive-touch .touch-bubble.rush{border-color:#fff;box-shadow:0 0 0 2px #bdefff60}
+ .game-shell .dash-meter{display:flex!important;right:max(12px,env(safe-area-inset-right));bottom:calc(max(14px,env(safe-area-inset-bottom)) + 70px);width:188px;padding:7px 9px;gap:5px;border-radius:10px;pointer-events:none}
+ .dash-meter .cue-icon,.dash-meter .boost-key{display:none!important}.dash-meter #boost-label{font-size:11px!important}.game-shell .dash-meter .boost-track{order:0;flex:1;height:4px}.game-shell .dash-meter #boost-status{font-size:11px}
+ .game-shell .bubble-power-hud{bottom:calc(max(14px,env(safe-area-inset-bottom)) + 110px);right:12px}.game-shell .highland-caption,.game-shell .boss-lesson{bottom:185px}.game-shell .training-switch{bottom:185px;min-height:44px;font-size:12px;padding:8px 12px}
+ footer{display:none!important}
+}
+@media(max-width:700px){
+ .game-shell .hud{left:10px;right:10px;padding:9px 10px;gap:12px;min-height:62px;flex-wrap:wrap;border-radius:14px}
+ .game-shell .hud .score-tile{gap:7px}.game-shell .hud #score{font-size:22px!important}.hud .treasure-counters{gap:3px}.game-shell .hud .counter-pill{padding:3px}.hud .counter-pill i{width:15px;height:15px}.hud .counter-pill b,.game-shell .hud #combo{font-size:12px!important}
+ .game-shell .hud .timer-tile{margin-left:auto;min-width:100px}.game-shell .hud .timer-tile .mini{display:none}.game-shell .hud .right-hud{gap:0}.game-shell .hud .best{display:none!important}
+ .game-shell .hud .stage-hud{order:4;flex:1 0 100%;display:flex;flex-direction:row;align-items:baseline;gap:8px;border-top:1px solid #ffffff12!important;padding-top:6px}.hud .stage-hud>span{font-size:9px;flex:none}.hud .stage-hud b{font-size:12px}
+ .game-shell .coin-objective,.game-shell .boss-hud{top:116px!important}.game-shell .tutorial-card,.game-shell .waterfall-help,.game-shell .toast{top:116px}.game-shell .boss-hud{width:55%;max-width:280px}
+ .title-screen .title-content{width:100%;padding:16px 20px;max-width:440px}.title-screen .edition-seal{margin-bottom:14px}.title-screen .title-action{min-height:48px;font-size:15px!important}.title-screen .studio-credit{margin-bottom:6px}
+ .game-shell .dialogue-card{padding:18px;border-radius:18px}.dialogue-card #dialogue-line,.dialogue-card #dialogue-response{font-size:15px;line-height:1.5}.dialogue-card #dialogue-speaker{font-size:20px}
+}
+@media(any-pointer:coarse) and (max-width:360px){
+ .game-shell .definitive-touch{left:8px;right:8px;gap:8px}.game-shell .definitive-touch .dpad{grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,44px);gap:2px}.game-shell .definitive-touch .dpad button{width:44px;height:44px;min-height:44px;border-radius:12px}.game-shell .definitive-touch .splash-actions{gap:4px}.game-shell .definitive-touch .splash-actions button{width:48px;height:54px;min-width:48px;min-height:54px;border-radius:14px}.game-shell .dash-meter{width:152px}.game-shell .hud{gap:7px;padding:8px}.hud .treasure-counters{display:none!important}
+}
+@media(any-pointer:coarse) and (min-width:900px) and (min-height:650px){
+ .game-shell .definitive-touch .dpad{grid-template-columns:repeat(3,56px);grid-template-rows:repeat(3,56px)}.game-shell .definitive-touch .dpad button{width:56px;height:56px;min-height:56px}.game-shell .definitive-touch .splash-actions button{width:64px;height:64px;min-width:64px;min-height:64px}.game-shell .dash-meter{width:206px;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 76px)}
+}
+@media(max-height:550px) and (orientation:landscape){
+ .game-shell .hud{top:8px;left:10px;right:10px;min-height:54px;padding:6px 10px;gap:14px;flex-wrap:nowrap}.game-shell .hud .stage-hud{order:0;flex:1;display:flex;flex-direction:column;border:0!important;padding:0;gap:2px}.hud .stage-hud b{font-size:12px}.game-shell .hud .timer-tile{min-width:100px;margin-left:0}.game-shell .hud .score-tile #score{font-size:21px!important}.game-shell .hud .timer-tile .mini{display:none}.hud .best{display:none!important}
+ .game-shell .boss-hud,.game-shell .coin-objective{top:70px!important}.game-shell .tutorial-card,.game-shell .waterfall-help,.game-shell .toast{top:70px}.game-shell .highland-caption,.game-shell .boss-lesson{bottom:100px;max-width:45%}.title-screen .title-content{width:48%;padding:8px 12px}.title-screen .title-action{min-height:44px;padding:8px 14px;font-size:14px!important}.title-screen .title-actions{gap:7px}.title-screen .studio-credit{display:none}.title-screen .edition-seal{margin-bottom:10px}.title-screen h1{margin-bottom:4px}.title-screen .chapter-drawer{margin-top:5px}
+}
+@media(prefers-reduced-motion:reduce){.game-shell .hud *,.game-shell .touch *,.title-screen *{animation:none!important;transition:none!important}}
+
+.title-screen .edition-seal>span{display:block!important;letter-spacing:1.2px!important}.game-shell .hud .score-copy .mini{letter-spacing:.6px!important;color:var(--ui-muted)!important}.game-shell .hud .stage-hud b{font-size:15px!important}
+@media(max-width:700px){.game-shell .hud .stage-hud b{font-size:12px!important}}
+
+.story .hud #timer{display:none!important}
+@media(max-width:420px){.game-shell .hud .treasure-counters,.game-shell .hud .combo-readout{display:none!important}}

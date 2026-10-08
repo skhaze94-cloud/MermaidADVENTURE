@@ -1,4 +1,15 @@
-# Sarah Maria Family Adventure 9.0 — Painted World Adventure
+# Sarah Maria Family Adventure 9.1 — Definitive Interface
+
+9.1 consolidates the HUD into one glass rail, simplifies menu typography and buttons, and replaces persistent lesson panels with one-second control cues. Mobile controls use a smaller D-pad and matching Jump, Boost and Bubble buttons, with an always-visible energy strip. Story speech, conversations and combat feedback remain readable.
+
+See [9.1 release notes](docs/interface-v91.md). Run the focused suites in `.github/workflows/ci.yml`; Chromium QA additionally checks five viewport sizes and saves menu/game/cue screenshots. Export the complete offline game with:
+
+```sh
+python3 scripts/export-standalone.py Mermaid-Adventure-9.1.html
+```
+
+## Previous update: 9.0 — Painted World Adventure
+
 
 A unified visual overhaul of all chapters: one horizon-aligned painted backdrop, crisp alpha-trimmed scenery with preserved proportions, opaque nearby gardens, seamless single-transform environmental animation, and clear characters and combat above the scenery. Removed duplicate ghost flora, repeated translucent ruins, layered palace washes and post-character Highland tints. Refined the pearl frame, opening panel and dialogue presentation while preserving the existing painted character identities and animations.
 
