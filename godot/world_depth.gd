@@ -76,8 +76,9 @@ func _make_plane(parent: Node2D, entries: Array[Dictionary], count: int,
 
 func _resize() -> void:
     screen_size = get_viewport_rect().size
-    background.position = Vector2(-18.0, -10.0)
-    background.size = screen_size + Vector2(36.0, 26.0)
+    # Overscan avoids exposing the right edge during maximum 2.5D travel.
+    background.position = Vector2(-50.0, -12.0)
+    background.size = screen_size + Vector2(120.0, 40.0)
     background_material.set_shader_parameter("surface_y", clampf(WATER_LINE / maxf(screen_size.y, 1.0), 0.0, 0.7))
     set_camera(camera_x, grotto, reduced_motion)
 
@@ -90,7 +91,7 @@ func set_camera(world_camera: float, is_grotto: bool, reduce_motion: bool) -> vo
     background_material.set_shader_parameter("grotto_mix", 1.0 if grotto else 0.0)
     background_material.set_shader_parameter("motion_enabled", 0.0 if reduced_motion else 1.0)
     # One depth-perceived image parallax. No duplicate backdrop layers.
-    background.position.x = -18.0 - camera_x / LEVEL_WIDTH * 26.0
+    background.position.x = -50.0 - camera_x / LEVEL_WIDTH * 24.0
     for entry in far_entries:
         _position_entry(entry)
     for entry in middle_entries:
