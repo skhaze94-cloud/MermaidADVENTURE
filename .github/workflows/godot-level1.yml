@@ -38,6 +38,16 @@ jobs:
             echo "Godot editor emitted errors"
             exit 1
           fi
+      - name: Exercise waterfall, pickups, checkpoints and exit portal
+        shell: bash
+        run: |
+          set -o pipefail
+          godot --headless --path . --script res://godot/level1_smoke_test.gd 2>&1 | tee /tmp/godot-logic.log
+          grep -q 'GODOT LEVEL 1 LOGIC TEST PASSED' /tmp/godot-logic.log
+          if grep -E 'SCRIPT ERROR|Parse Error|Compile Error|^ERROR:' /tmp/godot-logic.log; then
+            echo "Godot gameplay smoke test emitted errors"
+            exit 1
+          fi
       - name: Launch first level headless
         shell: bash
         run: |
