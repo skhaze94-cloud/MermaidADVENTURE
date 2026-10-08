@@ -36,7 +36,7 @@ func _panel(fill: Color, outline: Color, radius: int) -> StyleBoxFlat:
     return p
 
 func _resize() -> void:
-    game_size = get_viewport_rect().size
+    game_size = get_viewport().get_visible_rect().size
     canvas.size = game_size
     canvas.queue_redraw()
 
