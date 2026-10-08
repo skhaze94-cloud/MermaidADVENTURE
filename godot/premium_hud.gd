@@ -4,6 +4,7 @@ extends CanvasLayer
 var canvas: Control
 var info: Dictionary = {}
 var game_size := Vector2(1400, 960)
+const DISPLAY_FONT: FontFile = preload("res://dist/fonts/treasure-display.ttf")
 var panel_style: StyleBoxFlat
 var chip_style: StyleBoxFlat
 var warning_style: StyleBoxFlat
@@ -47,7 +48,8 @@ func update_hud(next_info: Dictionary) -> void:
 
 func _text(at: Vector2, label: String, size: int = 20, tint: Color = INK,
         alignment: HorizontalAlignment = HORIZONTAL_ALIGNMENT_LEFT, width: float = -1.0) -> void:
-    canvas.draw_string(ThemeDB.fallback_font, at, label, alignment, width, size, tint)
+    var font: Font = DISPLAY_FONT if label == "HIGHLAND GOLD" or label == "HIGHLAND COMPLETE!" else ThemeDB.fallback_font
+    canvas.draw_string(font, at, label, alignment, width, size, tint)
 
 func _backed(rect: Rect2, style: StyleBox) -> void:
     canvas.draw_style_box(style, rect)
@@ -73,10 +75,8 @@ func _bar(rect: Rect2, percentage: float, tint: Color) -> void:
     var inner := rect.grow(-4.0)
     var v := clampf(percentage, 0.0, 1.0)
     if v > 0.001:
-        var back := StyleBoxFlat.new()
-        back.bg_color = tint
-        back.set_corner_radius_all(5)
-        canvas.draw_style_box(back, Rect2(inner.position, Vector2(inner.size.x * v, inner.size.y)))
+        # Avoid allocating a new StyleBox every frame for HUD fill.
+        canvas.draw_rect(Rect2(inner.position, Vector2(inner.size.x * v, inner.size.y)), tint)
     canvas.draw_line(inner.position + Vector2(1, 1), inner.position + Vector2(inner.size.x * v - 1, 1),
         Color(1, 1, 1, 0.15), 1.0)
 
