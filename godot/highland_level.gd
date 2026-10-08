@@ -628,7 +628,7 @@ func _restart() -> void:
     boss_hp = BOSS_MAX_HEALTH
     boss_hit_cooldown = 0.0
     if is_instance_valid(native_boss):
-        native_boss.sprite.modulate.a = 1.0
+        native_boss.reset_boss()
     bubble_unlocked = false
     bubble_shots.clear()
     fallen = false
