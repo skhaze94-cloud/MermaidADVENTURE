@@ -12,8 +12,6 @@ const EEL = preload("res://dist/assets/eel-poses-v731.webp")
 const JELLY = preload("res://dist/assets/jelly-v731.webp")
 const CARLO = preload("res://dist/assets/carlo.webp")
 const MUSIC = preload("res://dist/assets/bubble-bell-adventure.mp3")
-const NATIVE_RIG = preload("res://godot/sarah_rig.gd")
-const NATIVE_FX = preload("res://godot/native_fx.gd")
 
 const WATER_SURFACE := 280.0
 const BOTTOM := 902.0
@@ -86,15 +84,9 @@ func _ready() -> void:
     # This does not mute desktop, Android or browser releases.
     if DisplayServer.get_name() != "headless":
         music_player.play()
-    # These are independent Godot nodes, not extra JavaScript-style canvas passes.
-    native_fx = Node2D.new()
-    native_fx.set_script(NATIVE_FX)
-    native_fx.name = "NativeUnderwaterFX"
-    add_child(native_fx)
-    native_rig = Node2D.new()
-    native_rig.set_script(NATIVE_RIG)
-    native_rig.name = "SarahAtlasRig"
-    add_child(native_rig)
+    # Godot editor-authored child scenes, ready before the level controller.
+    native_fx = get_node("NativeUnderwaterFX")
+    native_rig = get_node("SarahAtlasRig")
     _sync_native_visuals()
     queue_redraw()
 
