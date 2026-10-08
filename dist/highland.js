@@ -58,26 +58,41 @@ function updateHighland(dt){highland.clock+=dt;highland.exitGlow=Math.max(0,high
  }
  return false;
 }
-function beginHighlandFall(){if(highland.fall||highland.fallen)return;resetLeap();projectiles=[];dashTime=0;checkpoint=2770;highland.fall={phase:'pull',time:0,travel:0,fromX:nessie.x,fromY:nessie.y,fromBank:heroBank,x:0,vx:0,current:0,boost:0,hit:0,depth:0,
- hazards:Array.from({length:12},(_,i)=>({at:2.3+i*1.17,x:[-.56,.5,-.45,.57,0,-.55][i%6],kind:['reef','jelly','puffer'][i%3],r:i%3===0?.26:.18})),
+function beginHighlandFall(){if(highland.fall||highland.fallen)return;resetLeap();projectiles=[];dashTime=0;checkpoint=2770;highland.fall={phase:'pull',time:0,travel:0,fromX:nessie.x,fromY:nessie.y,fromBank:heroBank,x:0,vx:0,y:0,vy:0,lastDx:0,lastDy:1,bank:.32,current:0,boost:0,boostCooldown:0,hit:0,depth:0,
+ hazards:Array.from({length:12},(_,i)=>({at:2.3+i*1.17,x:[-.56,.5,-.45,.57,0,-.55][i%6],kind:[4,7,10].includes(i)?'eel':['reef','jelly','puffer'][i%3],r:i%3===0?.26:.18})),
  currents:[{at:4,x:-.28,dir:1},{at:7.6,x:.28,dir:-1},{at:11.2,x:-.24,dir:1},{at:14.4,x:.25,dir:-1}],
  gold:Array.from({length:22},(_,i)=>({at:1.3+i*.68,x:Math.sin(i*.85)*.48,taken:false}))};highlandSay('Oh no… what’s going on? The water is pulling me down!',4);tone(180,.3,.04);}
 function waterfallCurrent(f){return f.currents.reduce((force,w)=>force+w.dir*.58*Math.max(0,1-Math.abs(f.travel-w.at)/1.35)*Math.max(.25,1-Math.abs(f.x-w.x)/1.4),0);}
-function waterfallPose(f,t){const u=smoothUnit(clamp(f.time/(f.phase==='pull'?FALL_ENTRY:FALL_EXIT),0,1)),fx=vw/2+f.x*Math.min(vw*.4,520),fy=H*.4,bank=.32+clamp(f.vx*.12,-.3,.3),normalY=nessie.y+(reducedMotion?0:Math.sin(t*3)*3);
+function waterfallPose(f,t){const u=smoothUnit(clamp(f.time/(f.phase==='pull'?FALL_ENTRY:FALL_EXIT),0,1)),fx=vw/2+f.x*Math.min(vw*.4,520),fy=H*.4+(f.y||0),bank=f.bank??(.32+clamp(f.vx*.12,-.3,.3)),normalY=nessie.y+(reducedMotion?0:Math.sin(t*3)*3);
  if(f.phase==='pull')return {x:(nessie.x-camera)*(1-u)+fx*u,y:normalY*(1-u)+fy*u,bank:f.fromBank*(1-u)+bank*u,mix:u};
  if(f.phase==='outflow')return {x:fx*(1-u)+(nessie.x-camera)*u,y:fy*(1-u)+normalY*u,bank:bank*(1-u),mix:1-u};
  return {x:fx,y:fy,bank,mix:1};}
-function boostInWaterfall(){const f=highland?.fall;if(state!=='playing'||!f||f.phase!=='descent'||f.boost>0||(energy<.4&&boostUnlimited<=0))return;const d=(keys.has('ArrowRight')||keys.has('d')?1:0)-(keys.has('ArrowLeft')||keys.has('a')?1:0);if(!d)return;if(boostUnlimited<=0)energy-=.4;f.vx=d*2.7;f.boost=.3;tone(360,.12,.025);}
-function waterfallHazardX(h,time){return h.x+(h.kind==='jelly'?Math.sin(time*2.3+h.at)*.15:h.kind==='puffer'?Math.sin(time*1.6+h.at)*.08:0);}
+// Local coordinates keep the 17-second descent intact while permitting four-way dodges.
+function waterfallInput87(){let x=Number(keys.has('ArrowRight')||keys.has('d'))-Number(keys.has('ArrowLeft')||keys.has('a')),y=Number(keys.has('ArrowDown')||keys.has('s'))-Number(keys.has('ArrowUp')||keys.has('w'));const length=Math.hypot(x,y);if(length){x/=length;y/=length;}return {x,y};}
+function waterfallHalf87(){return Math.min(vw*.4,520);}
+function boostInWaterfall(){const f=highland?.fall;if(state!=='playing'||!f||f.phase!=='descent'||f.boost>0||f.boostCooldown>0||(energy<.4&&boostUnlimited<=0))return false;
+ let {x,y}=waterfallInput87();if(!x&&!y){x=f.lastDx;y=f.lastDy;}else{f.lastDx=x;f.lastDy=y;}
+ if(boostUnlimited<=0)energy=Math.max(0,energy-.4);f.vx=x*850/waterfallHalf87();f.vy=y*850;f.boost=.30;f.boostCooldown=.46;heroStretch=1.12;tone(360,.12,.025);return true;}
+function waterfallHazardX(h,time){if(h.kind==='eel'){const age=time-h.at;return h.x+Math.sin(time*2+h.at)*.09+Math.sin(clamp((age+.6)/.55,0,1)*Math.PI)*Math.sign(-h.x)*.18;}return h.x+(h.kind==='jelly'?Math.sin(time*2.3+h.at)*.15:h.kind==='puffer'?Math.sin(time*1.6+h.at)*.08:0);}
+function waterfallContact87(f,item,rx,ry){const dx=(f.x-waterfallHazardX(item,f.travel))*waterfallHalf87(),dy=(f.y||0)-(item.at-f.travel)*350;return (dx/rx)**2+(dy/ry)**2<1;}
 function updateHighlandFall(dt){const f=highland.fall;if(!f||state!=='playing')return;highland.clock+=dt;if(highland.speech){highland.speech.life-=dt;if(highland.speech.life<=0)highland.speech=null;}invincible=Math.max(0,invincible-dt);hitFlash=Math.max(0,hitFlash-dt);energy=Math.min(1,energy+dt*.23);boostUnlimited=Math.max(0,boostUnlimited-dt);swimTime+=dt*4;f.time+=dt;
- if(f.phase==='pull'){const u=smoothUnit(clamp(f.time/FALL_ENTRY,0,1));nessie.x=f.fromX+(3220-f.fromX)*u;nessie.y=f.fromY+(720-f.fromY)*u;f.depth=u*180;if(f.time>=FALL_ENTRY){f.phase='descent';f.time=0;nessie.y=520;highlandSay('Okay, tail… LEFT and RIGHT. We can do this!',3.4);}return;}
+ if(f.phase==='pull'){const u=smoothUnit(clamp(f.time/FALL_ENTRY,0,1));nessie.x=f.fromX+(3220-f.fromX)*u;nessie.y=f.fromY+(720-f.fromY)*u;f.depth=u*180;if(f.time>=FALL_ENTRY){f.phase='descent';f.time=0;nessie.y=520;highlandSay('All four directions! Boost to dodge — we can do this!',3.4);}return;}
  if(f.phase==='outflow'){f.depth+=dt*160;heroBank=0;if(f.time>=FALL_EXIT){highland.fall=null;nessie.vx=150;nessie.vy=70;checkpoint=4120;invincible=Math.max(invincible,1.2);highlandSay('Phew! A secret grotto… and crabs with places to be!',4.5);}return;}
  f.travel=f.time;
  if(f.time>5&&!f.swirlIntroduced){f.swirlIntroduced=true;highlandSay('Swirly water! I can steer against it… or ride along!',3.8);}
- f.boost=Math.max(0,f.boost-dt);f.hit=Math.max(0,f.hit-dt);const dx=Number(keys.has('ArrowRight')||keys.has('d'))-Number(keys.has('ArrowLeft')||keys.has('a'));if(f.boost<=0)f.vx+=(dx*1.4+waterfallCurrent(f)-f.vx)*(1-Math.exp(-dt*9));f.x=clamp(f.x+f.vx*dt,-.87,.87);f.current=waterfallCurrent(f);f.depth=180+Math.min(FALL_DURATION,f.time)*350;nessie.y=520;
- for(const h of f.hazards){if(!h.passed&&f.time>h.at+.23){h.passed=true;continue;}if(!h.passed&&Math.abs(f.time-h.at)<.23&&Math.abs(f.x-waterfallHazardX(h,f.time))<h.r+.09){if(f.boost>0&&h.kind!=='reef'){h.passed=true;score+=50;tone(650,.08);}else if(invincible<=0){hurt(nessie.x+(waterfallHazardX(h,f.time)-f.x)*300);f.hit=.35;if(state!=='playing')return;}}}
- for(const c of f.gold)if(!c.taken&&Math.abs(f.time-c.at)<.24&&Math.abs(f.x-c.x)<.19){c.taken=true;score+=20;goldCount++;tone(800,.07,.02);}
- if(f.time>=FALL_DURATION){f.phase='outflow';f.time=0;highland.fallen=true;nessie.x=4120;nessie.y=610;nessie.vx=150;nessie.vy=70;nessie.face=1;heroBank=0;camera=clamp(nessie.x-vw*.43,0,W-vw);}
+ f.boost=Math.max(0,f.boost-dt);f.boostCooldown=Math.max(0,f.boostCooldown-dt);f.hit=Math.max(0,f.hit-dt);heroStretch+=(1-heroStretch)*(1-Math.exp(-dt*10));
+ const input=waterfallInput87(),half=waterfallHalf87(),limit=Math.min(.87,1-76/half);if(input.x||input.y){f.lastDx=input.x;f.lastDy=input.y;if(input.x)nessie.face=Math.sign(input.x);}
+ // The same physical speed in either axis prevents diagonal input gaining an advantage.
+ if(f.boost<=0){const smooth=1-Math.exp(-dt*9);f.vx+=(input.x*430/half+waterfallCurrent(f)-f.vx)*smooth;f.vy+=(input.y*430-f.vy)*smooth;}
+ const nx=f.x+f.vx*dt,ny=f.y+f.vy*dt;f.x=clamp(nx,-limit,limit);f.y=clamp(ny,-145,205);if(nx!==f.x)f.vx=0;if(ny!==f.y)f.vy=0;
+ f.bank+=(Math.atan2(f.vy+180,Math.abs(f.vx*half)+280)*nessie.face*.65-f.bank)*(1-Math.exp(-dt*7));if(keys.has(' ')&&boostUnlimited>0)boostInWaterfall();
+ f.current=waterfallCurrent(f);f.depth=180+Math.min(FALL_DURATION,f.time)*350;nessie.y=520;nessie.vx=f.vx*half;nessie.vy=f.vy;dashTime=0;
+ for(const h of f.hazards){if(h.passed)continue;if((h.at-f.time)*350<-290){h.passed=true;continue;}
+  const rx=h.kind==='reef'?half*h.r+46:h.kind==='eel'?104:76,ry=h.kind==='reef'?91:h.kind==='jelly'?92:69;
+  if(waterfallContact87(f,h,rx,ry)){if(f.boost>0&&h.kind!=='reef'){h.passed=true;score+=50;tone(650,.08);}else if(invincible<=0){hurt(nessie.x+(waterfallHazardX(h,f.time)-f.x)*300);f.hit=.35;if(state!=='playing')return;}}
+ }
+ for(const c of f.gold)if(!c.taken&&waterfallContact87(f,c,68,62)){c.taken=true;score+=20;goldCount++;tone(800,.07,.02);}
+ if(f.time>=FALL_DURATION){f.phase='outflow';f.time=0;highland.fallen=true;nessie.x=4120;nessie.y=610;nessie.vx=150;nessie.vy=70;nessie.face=1;heroBank=0;heroStretch=1;camera=clamp(nessie.x-vw*.43,0,W-vw);}
 
 }
 function resetHighlandRetry(){if(!highland)return;highland.fall=null;highland.fallen=checkpoint>=4000;highland.speech=null;highland.exitGlow=0;heroBank=0;for(const e of enemies)if(e.scuttle)e.hp=1;}
@@ -92,23 +107,21 @@ function drawHighlandRouteRichness(t){if(!highland?.fallen)return;const tick=red
 }
 function drawHighlandWorld(t){if(!highland)return;const tick=reducedMotion?0:t;
  // The mouth is visible before the current catches Sarah.
- const x=3220-camera;if(x>-350&&x<vw+350&&!highland.fallen){ctx.save();const stream=ctx.createLinearGradient(x-155,0,x+155,0);stream.addColorStop(0,'#a3fff000');stream.addColorStop(.35,'#b0fff744');stream.addColorStop(.6,'#dbffff77');stream.addColorStop(1,'#8ee4ff00');ctx.fillStyle=stream;ctx.fillRect(x-155,330,310,610);ctx.strokeStyle='#d8ffef99';ctx.lineWidth=2;for(let i=0;i<15;i++){const y=345+(i*79+tick*160)%580,xx=x+Math.sin(i*1.7)*100;ctx.beginPath();ctx.moveTo(xx,y);ctx.quadraticCurveTo(xx+14,y+32,xx-6,y+70);ctx.stroke();}for(let i=0;i<9;i++){const yy=350+(i*83+tick*100)%560;paintedBubble(x+Math.sin(i*2.2)*120,yy,5+i%4,.7);}ctx.globalAlpha=.95;if(reefArt.complete){ctx.drawImage(reefArt,x-325,630,230,340);ctx.save();ctx.translate(x+325,630);ctx.scale(-1,1);ctx.drawImage(reefArt,0,0,230,340);ctx.restore();}ctx.restore();}
+ const x=3220-camera;if(x>-350&&x<vw+350&&!highland.fallen){ctx.save();const stream=ctx.createLinearGradient(x-155,0,x+155,0);stream.addColorStop(0,'#a3fff000');stream.addColorStop(.35,'#b0fff744');stream.addColorStop(.6,'#dbffff77');stream.addColorStop(1,'#8ee4ff00');ctx.fillStyle=stream;ctx.fillRect(x-155,330,310,610);ctx.strokeStyle='#d8ffef99';ctx.lineWidth=2;for(let i=0;i<15;i++){const y=345+(i*79+tick*160)%580,xx=x+Math.sin(i*1.7)*100;ctx.beginPath();ctx.moveTo(xx,y);ctx.quadraticCurveTo(xx+14,y+32,xx-6,y+70);ctx.stroke();}for(let i=0;i<9;i++){const yy=350+(i*83+tick*100)%560;paintedBubble(x+Math.sin(i*2.2)*120,yy,5+i%4,.7);}drawWaterfallRipples87(x,365,tick);ctx.globalAlpha=.95;if(reefArt.complete){ctx.drawImage(reefArt,x-325,630,230,340);ctx.save();ctx.translate(x+325,630);ctx.scale(-1,1);ctx.drawImage(reefArt,0,0,230,340);ctx.restore();}ctx.restore();}
  if(highland.fallen){ctx.save();const tint=ctx.createLinearGradient(0,waterSurface(),0,H);tint.addColorStop(0,'#124f8433');tint.addColorStop(1,'#121e5945');ctx.fillStyle=tint;ctx.fillRect(0,waterSurface(),vw,H-waterSurface());for(let i=0;i<18;i++){const xx=highlandRouteX(4050+i*610)-camera;if(xx<-80||xx>vw+80)continue;const yy=760+Math.sin(i)*70;const glow=ctx.createRadialGradient(xx,yy,1,xx,yy,48);glow.addColorStop(0,'#9affe32a');glow.addColorStop(1,'#74aaff00');ctx.fillStyle=glow;ctx.fillRect(xx-48,yy-48,96,96);paintedBubble(xx,yy,4+Math.sin(tick+i),.55);}ctx.restore();drawHighlandRouteRichness(tick);}
  if(highland.exitGlow>0){ctx.save();ctx.fillStyle='rgba(173,246,237,'+(highland.exitGlow*.3)+')';ctx.fillRect(0,0,vw,H);ctx.restore();}
 }
 function drawHighlandFall(t){const f=highland.fall,tick=reducedMotion?0:t,cx=vw/2,half=Math.min(vw*.40,520),heroY=H*.40,pose=waterfallPose(f,t);ctx.save();ctx.globalAlpha=pose.mix;
- const bg=ctx.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#17697d');bg.addColorStop(.5,'#073d5c');bg.addColorStop(1,'#09233f');ctx.fillStyle=bg;ctx.fillRect(0,0,vw,H);
- // Painted reef walls scroll at different depths around the downward current.
- for(let layer=0;layer<2;layer++){ctx.save();ctx.globalAlpha=pose.mix*(layer?.85:.32);const size=layer?440:590,scroll=f.depth*(layer?1:.42);for(let i=-1;i<4;i++){const yy=i*size-(scroll%size);if(reefArt.complete){ctx.drawImage(reefArt,cx-half-size*.72,yy,size*.95,size*1.2);ctx.save();ctx.translate(cx+half+size*.72,yy);ctx.scale(-1,1);ctx.drawImage(reefArt,0,0,size*.95,size*1.2);ctx.restore();}}ctx.restore();}
- drawWaterfallScenery75(t,f,cx,half);
- const light=ctx.createLinearGradient(cx-half,0,cx+half,0);light.addColorStop(0,'#031c3800');light.addColorStop(.4,'#8bfff019');light.addColorStop(.55,'#9aeaff30');light.addColorStop(1,'#031c3800');ctx.fillStyle=light;ctx.fillRect(cx-half,0,half*2,H);
+ const distant=waterfallBackdrop87();if(distant)ctx.drawImage(distant,0,0,vw,H);else{ctx.fillStyle='#073d5c';ctx.fillRect(0,0,vw,H);}
+ // One opaque wall on each side; no stacked translucent reef sheets.
+ drawWaterfallWalls87(f);
  for(let i=0;i<30;i++){const x=cx+Math.sin(i*6.2)*half*.93,y=((i*91-f.depth*.75)%(H+120)+H+120)%(H+120)-60;ctx.strokeStyle=i%3?'#bafaff2a':'#f0fff952';ctx.lineWidth=1+i%2;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+Math.sin(tick+i)*6,y+30+i%4*13);ctx.stroke();if(i%3===0)paintedBubble(x,y,3+i%5,.4);}
  for(const w of f.currents){const xx=cx+w.x*half,yy=heroY+(w.at-f.travel)*350;if(yy<-190||yy>H+190)continue;ctx.save();ctx.translate(xx,yy);const glow=ctx.createRadialGradient(0,0,12,0,0,190);glow.addColorStop(0,'#affff13a');glow.addColorStop(1,'#65efd900');ctx.fillStyle=glow;ctx.fillRect(-190,-190,380,380);ctx.scale(1,.58);for(let arm=0;arm<4;arm++){ctx.beginPath();for(let j=0;j<60;j++){const r=18+j*2.7,a=arm*Math.PI/2+j*.07+w.dir*tick*1.6,x=Math.cos(a)*r,y=Math.sin(a)*r;j?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.strokeStyle=arm%2?'#ddfffba0':'#6cdddf80';ctx.lineWidth=arm%2?2:5;ctx.stroke();}for(let j=0;j<9;j++){const a=j*.7+w.dir*tick*1.3,r=55+j*12;paintedBubble(Math.cos(a)*r,Math.sin(a)*r,4+j%3,.65);}ctx.restore();}
- for(const h of f.hazards){if(h.passed)continue;const xx=cx+waterfallHazardX(h,f.travel)*half,yy=heroY+(h.at-f.travel)*350;if(yy<-180||yy>H+200)continue;ctx.save();if(h.kind==='reef'){envDraw(0,xx-half*h.r-25,yy-90,half*h.r*2+50,185,tick);}else{releaseCreature({kind:h.kind,x:xx+camera,y:yy,clock:tick+h.at,facing:1},tick);}ctx.restore();if(yy>heroY+130){ctx.strokeStyle='#ffe4ab55';ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(xx,yy,half*(h.r+.06),70,0,0,Math.PI*2);ctx.stroke();}}
+ for(const h of f.hazards){if(h.passed)continue;const xx=cx+waterfallHazardX(h,f.travel)*half,yy=heroY+(h.at-f.travel)*350;if(yy<-180||yy>H+200)continue;ctx.save();if(h.kind==='reef'){envDraw(0,xx-half*h.r-25,yy-90,half*h.r*2+50,185,tick);}else{const age=f.travel-h.at;releaseCreature({kind:h.kind,x:xx+camera,y:yy,clock:tick+h.at,facing:h.x>0?1:-1,sparkState:h.kind==='eel'?(age<-.6?'swim':age<-.1?'coil':'lunge'):undefined,windup:h.kind==='eel'&&age<-.1&&age>-.6?-.1-age:0,vx:h.kind==='eel'&&age>=-.1?170:0},tick);}ctx.restore();if(yy>heroY+130){ctx.strokeStyle='#ffe4ab55';ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(xx,yy,half*(h.r+.06),70,0,0,Math.PI*2);ctx.stroke();}}
  for(const c of f.gold){if(c.taken)continue;const xx=cx+c.x*half,yy=heroY+(c.at-f.travel)*350;if(yy<0||yy>H)continue;ctx.save();ctx.translate(xx,yy);ctx.fillStyle='#ffe19a';ctx.shadowColor='#f9dd83';ctx.shadowBlur=12;ctx.beginPath();ctx.ellipse(0,0,6+Math.abs(Math.cos(tick*3+c.at))*7,17,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#fff6c9';ctx.lineWidth=2;ctx.stroke();ctx.restore();}
  ctx.restore();
  // One character is carried through both transitions; the world never blanks.
- ctx.save();ctx.translate(pose.x,pose.y);ctx.rotate(pose.bank);if(f.hit>0)ctx.globalAlpha=.5+.5*Math.abs(Math.sin(tick*20));drawLivingHero(mode==='story'?sprite:sarahArt,230,154,reducedMotion?0:swimTime,Math.abs(f.vx),0);ctx.restore();if(f.boost>0){for(let i=1;i<6;i++)paintedBubble(pose.x-f.vx*i*12,pose.y-i*8,3+i,.4);}
+ ctx.save();ctx.translate(pose.x,pose.y);ctx.rotate(pose.bank);ctx.scale(nessie.face,1);if(f.hit>0)ctx.globalAlpha=.5+.5*Math.abs(Math.sin(tick*20));drawLivingHero(mode==='story'?sprite:sarahArt,230,154,reducedMotion?0:swimTime,Math.hypot(f.vx*half,f.vy)/300,0);ctx.restore();if(f.boost>0){const length=Math.hypot(f.vx*half,f.vy)||1;for(let i=1;i<8;i++)paintedBubble(pose.x-f.vx*half/length*i*15,pose.y-f.vy/length*i*15,2+i*.6,.5*(1-i/9));}
  if(hitFlash>0){ctx.fillStyle='rgba(255,105,136,'+(hitFlash*.35)+')';ctx.fillRect(0,0,vw,H);}
 
 }
@@ -116,3 +129,26 @@ function syncHighlandUi(){const active=isExpandedHighland()&&!!highland&&state==
  if(active&&highland.speech&&highlandCaptionKey!==highland.speech.text){highlandCaptionKey=highland.speech.text;$('highland-speaker').textContent=mode==='story'?'Nessie':'Sarah Maria';$('highland-line').textContent=highland.speech.text;}if(active&&highland.fall)$('waterfall-progress').style.width=(highland.fall.phase==='descent'?highland.fall.time/FALL_DURATION*100:highland.fall.phase==='outflow'?100:0)+'%';}
 
 function drawHighlandGrottoBackdrop(t){ctx.save();if(scene.complete&&scene.naturalWidth){const sy=scene.naturalHeight*.38;ctx.drawImage(scene,0,sy,scene.naturalWidth,scene.naturalHeight-sy,0,0,vw,H);}const shade=ctx.createLinearGradient(0,0,0,H);shade.addColorStop(0,'#06152ded');shade.addColorStop(.25,'#102a5177');shade.addColorStop(.55,'#23387522');shade.addColorStop(1,'#06264255');ctx.fillStyle=shade;ctx.fillRect(0,0,vw,H);for(let i=-1;i<Math.ceil(vw/380)+1;i++){const x=i*380-(camera*.14%380);ctx.save();ctx.translate(x+200,0);ctx.rotate(Math.PI);ctx.globalAlpha=.65;envDraw(0,-200,-190,400,290,t);ctx.restore();}ctx.restore();}
+
+let waterfallWall87=null,waterfallBackground87=null;
+function waterfallBackdrop87(){if(!scene.complete||!scene.naturalWidth||typeof OffscreenCanvas==='undefined')return null;const key=vw+':'+H+':'+scene.naturalWidth;if(waterfallBackground87?.key===key)return waterfallBackground87.surface;const surface=new OffscreenCanvas(Math.ceil(vw),H),c=surface.getContext('2d'),sy=scene.naturalHeight*.39;
+ const bg=c.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#17697d');bg.addColorStop(.5,'#073d5c');bg.addColorStop(1,'#09233f');c.fillStyle=bg;c.fillRect(0,0,vw,H);c.globalAlpha=.28;c.drawImage(scene,0,sy,scene.naturalWidth,scene.naturalHeight-sy,0,-24,vw,H+48);c.globalAlpha=1;
+ const half=waterfallHalf87(),cx=vw/2,light=c.createLinearGradient(cx-half,0,cx+half,0);light.addColorStop(0,'#031c3800');light.addColorStop(.4,'#8bfff019');light.addColorStop(.55,'#9aeaff30');light.addColorStop(1,'#031c3800');c.fillStyle=light;c.fillRect(cx-half,0,half*2,H);waterfallBackground87={key,surface};return surface;}
+function waterfallWallTile87(){const ready=scene.complete&&!!scene.naturalWidth,edge=vw/2-waterfallHalf87()-20,width=Math.max(90,Math.ceil(edge+30)),key=width+':'+ready;if(waterfallWall87?.key===key)return waterfallWall87.surface;if(typeof OffscreenCanvas==='undefined')return null;
+ const surface=new OffscreenCanvas(width,1280),c=surface.getContext('2d');
+ // Bake both texture resampling and the edge mask once, outside the animation loop.
+ c.beginPath();c.moveTo(0,0);c.lineTo(0,1280);for(let y=1280;y>=0;y-=8){const a=y*Math.PI*2/1280;c.lineTo(edge+12+Math.sin(a*2)*9+Math.sin(a*5)*5,y);}c.closePath();c.clip();
+ const g=c.createLinearGradient(0,0,width,0);g.addColorStop(0,'#103340');g.addColorStop(.6,'#285562');g.addColorStop(1,'#4c7473');c.fillStyle=g;c.fillRect(0,0,width,1280);
+ // Mirrored cliff samples join pixel-for-pixel at both boundaries.
+ if(ready){const sw=scene.naturalWidth,sh=scene.naturalHeight;c.drawImage(scene,sw*.095,sh*.52,sw*.145,sh*.46,0,0,width,640);c.save();c.translate(0,1280);c.scale(1,-1);c.drawImage(scene,sw*.095,sh*.52,sw*.145,sh*.46,0,0,width,640);c.restore();}
+ const shade=c.createLinearGradient(0,0,width,0);shade.addColorStop(0,'#061b3966');shade.addColorStop(.72,'#0b344620');shade.addColorStop(1,'#02182e55');c.fillStyle=shade;c.fillRect(0,0,width,1280);waterfallWall87={key,surface};return surface;
+}
+function drawWaterfallWalls87(f){const edge=vw/2-waterfallHalf87()-20,tile=waterfallWallTile87(),scroll=f.depth%1280;
+ for(const side of [-1,1]){ctx.save();if(side===1){ctx.translate(vw,0);ctx.scale(-1,1);}if(tile)for(let y=-scroll;y<H;y+=1280)ctx.drawImage(tile,0,y);else{ctx.fillStyle='#244c59';ctx.fillRect(0,0,Math.max(0,edge),H);}
+  const shadow=ctx.createLinearGradient(edge,0,edge+38,0);shadow.addColorStop(0,'#031c3450');shadow.addColorStop(1,'#031c3400');ctx.fillStyle=shadow;ctx.fillRect(edge,0,38,H);ctx.restore();
+ }
+}
+function drawWaterfallRipples87(x,y,t){ctx.save();ctx.translate(x,y);const glow=ctx.createRadialGradient(0,0,12,0,0,160);glow.addColorStop(0,'#d7fff65c');glow.addColorStop(.5,'#8cf7ed24');glow.addColorStop(1,'#64deee00');ctx.fillStyle=glow;ctx.fillRect(-160,-160,320,320);
+ for(let i=0;i<8;i++){const phase=(t*.4+i/8)%1,r=36+(1-phase)*105;ctx.beginPath();ctx.ellipse(0,i*2,r,r*.23,Math.sin(t*.6)*.025,0,Math.PI*2);ctx.strokeStyle='rgba(204,255,246,'+(.12+Math.sin(phase*Math.PI)*.42)+')';ctx.lineWidth=1.2+phase*.8;ctx.stroke();ctx.beginPath();ctx.ellipse(0,i*2-1,r-2,r*.23,0,Math.PI*1.05,Math.PI*1.65);ctx.strokeStyle='#f4ffec99';ctx.lineWidth=.8;ctx.stroke();}
+ for(let i=0;i<12;i++){const a=i*Math.PI/6+t*.35,r=70+Math.sin(t+i)*22;paintedBubble(Math.cos(a)*r,Math.sin(a)*r*.22,2+i%3,.55);}ctx.restore();
+}

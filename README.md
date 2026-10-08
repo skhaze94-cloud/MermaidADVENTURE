@@ -1,4 +1,16 @@
-# Sarah Maria Family Adventure 8.6 — World Polish & Sky Adventure Update
+# Sarah Maria Family Adventure 8.7 — Waterfall Adventure
+
+Stage 1’s uninterrupted waterfall now has smooth four-direction swimming and directional boost, including diagonals, with matching collision and energy costs. Three painted eels coil and lunge with visible warning cues. Crisp flowing inlet rings lead into one opaque textured rock shaft, replacing overlapping reef layers. The 17-second descent, whirlpools, treasure, exit checkpoint and all other chapters are preserved.
+
+Keyboard: arrows or WASD to swim; Space to boost. Touch: slide the swim pad and press Boost independently. Neutral boost follows the last swim direction; unlimited boost can be held. The waterfall keeps Sarah inside a safe visible swim area while the current carries the world downward.
+
+Regression coverage includes vertical and diagonal input, multi-touch boosts and release, energy and cooldowns, unlimited boost, visible-position collision, eel encounters, edges, pause, transition continuity, complete descent and retry. Run the suites listed in `.github/workflows/ci.yml`. Native Canvas visual checks and busy-scene timings supplement those tests; physical iPad/device testing remains a release follow-up.
+
+Export all source, images, fonts and soundtrack data into one offline HTML:
+
+```sh
+python3 scripts/export-standalone.py Sarah-Maria-Family-Adventure-8.7.html
+```
 
 8.6 brings six themed painted sky reef sets, optional airborne rewards in every chapter, full silhouette foreground artwork and stone-matched collision bands. Antonella swims into and out of her palace encounter at full opacity. The 8.5 tutorial, 8.4 jump routines, backgrounds, dialogue and boss attack timings are preserved. See [8.6 release notes](docs/world-polish-v86.md).
 

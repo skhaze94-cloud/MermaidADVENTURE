@@ -4,7 +4,7 @@ const html=fs.readFileSync('dist/index.html','utf8');
 const css=fs.readFileSync('dist/icon-spectacular-v72.css','utf8');
 const js=fs.readFileSync('dist/icon-spectacular-v72.js','utf8');
 new vm.Script(js);
-assert.match(html,/icon-spectacular-v72\.css/);assert.match(html,/icon-spectacular-v72\.js/);assert.match(html,/8\.6 · WORLD POLISH & SKY ADVENTURE/);
+assert.match(html,/icon-spectacular-v72\.css/);assert.match(html,/icon-spectacular-v72\.js/);assert.match(html,/8\.7 · WATERFALL ADVENTURE/);
 for(const id of ['v72-lagoon','v72-crab','v72-shadow','v72-manta','v72-tunnel','v72-crown','v72-rana'])assert(html.includes('id="'+id+'"'),id);
 for(const token of ['health-shells i.filled','score-shell-art','counter-pill','combo-meter i.filled','reward-banner','charm-starfish','bubble-power-hud','boss-hud','v72-stage-emblem','touch-jump'])assert(css.includes(token),token);
 for(const token of ['v72PearlMaterial','drawPearlTreasure=function','drawStarCoinTreasure=function','drawTreasureChest62=function','drawGemTreasure=function','drawGlossyHeart=function','drawBoostCrystal=function','drawBubbleRushPowerup=function','drawScorePopup=function','drawBossProjectileV4=function'])assert(js.includes(token),token);
