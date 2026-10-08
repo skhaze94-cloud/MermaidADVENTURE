@@ -67,6 +67,7 @@ var music_player: AudioStreamPlayer
 var native_rig: Node2D
 var native_fx: Node2D
 var native_boss: Node2D
+var premium_hud: CanvasLayer
 var world_depth: Node2D
 var foreground_depth: Node2D
 var relief_obstacles: Node2D
@@ -93,6 +94,7 @@ func _ready() -> void:
     native_fx = get_node("NativeUnderwaterFX")
     native_rig = get_node("SarahAtlasRig")
     native_boss = get_node("CarloNativeBoss")
+    premium_hud = get_node("PremiumHud")
     world_depth = get_node("PaintedWorldDepth")
     foreground_depth = get_node("SparseForegroundDepth")
     relief_obstacles = get_node("ReliefReefObstacles")
@@ -305,6 +307,8 @@ func _process(delta: float) -> void:
     if state != "playing":
         if is_instance_valid(native_rig):
             native_rig.set_process(false)
+        if is_instance_valid(premium_hud):
+            premium_hud.update_hud(_hud_snapshot())
         queue_redraw()
         return
     if is_instance_valid(native_rig):
@@ -344,6 +348,24 @@ func _hero_screen_position() -> Vector2:
         return (player - Vector2(camera, 0.0)).lerp(pos, clampf(waterfall_time / Highland.FALL_ENTRY, 0.0, 1.0))
     return pos
 
+func _hud_snapshot() -> Dictionary:
+    return {
+        "health": health,
+        "energy": energy,
+        "score": score,
+        "pearls": picked_count,
+        "progress": clampf(player.x / Highland.LEVEL_LENGTH, 0.0, 1.0),
+        "message": message,
+        "message_time": message_time,
+        "boss_active": player.x > Highland.BOSS_X - 850.0 and boss_hp > 0,
+        "boss_health": float(boss_hp) / float(BOSS_MAX_HEALTH),
+        "boss_vulnerable": _boss_vulnerable(),
+        "bubble": bubble_unlocked,
+        "paused": state == "paused",
+        "victory": state == "victory",
+        "touch": DisplayServer.is_touchscreen_available()
+    }
+
 func _sync_native_visuals() -> void:
     if not is_instance_valid(native_rig) or not is_instance_valid(native_fx):
         return
@@ -366,6 +388,8 @@ func _sync_native_visuals() -> void:
     if is_instance_valid(relief_obstacles):
         relief_obstacles.set_camera(camera, not waterfall_active)
     native_fx.set_depth_profile(fallen)
+    if is_instance_valid(premium_hud):
+        premium_hud.update_hud(_hud_snapshot())
     if is_instance_valid(native_boss):
         var boss_x := Highland.BOSS_X - camera
         var boss_y := 570.0 + sin(boss_clock * 1.3) * 67.0
@@ -665,6 +689,8 @@ func _restart() -> void:
     _say("Highland Gold — your adventure begins!", 3.0)
     if is_instance_valid(native_fx):
         native_fx.flash(Color("#d6ffff"), 0.16, 0.4)
+    if is_instance_valid(premium_hud):
+        premium_hud.update_hud(_hud_snapshot())
 
 func _draw() -> void:
     var s := get_viewport_rect().size
@@ -676,11 +702,8 @@ func _draw() -> void:
         _draw_waterfall(s)
     else:
         _draw_world(s)
-    _draw_hud(s)
-    if DisplayServer.is_touchscreen_available():
-        _draw_touch_controls(s)
-    if state == "paused" or state == "victory":
-        _draw_overlay(s)
+    # All text/UI is now drawn by PremiumHud on a separate CanvasLayer.
+    # It remains crisp and remains legible above GPU post-processing.
 
 func _draw_world(s: Vector2) -> void:
     # The backdrop and gardens now come from the GPU-shaded, depth-separated
