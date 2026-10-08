@@ -4,10 +4,13 @@ extends Node2D
 const CAUSTICS: Shader = preload("res://godot/shaders/underwater_caustics.gdshader")
 const REFRACTION: Shader = preload("res://godot/shaders/subtle_refraction.gdshader")
 const MIST: Shader = preload("res://godot/shaders/depth_mist.gdshader")
+const CINEMATIC: Shader = preload("res://godot/shaders/cinematic_grade.gdshader")
 var refract_overlay: ColorRect
 var refract_material: ShaderMaterial
 var mist_overlay: ColorRect
 var mist_material: ShaderMaterial
+var cinematic_overlay: ColorRect
+var cinematic_material: ShaderMaterial
 var caustics_material: ShaderMaterial
 var high_quality := true
 var water_overlay: ColorRect
@@ -46,6 +49,14 @@ func _ready() -> void:
     mist_material.shader = MIST
     mist_overlay.material = mist_material
     add_child(mist_overlay)
+    cinematic_overlay = ColorRect.new()
+    cinematic_overlay.name = "CinematicDepthEdgeGrade"
+    cinematic_overlay.color = Color.WHITE
+    cinematic_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    cinematic_material = ShaderMaterial.new()
+    cinematic_material.shader = CINEMATIC
+    cinematic_overlay.material = cinematic_material
+    add_child(cinematic_overlay)
     impact_overlay = ColorRect.new()
     impact_overlay.name = "TweenedHitFlash"
     impact_overlay.color = Color("#ffe7ca")
@@ -77,10 +88,12 @@ func _fit_viewport() -> void:
     water_overlay.size = viewport_size
     refract_overlay.size = viewport_size
     mist_overlay.size = viewport_size
+    cinematic_overlay.size = viewport_size
     impact_overlay.size = viewport_size
     var line := clampf(280.0 / maxf(1.0, viewport_size.y), 0.0, 0.7)
     refract_material.set_shader_parameter("surface_y", line)
     mist_material.set_shader_parameter("surface_y", line)
+    cinematic_material.set_shader_parameter("surface_y", line)
     caustics_material.set_shader_parameter("water_surface", line)
 
 func _make_bubble_texture() -> Texture2D:
@@ -136,6 +149,7 @@ func flash(tint: Color = Color("#ffb3c0"), intensity: float = 0.22, duration: fl
 
 func set_depth_profile(is_grotto: bool) -> void:
     mist_material.set_shader_parameter("grotto_mix", 1.0 if is_grotto else 0.0)
+    cinematic_material.set_shader_parameter("cavern_mix", 1.0 if is_grotto else 0.0)
     mist_material.set_shader_parameter("mist_amount", 0.095 if is_grotto else 0.065)
     refract_material.set_shader_parameter("distortion_px", 1.0 if is_grotto else 1.25)
 
@@ -143,6 +157,7 @@ func set_quality(high: bool) -> void:
     high_quality = high
     refract_overlay.visible = high_quality and not reduced_motion
     mist_overlay.visible = high_quality and not reduced_motion
+    cinematic_overlay.visible = high_quality
     water_overlay.visible = not reduced_motion
     caustics_material.set_shader_parameter("caustic_strength", 0.10 if high_quality else 0.06)
 
@@ -151,6 +166,7 @@ func set_reduced_motion(enabled: bool) -> void:
     water_overlay.visible = not enabled
     refract_overlay.visible = not enabled and high_quality
     mist_overlay.visible = not enabled and high_quality
+    cinematic_overlay.visible = high_quality
     caustics_material.set_shader_parameter("speed", 0.0 if enabled else 0.65)
     refract_material.set_shader_parameter("motion_enabled", 0.0 if enabled else 1.0)
     mist_material.set_shader_parameter("motion_enabled", 0.0 if enabled else 1.0)
