@@ -42,7 +42,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          godot --headless --path . --quit-after 16 2>&1 | tee /tmp/godot-startup.log
+          godot --headless --verbose --path . --quit-after 16 2>&1 | tee /tmp/godot-startup.log
           if grep -E 'SCRIPT ERROR|Parse Error|Compile Error|^ERROR:' /tmp/godot-startup.log; then
             echo "Godot runtime emitted errors"
             exit 1
