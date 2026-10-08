@@ -1,4 +1,4 @@
-# Sarah Maria — Highland Gold, Godot 4 (texturing & depth upgrade v0.3)
+# Sarah Maria — Highland Gold, Godot 4 (graphics overhaul v0.4)
 
 This project is the **Godot-native vertical slice** of Mermaid Sarah's first story chapter, built from the existing HTML 9.1 repository. It is a real Godot scene and scripts rather than a webpage embedded in a Godot window. The browser version in `dist/` remains available and unchanged. Godot loads the existing artwork and MP3 directly from `res://dist/assets/`.
 
@@ -9,6 +9,33 @@ This project is the **Godot-native vertical slice** of Mermaid Sarah's first sto
 3. Import **`project.godot` at the repository root**, not the `godot/` directory.
 4. Allow asset import, then press **F5**. You can inspect `godot/highland_level.tscn` and its native child nodes in the scene editor.
 5. Play in landscape orientation. Current project window is 1400 × 960 with stretch scaling.
+
+## v0.4: comprehensive graphics overhaul
+
+This is a **full visual-presentation pass** on the *existing Level 1*, rather than a new level, a 3D engine rewrite, or a replacement HTML build.
+
+### Upgraded original artwork and in-game graphics
+- **Native premium HUD:** a dedicated `CanvasLayer` above all screen shader passes; responsive translucent rounded glass-and-pearl cards, custom illustrated heart meters, smoother boost bar, scoring and collectible readout, boss health, slim route ruler, touch control skins, and readable pause/victory screens. The root gameplay painter no longer renders a second, conflicting interface.
+- **Sarah lighting and silhouette:** her articulated `Sprite2D` artwork remains intact, with a small soft `PointLight2D` that responds to boosting. Turning no longer squashes her facial art through zero scale.
+- **Water surface:** the old ruler-straight line is replaced with a native Node2D drawing layered, gently moving wave highlights and 32 deterministic sparkle/foam glints. Visual-only; swimming and collision remain unchanged.
+- **Creature makeover:** original painted crab/eel/jelly strips remain, with glow and motion accents; the previously circular placeholder **puffers and swordfish** receive custom, multi-tone fish silhouettes, eyes, fins and highlights.
+- **Rewards and jewels:** pearls, health, crystals and treasure chests are redrawn as more dimensional, detailed collectibles with limited four-point specular glints.
+- **Waterfall:** the side walls are now textured using the repository's reef art in manageable sections; extra soft lighting shafts and spray improve the sense of speed without multiplying opaque walls or altering the tested 17-second descent.
+- **Cinematic grading:** a standalone GPU depth-sensitive edge shader adds very light framing, rather than strong blur or bloom. High graphics preset uses it; Economy disables it.
+- **Visual QA automation:** an optional Linux/Xvfb graphics-preview workflow renders four Level 1 scene checkpoints and uploads PNG artifacts for manual inspection when the runner supports software OpenGL.
+
+### Fidelity and performance principles
+1. Keep *original painted artwork*, not random stock illustrations, for established Sarah/Carlo/crab/eel designs.
+2. Use shallow overlays and preserve the transparency of atlases; never draw the opaque background twice.
+3. Maintain original obstacle geometry, enemy timing, movement, pickups, health and checkpoints.
+4. Cull deep/offscreen art in the existing 2.5D composer and keep mobile-friendly quality controls: **F3** reduces animation and **F4** disables expensive depth passes.
+5. Maintain a strict automated Godot scene import/runtime suite, plus optional **real rendered PNGs**; final GPU/device visual signoff still requires reviewing those captured images and playing in Godot.
+
+### New files
+`godot/premium_hud.gd`, `godot/water_surface.gd`,
+`godot/shaders/cinematic_grade.gdshader`,
+`godot/capture_level1_previews.gd`, and
+`.github/workflows/godot-graphics-preview.yml`.
 
 ## v0.3: multi-layer texturing and subtle 3D-style depth
 
