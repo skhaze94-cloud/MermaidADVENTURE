@@ -25,7 +25,7 @@ func _ready() -> void:
     background = TextureRect.new()
     background.name = "SingleOpaquePaintedBackdrop"
     background.texture = BACKGROUND
-    background.stretch_mode = TextureRect.STRETCH_SCALE
+    background.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
     background.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
     background.mouse_filter = Control.MOUSE_FILTER_IGNORE
     background_material = ShaderMaterial.new()
