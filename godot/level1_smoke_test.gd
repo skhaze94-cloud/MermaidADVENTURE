@@ -24,6 +24,11 @@ func _run_checks() -> void:
     _check(level.world_depth.far_entries.size() == 25, "Far garden plane missing")
     _check(level.world_depth.middle_entries.size() == 33, "Mid garden plane missing")
     _check(level.foreground_depth.entries.size() == 18, "Foreground parallax silhouettes missing")
+    _check(level.relief_obstacles.sprites.size() == 19, "Native reef collision texture sprites missing")
+    _check(level.relief_obstacles.sprites[0].material is ShaderMaterial, "Raised reef material shader missing")
+    _check(level.world_depth.z_index < level.relief_obstacles.z_index, "Deep reefs must draw behind obstacles")
+    _check(level.relief_obstacles.z_index <= level.native_fx.z_index, "Refraction must sample obstacle art before Sarah")
+
     _check(level.native_fx.refract_overlay.material is ShaderMaterial, "GPU refraction shader missing")
     _check(level.native_fx.mist_overlay.material is ShaderMaterial, "Volumetric depth mist shader missing")
     level.world_depth.set_camera(3900.0, true, false)
