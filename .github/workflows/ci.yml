@@ -30,6 +30,8 @@ jobs:
           node tests/jump-showcase-v84.cjs
           node tests/tutorial-revamp-v85.cjs
           node tests/world-polish-v86.cjs
+          node tests/world-art-v90.cjs
+          node tests/adventure-tools.cjs
           node tests/performance-v5.cjs
           node tests/treasure-ui-v8.cjs
           node tests/world-textures-v75.cjs
@@ -67,11 +69,11 @@ jobs:
           node tests/adventure-select-v71.cjs
           node tests/icon-spectacular-v72.cjs
 
-      - name: Export standalone 8.7 HTML
-        run: python3 scripts/export-standalone.py Mermaid-Adventure-8.7.html
-      - name: Upload standalone 8.7 HTML
+      - name: Export standalone 9.0 HTML
+        run: python3 scripts/export-standalone.py Mermaid-Adventure-9.0.html
+      - name: Upload standalone 9.0 HTML
         uses: actions/upload-artifact@v4
         with:
-          name: Mermaid-Adventure-8.7
-          path: Mermaid-Adventure-8.7.html
+          name: Mermaid-Adventure-9.0
+          path: Mermaid-Adventure-9.0.html
           if-no-files-found: error

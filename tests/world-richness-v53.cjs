@@ -8,8 +8,8 @@ assert.match(polish,/if\(small\)\{warpedSprite/);
 assert.match(html,/\d+\.\d+ · /);
 rt.run(`
 mode='sarah';stage=0;loadStage();state='playing';dialogueSeen=new Set(Object.keys(conversations));
-assert.equal(W,29640);assert.equal(HIGHLAND_LENGTH,29640);assert.equal(boss.x,29250);assert.equal(currentStage().count,144);assert.equal(HIGHLAND_ROUTE_ZONES.length,5);
-assert(obstacles.some(o=>o.x>26000));assert(coins.some(c=>c.x>26000));assert(powerups.some(p=>p.x>27950));
+assert.equal(W,20748);assert.equal(HIGHLAND_LENGTH,20748);assert.equal(boss.x,20358);assert.equal(currentStage().count,144);assert.equal(HIGHLAND_ROUTE_ZONES.length,5);
+assert(obstacles.some(o=>o.x>18200));assert(coins.some(c=>c.x>18200));assert(powerups.some(p=>p.x>W-1700));
 assert(enemies.some(e=>e.kind==='eel'));assert(enemies.some(e=>e.kind==='swordfish'));assert(enemies.filter(e=>e.scuttle).length>=13);
 assert.equal(new Set(fish.map(f=>f.kind)).size,5);
 highland.fallen=true;checkpoint=highlandRouteX(13750);nessie.x=HIGHLAND_BOSS_TRIGGER+20;nessie.y=500;updateStory(.016);assert(boss.active);

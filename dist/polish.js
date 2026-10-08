@@ -142,11 +142,11 @@ function releaseBossActor(art,x,y,width,mirror=false){if(!art.complete||!art.nat
 
 function releasePalaceWorld(t){if(!palace||!environmentArt.complete||!environmentArt.naturalWidth)return false;const tick=reducedMotion?0:t;
  for(const g of palace.gates){const x=g.x-camera;if(x<-170||x>vw+170)continue;envDraw(2,x-50,g.y-65,g.w+100,g.h+95,t);const extent=g.closed?(1-g.open)*g.h:0;if(extent>2){ctx.save();const grad=ctx.createLinearGradient(x,g.y,x+g.w,g.y+extent);grad.addColorStop(0,'#d5f4ffdd');grad.addColorStop(.4,'#92d9e69c');grad.addColorStop(1,'#e9ddbbd9');ctx.fillStyle=grad;ctx.strokeStyle='#fff1cd';ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(x,g.y,g.w,extent,8);ctx.fill();ctx.stroke();for(let j=1;j<4;j++){ctx.fillStyle='#fff9d8cc';ctx.fillRect(x+j*g.w/4-1,g.y+5,2,Math.max(0,extent-10));}ctx.restore();}paintedBubble(x+g.w/2,g.y-45,7,g.closed?.4:.8);}
- for(const e of palace.elevators){const x=e.x-camera;if(x<-150||x>vw+150)continue;ctx.save();ctx.globalAlpha=.34;envDraw(5,x-58,812,116,105,t,true);ctx.restore();for(let j=0;j<5;j++){const py=e.y+e.h-((tick*112+j*33)%e.h);paintedBubble(x+Math.sin(j*2.3+tick*.8)*24,py,3+j%2*2,.28);}const wash=ctx.createLinearGradient(x,e.y,x,e.y+e.h);wash.addColorStop(0,'#affff200');wash.addColorStop(1,'#9bfff018');ctx.fillStyle=wash;ctx.fillRect(x-48,e.y,96,e.h);}
+ for(const e of palace.elevators){const x=e.x-camera;if(x<-150||x>vw+150)continue;ctx.save();ctx.globalAlpha=.9;envDraw(5,x-58,812,116,105,t,true);ctx.restore();for(let j=0;j<5;j++){const py=e.y+e.h-((tick*112+j*33)%e.h);paintedBubble(x+Math.sin(j*2.3+tick*.8)*24,py,3+j%2*2,.28);}const wash=ctx.createLinearGradient(x,e.y,x,e.y+e.h);wash.addColorStop(0,'#affff200');wash.addColorStop(1,'#9bfff018');ctx.fillStyle=wash;ctx.fillRect(x-48,e.y,96,e.h);}
  for(const f of palace.fountains){const x=f.x-camera;if(x<-120||x>vw+120)continue;envDraw(5,x-65,795,130,130,t,true);for(let j=0;j<4;j++)paintedBubble(x+Math.sin(j+tick)*24,860-((tick*80+j*30)%180),3+j%2,.25);}
  drawPalaceCameo86(t);
  for(const e of enemies)if(e.hp>0)drawPalaceCreature(e,t);
- const center=palaceArenaCenter(),x=center-camera;ctx.save();ctx.globalAlpha=.42;envDraw(2,x-175,485,350,390,t);ctx.restore();
+ const center=palaceArenaCenter(),x=center-camera;ctx.save();ctx.globalAlpha=.9;envDraw(2,x-175,485,350,390,t);ctx.restore();
  for(let i=0;i<4;i++){const lx=center-230+i*150-camera,lit=!boss?.active||(queen?.entry||0)>i*.48;if(lit)paintedBubble(lx,372,5,.48);}
  drawQueenAttacks(t);if(queen?.victoryReady)for(let i=0;i<5;i++)paintedBubble(center-90+i*46-camera,640-Math.sin(i/4*Math.PI)*48,4,.42);return true;}
 

@@ -1,0 +1,12 @@
+/* 9.0: restrained pearl frame, readable panels and generous painted play area. */
+:root{--v90-ink:#082e43;--v90-pearl:#fff2d5;--v90-glass:#075061}
+body{background:radial-gradient(ellipse at 50% 0,#164f64 0,#092a40 45%,#061a2d 100%)}
+.game-shell{border:1px solid #c4f4ed65;box-shadow:0 24px 70px #02121f70,0 0 0 5px #a3e9df09;border-radius:24px;overflow:hidden}
+header{border-bottom:1px solid #b6ece52b;background:linear-gradient(100deg,#083548ed,#0b2e45ed)}
+.edition-seal{background:linear-gradient(135deg,#093d50ed,#155f6be6);border:1px solid #ffe4a39c;box-shadow:0 7px 24px #001b3960;color:#fff0ca}
+.edition-seal b{color:#b7ffeb}.title-content{background:linear-gradient(100deg,#052939d9,#06354792 65%,#08354900);border:1px solid #c6f4e32e;border-radius:30px}
+.mermaid-stat-card,.boss-hud,.stage-hud,.coin-objective{backdrop-filter:blur(9px);box-shadow:0 4px 16px #00172630}
+.dialogue-card{background:linear-gradient(140deg,#073449f7,#164653f5);border:1px solid #ffe8b791;box-shadow:0 20px 70px #00142580}
+.dialogue-card p{color:#f5fbf5}.build-tag{color:#d4f6e5;opacity:.75}
+@media(pointer:coarse){.game-shell{border-radius:14px}.mermaid-stat-card,.boss-hud,.stage-hud,.coin-objective{backdrop-filter:none}}
+@media(prefers-reduced-motion:reduce){.title-content,.edition-seal{animation:none}}

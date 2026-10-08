@@ -1,7 +1,7 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('fs'),rt=require('./runtime.cjs')();rt.sandbox.assert=assert;
 const game=fs.readFileSync('dist/game.js','utf8'),polish=fs.readFileSync('dist/polish.js','utf8'),pred=fs.readFileSync('dist/predators-v56.js','utf8'),ranaSrc=fs.readFileSync('dist/rana.js','utf8'),html=fs.readFileSync('dist/index.html','utf8');
-assert.match(html,/(?:6\.\d+|[78]\.\d+) · /);
+assert.match(html,/(?:6\.\d+|[789]\.\d+) · /);
 for(const token of ['for(let i=0;i<34;i++)fish.push','for(let i=0;i<36;i++)bubbles.push','for(let i=0;i<24;i++)','nessie.y>730?.18:.34'])assert(game.includes(token),token);
 assert.match(polish,/ctx\.globalAlpha=\.26;envDraw\(4/);
 assert.match(polish,/const center=palaceArenaCenter\(\),x=center-camera/);
@@ -9,7 +9,7 @@ assert.match(pred,/function drawSharkHealthBar/);assert.match(pred,/HUNT SHARK/)
 assert.match(ranaSrc,/RANA_ARENA_EXPANDED_RIGHT=7240/);assert.match(ranaSrc,/function ranaAvoidObstacles/);
 rt.run(`
 mode='story';stage=3;loadStage();state='playing';dialogueSeen=new Set(Object.keys(conversations));
-assert.equal(W,41600);assert.equal(ranaArenaRight(),39629);
+assert.equal(W,29120);assert.equal(ranaArenaRight(),27741);
 const sharks=enemies.filter(isReefShark);assert.equal(sharks.length,12);assert(sharks.every(s=>s.maxHp===4&&s.arenaShark&&s.aggressive));
 assert.equal(obstacles.filter(o=>o.huntArena).length,3);assert(launchPads.some(p=>p.x===storyStretchX(7040)));
 nessie.x=storyStretchX(2800);nessie.y=560;updateRana(.016);assert(boss.active);

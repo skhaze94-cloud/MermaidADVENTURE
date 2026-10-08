@@ -1,4 +1,24 @@
-# Sarah Maria Family Adventure 8.7 — Waterfall Adventure
+# Sarah Maria Family Adventure 9.0 — Painted World Adventure
+
+A unified visual overhaul of all chapters: one horizon-aligned painted backdrop, crisp alpha-trimmed scenery with preserved proportions, opaque nearby gardens, seamless single-transform environmental animation, and clear characters and combat above the scenery. Removed duplicate ghost flora, repeated translucent ruins, layered palace washes and post-character Highland tints. Refined the pearl frame, opening panel and dialogue presentation while preserving the existing painted character identities and animations.
+
+Core story stages 1–4 are exactly 30% shorter than 8.7, with identical enemy counts and species composition. Tutorial, Shadow Crab Kingdom, Blackwater Tunnel and timed trials retain their lengths. Stage 1 retains the uninterrupted 17-second waterfall and four-direction boost.
+
+| Chapter | 8.7 length | 9.0 length | Enemies |
+| --- | ---: | ---: | ---: |
+| Highland Gold | 29,640 | 20,748 | 68 |
+| Miguel’s Lagoon | 33,150 | 23,205 | 36 |
+| Pearl Palace | 37,050 | 25,935 | 40 |
+| Rana’s Rainbow Ruin | 41,600 | 29,120 | 18 |
+
+See [9.0 release notes](docs/painted-world-v90.md). Run the suites in `.github/workflows/ci.yml`. Export the complete offline game with:
+
+```sh
+python3 scripts/export-standalone.py Mermaid-Adventure-9.0.html
+```
+
+## Previous update: 8.7 Waterfall Adventure
+
 
 Stage 1’s uninterrupted waterfall now has smooth four-direction swimming and directional boost, including diagonals, with matching collision and energy costs. Three painted eels coil and lunge with visible warning cues. Crisp flowing inlet rings lead into one opaque textured rock shaft, replacing overlapping reef layers. The 17-second descent, whirlpools, treasure, exit checkpoint and all other chapters are preserved.
 
