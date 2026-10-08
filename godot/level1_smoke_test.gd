@@ -47,6 +47,28 @@ func _run_checks() -> void:
     _check(level.native_fx.trail is CPUParticles2D, "Native particle trail missing")
     _check(level.native_boss.sprite is Sprite2D, "Godot Carlo sprite missing")
     _check(level.native_boss.light is PointLight2D, "Carlo vulnerability light missing")
+    # Graphics overhaul: HUD is above every shader, with native actor lighting.
+    _check(level.premium_hud is CanvasLayer, "Native premium HUD must be a CanvasLayer")
+    _check(level.premium_hud.layer >= 6, "HUD must draw above the 2.5D post-processing")
+    _check(level.premium_hud.canvas is Control, "Native HUD drawing control missing")
+    _check(level.premium_hud.canvas.mouse_filter == Control.MOUSE_FILTER_IGNORE,
+        "HUD must not intercept touchscreen controls")
+    _check(level.native_rig.hero_light is PointLight2D, "Sarah's key light missing")
+    _check(level.water_surface is Node2D, "Water surface shader composition missing")
+    _check(level.water_surface.foam.size() == 32, "Wave foam highlights not initialized")
+    _check(level.native_fx.cinematic_overlay.material is ShaderMaterial,
+        "Cinematic depth edge grade shader missing")
+    var sample := level._hud_snapshot()
+    _check(int(sample.get("health", -1)) == 5, "HUD health snapshot mismatched")
+    level.premium_hud.update_hud(sample)
+    _check(level.premium_hud.info.has("progress"), "HUD missing level progress")
+    level.native_fx.set_quality(false)
+    _check(not level.native_fx.cinematic_overlay.visible,
+        "Economy preset must omit cinematic grade")
+    level.native_fx.set_quality(true)
+    _check(level.native_fx.cinematic_overlay.visible,
+        "High preset must restore cinematic grade")
+
     _check(level.obstacles.size() == 19, "Source obstacle count changed")
     _check(level.enemies.size() >= 25, "Expected a playable enemy roster")
     _check(level.treasures.size() > 80, "Expected exploration treasure")
