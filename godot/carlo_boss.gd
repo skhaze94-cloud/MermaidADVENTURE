@@ -8,6 +8,7 @@ var clock := 0.0
 var active := false
 var vulnerable := false
 var life := 5
+var defeating := false
 var hit_tween: Tween
 var boss_scale := Vector2.ONE
 var reduced_motion := false
@@ -44,7 +45,7 @@ func set_boss_state(hp: int, can_hit: bool, global_clock: float, screen_x: float
     vulnerable = can_hit
     clock = global_clock
     position = Vector2(screen_x, screen_y)
-    visible = hp > 0 and screen_x > -320.0 and screen_x < screen_width + 320.0
+    visible = (hp > 0 or defeating) and screen_x > -320.0 and screen_x < screen_width + 320.0
     light.color = Color("#7cffad") if vulnerable else Color("#ff9d92")
     light.energy = (0.9 if vulnerable else 0.22) * (1.0 if reduced_motion else 0.85 + 0.15 * sin(clock * 3.8))
     if not reduced_motion:
@@ -65,9 +66,21 @@ func play_hit() -> void:
     hit_tween.parallel().tween_property(sprite, "self_modulate", Color.WHITE, 0.3)
 
 func defeat() -> void:
+    defeating = true
     if hit_tween and hit_tween.is_running():
         hit_tween.kill()
     var tween := create_tween()
     tween.tween_property(sprite, "modulate:a", 0.0, 0.7).set_trans(Tween.TRANS_CUBIC)
     tween.parallel().tween_property(sprite, "rotation", 0.7, 0.7)
-    tween.tween_callback(func() -> void: visible = false)
+    tween.tween_callback(func() -> void:
+        visible = false
+        defeating = false
+    )
+
+func reset_boss() -> void:
+    defeating = false
+    sprite.modulate = Color.WHITE
+    sprite.self_modulate = Color.WHITE
+    sprite.rotation = 0.0
+    sprite.scale = Vector2(324.0 / CARLO.get_width(), 352.0 / CARLO.get_height())
+    visible = false
