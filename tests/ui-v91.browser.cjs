@@ -23,7 +23,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
    return {shell:box('.game-shell'),hud:box('.hud'),score:box('.score-tile'),health:box('.timer-tile'),pause:box('#pause'),pad:box('.dpad'),actions:box('.splash-actions'),boost:box('.touch-dash'),jump:box('#touch-jump'),bubble:box('#touch-bubble'),meter:box('.dash-meter')};
   });
   const inside=(a,b)=>a.x>=b.x-1&&a.right<=b.right+1&&a.y>=b.y-1&&a.bottom<=b.bottom+1;
-  assert(inside(boxes.hud,boxes.shell),device.name+' HUD bounded');
+  assert(inside(boxes.hud,boxes.shell),device.name+' HUD bounded');assert(boxes.hud.height<=(device.width<=700?100:85),device.name+' HUD stays compact');assert(boxes.score.right<=boxes.health.x+1&&boxes.health.right<=boxes.pause.x+1,device.name+' essentials share a row');
   for(const n of ['score','health','pause'])assert(inside(boxes[n],boxes.hud),device.name+' '+n+' fits HUD');
   if(device.touch){
    assert(boxes.pad.visible&&boxes.actions.visible,device.name+' touch controls visible');
@@ -36,6 +36,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
   }
   await page.evaluate(()=>{stage=-1;loadStage();state='playing';training.step=2;training.pendingLesson=null;syncTutorialUi();});
   assert(await page.locator('#tutorial-card').isVisible());await page.screenshot({path:`qa/ui-v91/${device.name}-cue.png`});await page.waitForTimeout(1250);assert(!(await page.locator('#tutorial-card').isVisible()));
+  await page.evaluate(()=>pause());await page.locator('#resume').scrollIntoViewIfNeeded();assert(await page.locator('#resume').isVisible());await page.screenshot({path:`qa/ui-v91/${device.name}-pause.png`});await page.locator('#resume').click();assert.equal(await page.evaluate(()=>state),'playing');
   assert.deepEqual(errors,[],device.name+' no page errors');console.log(device.name+' browser layout, cue and pointer checks passed');await context.close();
  }}finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

@@ -113,3 +113,32 @@ footer .definitive-controls{gap:18px;padding:12px 0;opacity:.85}.definitive-cont
 
 .story .hud #timer{display:none!important}
 @media(max-width:420px){.game-shell .hud .treasure-counters,.game-shell .hud .combo-readout{display:none!important}}
+/* Pause and results use the same menu scale and button hierarchy. */
+.game-shell .start-card{width:min(520px,90%);max-height:90%;overflow-y:auto;overscroll-behavior:contain;padding:26px;background:#0b293bf2;border:1px solid var(--ui-line);border-radius:22px;box-shadow:0 18px 60px #00111e55;font-family:var(--ui-font)!important}
+.game-shell .start-card .result-title{font:900 clamp(24px,3vw,34px)/1.15 var(--ui-font)!important;letter-spacing:-.5px;margin:12px 0;color:var(--ui-ink);text-shadow:none}
+.game-shell .start-card p{font:700 15px/1.5 var(--ui-font)!important;color:var(--ui-muted)}
+.game-shell .start-card .eyebrow,.game-shell .v62-result-badge{font:800 11px/1.4 var(--ui-font);letter-spacing:1px;color:var(--ui-gold);box-shadow:none}
+.game-shell .start-card .restart{font:800 14px var(--ui-font);min-height:44px;padding:10px 14px;border:1px solid var(--ui-line);border-radius:12px;background:#ffffff09;color:var(--ui-ink);box-shadow:none}
+.game-shell .v62-result-score strong{font:900 44px/1.2 var(--ui-font)!important;color:var(--ui-gold);text-shadow:none}
+.game-shell .v62-result-score small,.game-shell .v62-result-bonuses{font:700 12px/1.4 var(--ui-font)!important}
+.game-shell #dialogue-options button{font:800 14px/1.4 var(--ui-font)!important;min-height:44px;border:1px solid var(--ui-line);border-radius:12px;box-shadow:none;background:#ffffff0b;color:var(--ui-ink)}
+.game-shell.controls-suspended .bubble-power-hud{visibility:hidden}
+@media(max-height:550px) and (orientation:landscape){.game-shell .start-card{padding:16px 22px;max-height:94%}.game-shell .start-card .result-title{font-size:24px!important;margin:8px 0}.game-shell .start-card p{margin:8px 0}.game-shell .v62-result-score strong{font-size:32px!important}}
+/* Override inherited ornament sizes, including older !important declarations. */
+.game-shell .hud .timer-tile{min-width:115px!important;padding:0!important}
+.game-shell .hud .health-shells{gap:4px!important;width:auto;height:20px;min-height:20px;background:none;border:0;box-shadow:none}
+.game-shell .hud #health-shells i{width:20px!important;height:20px!important;flex:0 0 20px!important;box-shadow:none!important}
+.game-shell .hud .stage-hud b,.game-shell .hud #score,.game-shell .hud .counter-pill b{font-family:var(--ui-font)!important}
+.game-shell .coin-objective{background:var(--ui-panel)!important;border:1px solid var(--ui-line)!important;box-shadow:none!important}
+.game-shell .coin-objective::before,.game-shell .coin-objective::after{display:none!important}
+.game-shell .dash-meter .boost-track{width:100%!important;height:5px!important;overflow:hidden!important;border:0!important;box-shadow:none!important;background:#ffffff24!important;border-radius:4px!important}
+.game-shell .dash-meter #energy{border-radius:4px!important;box-shadow:none!important;background:linear-gradient(90deg,#72e1ca,#c6ffe9)!important}
+@media(any-pointer:coarse){
+ .game-shell .definitive-touch .splash-actions button{border:1px solid #c2f2e870!important;background:#10394ee8!important;box-shadow:0 3px 10px #00182c33!important}
+ .game-shell .definitive-touch .splash-actions .touch-dash{background:#f2d390f5!important;color:#153c48;border-color:#fff0ba!important}
+ .game-shell .definitive-touch .splash-actions .touch-bubble{background:#514c87ed!important;border-color:#d9d2ff!important}
+ .game-shell .definitive-touch .touch-dash .cue-icon{color:inherit;filter:none}
+ .game-shell .dash-meter .boost-track{width:auto!important;height:4px!important}
+}
+@media(max-width:700px){.game-shell .hud .timer-tile{min-width:100px!important}.game-shell .hud{flex-wrap:nowrap;position:absolute}.game-shell .hud .stage-hud{position:absolute;left:10px;right:10px;bottom:7px;flex-basis:auto}.game-shell .hud{padding-bottom:30px;min-height:88px}.game-shell .hud .stage-hud b{font-family:var(--ui-font)!important}}
+@media(max-height:550px) and (orientation:landscape){.game-shell .hud{padding-bottom:6px;min-height:54px}.game-shell .hud .stage-hud{position:static;flex:1}}
