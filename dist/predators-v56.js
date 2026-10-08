@@ -156,7 +156,7 @@ function updateReefSharks(dt){
   for(const e of enemies){
     if(!isReefShark(e)||e.hp<=0)continue;
     const oldX=e.x,oldY=e.y;
-    e.clock+=dt;e.sharkTime+=dt;e.cooldown=Math.max(0,e.cooldown-dt);
+    e.clock+=dt;e.swimPhase83=(e.swimPhase83||0)+dt*(4+clamp(Math.hypot(e.vx||0,e.vy||0)/1030,0,1)*5);e.sharkTime+=dt;e.cooldown=Math.max(0,e.cooldown-dt);
     e.recoil=Math.max(0,e.recoil-dt*2.4);e.alert=Math.max(0,e.alert-dt*.7);e.eyeBlink=(e.eyeBlink+dt*.28)%1;
     const dx=nessie.x-e.x,dy=nessie.y-e.y,d=Math.hypot(dx,dy),enraged=e.hp===1,playerVisible=!leap.breached&&d<SHARK_TUNE.loseRange;
     if(playerVisible){e.lastSeenX=nessie.x;e.lastSeenY=nessie.y;}
@@ -276,14 +276,14 @@ function drawReefShark(e,t){
   const lunge=['charge','lunge','bite'].includes(state),stun=state==='stunned',lock=state==='lock';
   const jawOpen=state==='bite'?.95:state==='lunge'?.58:state==='lock'?.36:state==='stunned'?.12:.08+Math.sin(e.clock*3.1)*.035;
   const tailAmp=reducedMotion?0:(.13+speedNorm*.28+(enraged?.05:0));
-  const tail1=Math.sin(e.clock*(4.2+speedNorm*5)+e.phase)*tailAmp;
-  const tail2=Math.sin(e.clock*(4.9+speedNorm*6)+e.phase+1.05)*tailAmp*1.45;
+  const tail1=Math.sin((e.swimPhase83??e.clock*4.2)+e.phase)*tailAmp;
+  const tail2=Math.sin((e.swimPhase83??e.clock*4.2)-1.05+e.phase)*tailAmp*1.45;
   const bodyRoll=reducedMotion?0:Math.sin(e.clock*2.1+e.phase)*.025;
   const blink=e.eyeBlink>.94?1:0;
   const wakeIntensity=lunge?1:state==='stalk'||state==='circle'?.55:0;
 
   ctx.save();ctx.translate(x,y);ctx.scale(face,1);ctx.rotate(headAim*.45+bodyRoll+Math.sin(e.recoil*12)*e.recoil*.055);
-  drawSharkWake(e,t,wakeIntensity);
+  drawSharkWake(e,reducedMotion?0:e.clock,wakeIntensity);
 
   // Rear tail stalk and articulated tail lobes.
   ctx.save();ctx.translate(88,2);ctx.rotate(tail1);
@@ -390,12 +390,12 @@ function drawPaintedReefShark(e,t){
   const swimAngle=e.renderAngle||0;
   ctx.save();ctx.translate(x,e.y);ctx.scale(-face,1);
   ctx.rotate(clamp(swimAngle,-.38,.38)*(face>0?-1:1));
-  drawSharkWake(e,t,['lunge','bite'].includes(state)?1:state==='circle'?.5:0);
+  drawSharkWake(e,reducedMotion?0:e.clock,['lunge','bite'].includes(state)?1:state==='circle'?.5:0);
   ctx.rotate(Math.sin(tick*2)*.018+Math.sin(tick*18)*(e.recoil||0)*.045);
   const amplitude=reducedMotion?0:4+speed*7;
   warpedSprite(sharkPaintedArt,crop,w,h,(u,v)=>{
     const tail=Math.max(0,(.43-u)/.43),fin=Math.max(0,(v-.58)/.42);
-    return {x:(u-.5)*w,y:(v-.5)*h+Math.sin(tick*(4+speed*5)-u*5)*tail*tail*amplitude+Math.sin(tick*3.4-u*4)*fin*2};
+    return {x:(u-.5)*w,y:(v-.5)*h+Math.sin((reducedMotion?0:e.swimPhase83??tick*4)-u*5)*tail*tail*amplitude+Math.sin(tick*3.4-u*4)*fin*2};
   },6,4);
   ctx.restore();
   if(state==='lock'||state==='charge'){

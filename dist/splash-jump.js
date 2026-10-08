@@ -1,8 +1,9 @@
 'use strict';
 // A deliberate press close to water contact chains a splash bounce.
+const JUMP_BUFFER83=.16;let jumpBuffer83=0;
 const SPLASH_EARLY=.22,SPLASH_LATE=.24,SPLASH_DIP=.16;
 let splashChain=0,splashBonusUntil=-Infinity,splashLandingAt=-Infinity,splashQueued=false,splashDip=null;
-function resetSplashChain(){splashChain=0;splashBonusUntil=-Infinity;splashLandingAt=-Infinity;splashQueued=false;splashDip=null;}
+function resetSplashChain(){jumpBuffer83=0;splashChain=0;splashBonusUntil=-Infinity;splashLandingAt=-Infinity;splashQueued=false;splashDip=null;}
 function treasureMultiplier(){return Math.min(8,Math.min(5,1+Math.floor(combo/5))+(elapsed<splashBonusUntil?splashChain:0));}
 function landingSoon(){
  if(!leap.active||!leap.breached||nessie.vy<=0||leap.skimming)return false;
@@ -14,8 +15,10 @@ function requestJump(){
  if(state!=='playing'||splashDip||isExpandedHighland()&&highland?.fall)return false;
  if(leap.active){if(landingSoon()){splashQueued=true;return true;}return false;}
  if(elapsed-splashLandingAt<=SPLASH_LATE){beginSplashBounce();return true;}
- if(leap.cooldown>0||energy<.4&&boostUnlimited<=0&&!bossLeapReady)return false;
- splashChain=0;splashBonusUntil=-Infinity;splashQueued=false;
+ if(leap.cooldown>0||energy<.4&&boostUnlimited<=0&&!bossLeapReady){
+  if(leap.cooldown<=JUMP_BUFFER83&&(energy>=.37||boostUnlimited>0||bossLeapReady)){jumpBuffer83=JUMP_BUFFER83;return true;}return false;
+ }
+ jumpBuffer83=0;splashChain=0;splashBonusUntil=-Infinity;splashQueued=false;
  launchFromPad(closestLaunchPad());return true;
 }
 function noteSplashLanding(splashed){
@@ -44,3 +47,6 @@ function updateSplashBounce(dt,dx){
  }
  return true;
 }
+
+// A short press buffer applies only to nearly-ready underwater jumps.
+function updateJumpBuffer83(dt){if(state!=='playing'){jumpBuffer83=0;return;}if(jumpBuffer83<=0)return;jumpBuffer83=Math.max(0,jumpBuffer83-dt);if(!leap.active&&!splashDip&&leap.cooldown<=0&&(energy>=.4||boostUnlimited>0||bossLeapReady)&&!(isExpandedHighland()&&highland?.fall)){jumpBuffer83=0;requestJump();}}

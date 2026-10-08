@@ -4,7 +4,7 @@ const family=fs.readFileSync('dist/family.js','utf8'),tutorial=fs.readFileSync('
 assert.match(title,/\.opening-logo\{/);assert.match(title,/logo-return/);assert.match(html,/\d+\.\d+ · /);
 for(const name of ['Professor Puff','Sir Wobble','Noodle'])assert(family.includes(name));
 for(const move of ['THUNDER TEAPOT','TRIPLE TICKLE BOLT','THE CLOUD OF MILD CONCERN','ROYAL WOBBLE WAVE','DAD DASH','BUBBLE BEARD BLAST','GREEN GLOW · BOOST NOW'])assert(family.includes(move));
-assert.match(bossV4,/dadDash/);assert.match(bossV4,/bubbleBurst/);assert.match(tutorialTwo,/queenReact/);assert.match(tutorialTwo,/bloomCharge/);assert.match(tutorial,/practice creature/i);
+assert.match(bossV4,/daddash/i);assert.match(bossV4,/bubbleBurst/);assert.match(tutorialTwo,/queenReact/);assert.match(tutorialTwo,/bloomCharge/);assert.match(tutorial,/practice creature/i);
 rt.run(`
 mode='sarah';stage=-1;loadStage();state='playing';training.step=6;training.entryDone=true;dialogueSeen=new Set(Object.keys(conversations));
 assert.equal(training.practiceEnemies.length,3);

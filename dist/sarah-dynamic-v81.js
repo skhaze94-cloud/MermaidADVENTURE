@@ -24,14 +24,16 @@ function sarahFlight82(progress,variant='standard'){
  const compact=variant==='standard'?.72:variant==='heart'?.56:1,spread=variant==='heart'?1.2:variant==='combo'?1.15:1;
  return {p,angle:turns*Math.PI*2*ease,roll,tuck:envelope*(1-sarahEase82((p-.63)/.3))*compact,open:envelope*sarahEase82((p-.48)/.3)*spread};
 }
+// Fast downward steering shortens airtime: align the spin to actual flight as well as its clock.
+function sarahAirProgress83(){const clock=clamp((leap.airTime||0)/(leap.airDuration||1.05),0,1);if(!Number.isFinite(leap.airStartVy))return clock;const initial=-leap.airStartVy,end=Math.sqrt(2*(leap.gravity||1200)*((leap.height||140)+25));return Math.max(clock,clamp((nessie.vy+initial)/(initial+end),0,1));}
 function sarahJumpPose82(){
  if(!leap.breached||reducedMotion)return {angle:0,squash:1,stretch:1,skew:0};
- const f=sarahFlight82((leap.airTime||0)/(leap.airDuration||1.05),leap.variant);
+ const f=sarahFlight82(sarahAirProgress83(),leap.variant);
  return {angle:f.angle,squash:1-Math.abs(f.roll)*.075,stretch:1+f.tuck*.025,skew:f.roll*.055};
 }
 function sarahMotion81(wave,speed=0,air=0){const moving=clamp(speed,0,2),s=SARAH81_STATE,title=state==='ready',quiet=reducedMotion,tick=quiet?0:wave;
  const boost=title||quiet?0:s.boost,flight=title||quiet?0:Math.max(s.air,air>0?.7:0),stroke=quiet?0:(.08+moving*.075)*(1-boost*.86)*(1-flight*.7),phase=tick*.82;
- const f=!title&&!quiet&&leap.breached?sarahFlight82((leap.airTime||0)/(leap.airDuration||1.05),leap.variant):{roll:0,tuck:0,open:0};
+ const f=!title&&!quiet&&leap.breached?sarahFlight82(sarahAirProgress83(),leap.variant):{roll:0,tuck:0,open:0};
  const recover=title||quiet?0:s.recovery,charge=title||quiet?0:s.charge,turn=title||quiet?0:s.turn;
  const attack=title||quiet||mode!=='sarah'?0:Math.sin(clamp(V70.attackPulse/.22,0,1)*Math.PI);
  const pull=Math.sin(phase),follow=Math.sin(phase-.8),kick=Math.sin(tick*.88),tuck=f.tuck;
@@ -39,20 +41,20 @@ function sarahMotion81(wave,speed=0,air=0){const moving=clamp(speed,0,2),s=SARAH
  head:quiet?0:s.look*.045+Math.sin(tick*.38)*.012+boost*.04+turn*.018+tuck*.025,
  neck:quiet?0:-s.look*.015+Math.sin(tick*.31)*.008,
  torso:quiet?0:Math.sin(tick*.46)*.018-boost*.025-charge*.025+recover*.035,
- nearShoulder:.045+pull*stroke-boost*.20-charge*.13-tuck*.20+f.open*.14+f.roll*.09-attack*.13,
+ nearShoulder:.045+pull*stroke-boost*.20-charge*.13-tuck*.20+f.open*.14+f.roll*.10-attack*.16,
  farShoulder:-.14+Math.sin(phase+2.6)*stroke-boost*.10-charge*.08-tuck*.14-f.roll*.08-attack*.07,
  nearElbow:quiet?.10:.10+follow*stroke*.7-boost*.075+tuck*.16+recover*.09-attack*.10,
  farElbow:quiet?.08:.08+Math.sin(phase+1.8)*stroke*.6-boost*.055+tuck*.12+recover*.06,
  nearWrist:quiet?0:Math.sin(phase-1.5)*.032*(1-boost)+f.open*.025,
  farWrist:quiet?0:Math.sin(phase+1.1)*.028*(1-boost)-f.open*.02,
- tailBase:quiet?0:kick*(.04+moving*.025)*(1-boost*.3)+charge*.09+tuck*.10-recover*.065+turn*.055,
+ tailBase:quiet?0:kick*(.04+moving*.03)*(1-boost*.35)+charge*.09+tuck*.10-recover*.065+turn*.055,
  tailTip:quiet?0:Math.sin(tick*.88-1.1)*(.07+moving*.04)+charge*.12+tuck*.20-recover*.10+turn*.12,
  finTop:quiet?0:Math.sin(tick*1.35-1.9)*(.06+moving*.035)-tuck*.14-f.open*.09+f.roll*.10,
  finBottom:quiet?0:Math.sin(tick*1.43-2.5)*(.07+moving*.025)+tuck*.12+f.open*.11-f.roll*.10,
  sideFin:quiet?0:Math.sin(tick*1.61-.7)*.09+f.roll*.10,
  hair:quiet?0:Math.sin(tick*.58)*.03-boost*.035-f.roll*.035+recover*.025,
  hairLock:quiet?0:Math.sin(tick*.69-1.2)*.055+f.roll*.045,
- hairStrand:quiet?0:Math.sin(tick*.77-2)*.06+f.roll*.065+recover*.04,
+ hairStrand:quiet?0:Math.sin(tick*.77-2)*.065+f.roll*.065+recover*.04,
  flutter:quiet?0:.65+moving*.45+boost*.4+flight*.35,
  bob:quiet?0:Math.sin(tick*.5)*1.1};
 }
@@ -93,4 +95,4 @@ function drawSarahTrail81(){if(mode==='story'||(isTraining()&&trainingHero==='da
  if(!motionTrail.length)return true;sarahGhost81??=new OffscreenCanvas(276,192);
  if(elapsed-sarahGhostTime81>.07||elapsed<sarahGhostTime81){const paint=sarahGhost81.getContext('2d');paint.clearRect(0,0,276,192);paint.save();paint.translate(138,96);sarahPaint81=paint;try{drawSarahRig81(230,154,swimTime,clamp(Math.hypot(nessie.vx,nessie.vy)/360,0,2),leap.breached?leap.airTime:0);}finally{sarahPaint81=null;paint.restore();}sarahGhostTime81=elapsed;}
  ctx.save();for(const p of motionTrail){ctx.save();ctx.globalAlpha=p.life*.2;ctx.translate(p.x-camera,p.y);ctx.scale(p.face,1);ctx.rotate(p.angle||0);ctx.drawImage(sarahGhost81,-138,-96);ctx.restore();}ctx.restore();return true;}
-function installSarahDynamic81(){const baseUpdate=update,baseLoad=loadStage,baseTrail=drawMotionTrail,baseJump=jumpPose;jumpPose=function(){return mode!=='story'&&!(isTraining()&&trainingHero==='daddy')?sarahJumpPose82():baseJump();};drawMotionTrail=function(){if(!drawSarahTrail81())baseTrail();};update=function(dt){baseUpdate(dt);updateSarahPose81(dt);};loadStage=function(){const out=baseLoad();resetSarahPose81();return out;};resetSarahPose81();}
+function installSarahDynamic81(){const baseUpdate=update,baseLoad=loadStage,baseTrail=drawMotionTrail,baseJump=jumpPose;jumpPose=function(){return mode!=='story'&&!(isTraining()&&trainingHero==='daddy')?sarahJumpPose82():baseJump();};drawMotionTrail=function(){if(!drawSarahTrail81())baseTrail();};update=function(dt){baseUpdate(dt);updateJumpBuffer83(dt);updateSarahPose81(dt);};loadStage=function(){const out=baseLoad();BOSS_V4_RIGS.clear();resetSarahPose81();return out;};resetSarahPose81();}

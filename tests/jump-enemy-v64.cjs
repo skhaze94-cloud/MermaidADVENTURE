@@ -4,7 +4,7 @@ const html=fs.readFileSync('dist/index.html','utf8'),game=fs.readFileSync('dist/
 
 assert.match(html,/(?:6\.4 · JUMP \+ ENEMY OVERHAUL|6\.5 · RESTORATION \+ ENEMY POLISH|[78]\.\d+ · [^<]+)/);
 assert.match(html,/id="desktop-jump"/);assert.match(html,/controls-v64\.css/);
-assert.match(game,/J \/ SHIFT/);assert.match(game,/jumpKey=key==='j'/);assert.match(game,/function doubleStoryEnemyRoster/);
+assert.match(game,/J \/ SHIFT/);assert.match(game,/if\(action==='j'\)/);assert.match(game,/function doubleStoryEnemyRoster/);
 assert.match(controls,/desktop-jump-action/);assert.match(controls,/bounce-ready/);assert.match(controls,/double-ready/);
 for(const token of ['faceHoldUntil','renderAngle','Luminous dorsal line','BOOST DISRUPTED'])assert(spark.includes(token),token);
 for(const token of ['RELEASE_ENEMY_PROFILE','swordfish','puffer','jelly','seahorse','globalCompositeOperation=\'screen\''])assert(polish.includes(token.replace(/\\'/g,"'")),token);

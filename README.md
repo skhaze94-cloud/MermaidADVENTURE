@@ -1,6 +1,8 @@
-# Sarah Maria Family Adventure 8.2 — Definitive Sarah
+# Sarah Maria Family Adventure 8.3 — Controls & Animations
 
-8.2 adds a graceful corkscrew jump, coordinated takeoff/tuck/re-entry poses, softer swimming strokes, turning follow-through and slightly fuller proportions. See [8.2 release notes](docs/definitive-sarah-v82.md).
+8.3 adds a short jump-input buffer, safer keyboard/touch cleanup, velocity-aware airborne turns, and character-specific spring transitions for every articulated boss. See [8.3 release notes](docs/controls-animation-v83.md).
+
+8.2 added a graceful corkscrew jump, coordinated takeoff/tuck/re-entry poses, softer swimming strokes, turning follow-through and slightly fuller proportions. See [8.2 release notes](docs/definitive-sarah-v82.md).
 
 Sarah uses a matching painted 16-part rig, independent shoulders/elbows/wrists, neck and head movement, connected tail segments, individual fin flutter and flowing layered hair. Boosts blend smoothly into a streamlined pose. Cached afterimages match the new rig. Her face is always rigid artwork. See [8.1 release notes](docs/dynamic-sarah-v81.md).
 
