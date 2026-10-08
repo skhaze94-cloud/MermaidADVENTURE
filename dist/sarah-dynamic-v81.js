@@ -1,27 +1,60 @@
 'use strict';
-// Sarah's painted face is a rigid head sprite. Only hair, scales and fins use a mesh.
+// 8.2 Definitive Sarah. Retain the established asset/entry-point names for saved builds.
+// Painted facial pixels stay rigid; continuous arms, hair and fins have bounded skinning.
 const SARAH81_IMAGES=[new Image(),new Image()];
 SARAH81_IMAGES[0].src='assets/sarah-parts-v81.webp';
 SARAH81_IMAGES[1].src='assets/sarah-arms-refined-v81.webp';
 const SARAH81_ARM_CROPS=[[0.015625,0.201171875,0.46875,0.59765625],[0.515625,0.193359375,0.46875,0.611328125]];
-const SARAH81_ARM_SIZE={near:{length:69,height:44},far:{length:64,height:42}};
+const SARAH81_ARM_SIZE={near:{length:70,height:45},far:{length:66,height:43}};
 let sarahPaint81=null,sarahGhost81=null,sarahGhostTime81=-Infinity;
-const SARAH81_STATE={boost:0,look:0,air:0,turn:0,lastFace:1};
+const SARAH81_STATE={boost:0,look:0,air:0,turn:0,recovery:0,wasAir:false,charge:0,lastFace:1};
 const SARAH81_CROPS=[[0.0078125,0.0185546875,0.234375,0.212890625],[0.2578125,0.0107421875,0.234375,0.2275390625],[0.5078125,0.044921875,0.234375,0.16015625],[0.7578125,0.013671875,0.234375,0.2216796875],[0.0078125,0.30859375,0.234375,0.1318359375],[0.2578125,0.3173828125,0.234375,0.115234375],[0.51171875,0.296875,0.2265625,0.1552734375],[0.7578125,0.306640625,0.234375,0.1357421875],[0.0078125,0.56640625,0.234375,0.1171875],[0.2578125,0.544921875,0.234375,0.16015625],[0.5078125,0.56640625,0.234375,0.1171875],[0.7578125,0.5634765625,0.234375,0.123046875],[0.0078125,0.7783203125,0.234375,0.1923828125],[0.2578125,0.7744140625,0.234375,0.201171875],[0.5078125,0.822265625,0.234375,0.10546875],[0.7578125,0.7998046875,0.234375,0.150390625]];
-function resetSarahPose81(){sarahGhostTime81=-Infinity;SARAH81_STATE.boost=0;SARAH81_STATE.look=0;SARAH81_STATE.air=0;SARAH81_STATE.turn=0;SARAH81_STATE.lastFace=nessie.face;}
+function resetSarahPose81(){sarahGhostTime81=-Infinity;SARAH81_STATE.boost=0;SARAH81_STATE.look=0;SARAH81_STATE.air=0;SARAH81_STATE.turn=0;SARAH81_STATE.recovery=0;SARAH81_STATE.wasAir=false;SARAH81_STATE.charge=0;SARAH81_STATE.lastFace=nessie.face;}
 function updateSarahPose81(dt){if(!['playing','intro','portal'].includes(state))return;const d=clamp(dt,0,.1),follow=1-Math.exp(-d*10),s=SARAH81_STATE,boost=dashTime>0||(isExpandedHighland()&&highland?.fall?.boost>0)?1:0;
  s.boost+=(boost-s.boost)*follow;s.look+=(clamp(nessie.vy/420*nessie.face,-1,1)-s.look)*(1-Math.exp(-d*6));s.air+=((leap.breached?1:0)-s.air)*follow;
+ s.recovery*=Math.exp(-d*8);if(s.wasAir&&!leap.breached)s.recovery=1;s.wasAir=!!leap.breached;
+ s.charge+=((leap.active&&!leap.breached||splashDip?1:0)-s.charge)*follow;
  if(nessie.face!==s.lastFace){s.turn=1;s.lastFace=nessie.face;}s.turn*=Math.exp(-d*7);
 }
+// Quintic easing gives takeoff and water entry zero angular velocity.
+function sarahEase82(value){const u=clamp(value,0,1);return u*u*u*(u*(u*6-15)+10);}
+function sarahFlight82(progress,variant='standard'){
+ const p=clamp(progress,0,1),ease=sarahEase82((p-.06)/.88),turns=variant==='boss'?2:1;
+ const envelope=Math.sin(p*Math.PI)**2,roll=Math.sin(ease*Math.PI*2*(variant==='combo'?2:turns))*envelope;
+ const compact=variant==='standard'?.72:variant==='heart'?.56:1,spread=variant==='heart'?1.2:variant==='combo'?1.15:1;
+ return {p,angle:turns*Math.PI*2*ease,roll,tuck:envelope*(1-sarahEase82((p-.63)/.3))*compact,open:envelope*sarahEase82((p-.48)/.3)*spread};
+}
+function sarahJumpPose82(){
+ if(!leap.breached||reducedMotion)return {angle:0,squash:1,stretch:1,skew:0};
+ const f=sarahFlight82((leap.airTime||0)/(leap.airDuration||1.05),leap.variant);
+ return {angle:f.angle,squash:1-Math.abs(f.roll)*.075,stretch:1+f.tuck*.025,skew:f.roll*.055};
+}
 function sarahMotion81(wave,speed=0,air=0){const moving=clamp(speed,0,2),s=SARAH81_STATE,title=state==='ready',quiet=reducedMotion,tick=quiet?0:wave;
- const boost=title||quiet?0:s.boost,flight=title||quiet?0:Math.max(s.air,air>0?.7:0),stroke=quiet?0:(.075+moving*.055)*(1-boost*.85)*(1-flight*.65),phase=tick*.82;
- return {boost,flight,phase,head:quiet?0:s.look*.055+Math.sin(tick*.38)*.012+boost*.045+s.turn*.018,neck:quiet?0:-s.look*.018+Math.sin(tick*.31)*.009,
- torso:quiet?0:Math.sin(tick*.46)*.014-boost*.025,nearShoulder:.06+Math.sin(phase)*stroke-boost*.18-flight*.05,farShoulder:-.18+Math.sin(phase+Math.PI)*stroke-boost*.06,
- nearElbow:quiet?.10:.10+Math.sin(phase-1)*stroke*.5-boost*.075,farElbow:quiet?.08:.08+Math.sin(phase+2.1)*stroke*.45-boost*.055,
- nearWrist:quiet?0:Math.sin(phase-1.5)*.025*(1-boost),farWrist:quiet?0:Math.sin(phase+1.9)*.022*(1-boost),
- tailBase:quiet?0:Math.sin(tick*.88)*(.035+moving*.022)*(1-boost*.3),tailTip:quiet?0:Math.sin(tick*.88-1.1)*(.06+moving*.033),
- finTop:quiet?0:Math.sin(tick*1.35-1.9)*(.055+moving*.03),finBottom:quiet?0:Math.sin(tick*1.43-2.5)*(.065+moving*.022),sideFin:quiet?0:Math.sin(tick*1.61-.7)*.08,
- hair:quiet?0:Math.sin(tick*.58)*.028-boost*.035,hairLock:quiet?0:Math.sin(tick*.69-1.2)*.055,hairStrand:quiet?0:Math.sin(tick*.77-2)*.055,flutter:quiet?0:.65+moving*.45+boost*.5+flight*.3,bob:quiet?0:Math.sin(tick*.5)*1.1};
+ const boost=title||quiet?0:s.boost,flight=title||quiet?0:Math.max(s.air,air>0?.7:0),stroke=quiet?0:(.08+moving*.075)*(1-boost*.86)*(1-flight*.7),phase=tick*.82;
+ const f=!title&&!quiet&&leap.breached?sarahFlight82((leap.airTime||0)/(leap.airDuration||1.05),leap.variant):{roll:0,tuck:0,open:0};
+ const recover=title||quiet?0:s.recovery,charge=title||quiet?0:s.charge,turn=title||quiet?0:s.turn;
+ const attack=title||quiet||mode!=='sarah'?0:Math.sin(clamp(V70.attackPulse/.22,0,1)*Math.PI);
+ const pull=Math.sin(phase),follow=Math.sin(phase-.8),kick=Math.sin(tick*.88),tuck=f.tuck;
+ return {boost,flight,phase,roll:f.roll,tuck,recover,charge,attack,
+ head:quiet?0:s.look*.045+Math.sin(tick*.38)*.012+boost*.04+turn*.018+tuck*.025,
+ neck:quiet?0:-s.look*.015+Math.sin(tick*.31)*.008,
+ torso:quiet?0:Math.sin(tick*.46)*.018-boost*.025-charge*.025+recover*.035,
+ nearShoulder:.045+pull*stroke-boost*.20-charge*.13-tuck*.20+f.open*.14+f.roll*.09-attack*.13,
+ farShoulder:-.14+Math.sin(phase+2.6)*stroke-boost*.10-charge*.08-tuck*.14-f.roll*.08-attack*.07,
+ nearElbow:quiet?.10:.10+follow*stroke*.7-boost*.075+tuck*.16+recover*.09-attack*.10,
+ farElbow:quiet?.08:.08+Math.sin(phase+1.8)*stroke*.6-boost*.055+tuck*.12+recover*.06,
+ nearWrist:quiet?0:Math.sin(phase-1.5)*.032*(1-boost)+f.open*.025,
+ farWrist:quiet?0:Math.sin(phase+1.1)*.028*(1-boost)-f.open*.02,
+ tailBase:quiet?0:kick*(.04+moving*.025)*(1-boost*.3)+charge*.09+tuck*.10-recover*.065+turn*.055,
+ tailTip:quiet?0:Math.sin(tick*.88-1.1)*(.07+moving*.04)+charge*.12+tuck*.20-recover*.10+turn*.12,
+ finTop:quiet?0:Math.sin(tick*1.35-1.9)*(.06+moving*.035)-tuck*.14-f.open*.09+f.roll*.10,
+ finBottom:quiet?0:Math.sin(tick*1.43-2.5)*(.07+moving*.025)+tuck*.12+f.open*.11-f.roll*.10,
+ sideFin:quiet?0:Math.sin(tick*1.61-.7)*.09+f.roll*.10,
+ hair:quiet?0:Math.sin(tick*.58)*.03-boost*.035-f.roll*.035+recover*.025,
+ hairLock:quiet?0:Math.sin(tick*.69-1.2)*.055+f.roll*.045,
+ hairStrand:quiet?0:Math.sin(tick*.77-2)*.06+f.roll*.065+recover*.04,
+ flutter:quiet?0:.65+moving*.45+boost*.4+flight*.35,
+ bob:quiet?0:Math.sin(tick*.5)*1.1};
 }
 function sarahPart81(index,x,y,w,h,angle=0,pivotX=0,pivotY=0){const paint=sarahPaint81||ctx;const im=SARAH81_IMAGES[0],crop=SARAH81_CROPS[index];if(!crop)return;paint.save();paint.translate(pivotX,pivotY);paint.rotate(angle);paint.drawImage(im,crop[0]*im.naturalWidth,crop[1]*im.naturalHeight,crop[2]*im.naturalWidth,crop[3]*im.naturalHeight,x-pivotX,y-pivotY,w,h);paint.restore();}
 function sarahFlow81(index,x,y,w,h,tick,amount,cols=4,rows=2){const paint=sarahPaint81||ctx;const crop=SARAH81_CROPS[index];if(!crop)return;paint.save();paint.translate(x+w/2,y+h/2);if(reducedMotion||amount===0||sarahPaint81)sarahPart81(index,-w/2,-h/2,w,h);else warpedSprite(SARAH81_IMAGES[0],crop,w,h,(u,v)=>({x:(u-.5)*w,y:(v-.5)*h+Math.sin(tick-(1-u)*4.5+v*.8)*(1-u)*(1-u)*amount}),cols,rows);paint.restore();}
@@ -43,15 +76,15 @@ function drawSarahRig81(w,h,wave,speed=0,air=0){const paint=sarahPaint81||ctx;co
  paint.save();paint.translate(49,-23);paint.rotate(m.hair);sarahFlow81(2,-105,-46,116,77,tick*.66,m.flutter*2.2);paint.save();paint.rotate(m.hairStrand);sarahFlow81(15,-109,-18,109,28,tick*.76-1.1,m.flutter*2.5);paint.restore();paint.restore();
 
  // A parented two-bone tail carries two independently fluttering terminal fins.
- paint.save();paint.translate(13,30);paint.rotate(m.tailBase);paint.save();paint.translate(-62,-1);paint.rotate(m.tailTip);sarahFlow81(11,-42,-13,50,26,tick*.88-1.1,m.flutter*1.2,3,2);paint.translate(-34,-2);
- paint.save();paint.rotate(m.finBottom);sarahFlow81(13,-37,-7,46,38,tick*1.43-2.5,m.flutter*1.6,3,2);paint.restore();paint.save();paint.rotate(m.finTop);sarahFlow81(12,-40,-49,49,57,tick*1.35-1.9,m.flutter*1.5,3,2);paint.restore();paint.restore();sarahFlow81(10,-70,-24,78,49,tick*.88,m.flutter*.9,4,2);paint.restore();
+ paint.save();paint.translate(13,30);paint.rotate(m.tailBase);paint.save();paint.translate(-62,-1);paint.rotate(m.tailTip);sarahFlow81(11,-42,-13,50,29,tick*.88-1.1,m.flutter*1.2,3,2);paint.translate(-34,-2);
+ paint.save();paint.rotate(m.finBottom);sarahFlow81(13,-37,-7,46,38,tick*1.43-2.5,m.flutter*1.6,3,2);paint.restore();paint.save();paint.rotate(m.finTop);sarahFlow81(12,-40,-49,49,57,tick*1.35-1.9,m.flutter*1.5,3,2);paint.restore();paint.restore();sarahFlow81(10,-70,-24,78,51,tick*.88,m.flutter*.9,4,2);paint.restore();
  paint.save();paint.translate(5,45);paint.rotate(m.sideFin);sarahFlow81(14,-36,-6,43,20,tick*1.61-.7,m.flutter,3,1);paint.restore();
  // Torso, shoulder sockets and collar share one parent transform.
  paint.save();paint.translate(12,24);paint.rotate(m.torso);paint.translate(-12,-24);
  sarahArm81(false,m);
- sarahPart81(0,5,-18,73,67);
+ sarahPart81(0,5,-18,75,69);
  // Never warp facial pixels. Neck and head rotate as separate rigid transforms.
- paint.save();paint.translate(56,-5);paint.rotate(m.neck+m.head);sarahPart81(1,-34,-71,67,73);paint.restore();
+ paint.save();paint.translate(56,-5);paint.rotate(m.neck+m.head);sarahPart81(1,-34,-69,67,73);paint.restore();
  paint.save();paint.translate(46,-26);paint.rotate(m.hairLock);sarahFlow81(3,-27,-4,33,49,tick*.69-1.2,m.flutter*.7,2,2);paint.restore();
  sarahArm81(true,m);paint.restore();paint.restore();return true;
 }
@@ -60,4 +93,4 @@ function drawSarahTrail81(){if(mode==='story'||(isTraining()&&trainingHero==='da
  if(!motionTrail.length)return true;sarahGhost81??=new OffscreenCanvas(276,192);
  if(elapsed-sarahGhostTime81>.07||elapsed<sarahGhostTime81){const paint=sarahGhost81.getContext('2d');paint.clearRect(0,0,276,192);paint.save();paint.translate(138,96);sarahPaint81=paint;try{drawSarahRig81(230,154,swimTime,clamp(Math.hypot(nessie.vx,nessie.vy)/360,0,2),leap.breached?leap.airTime:0);}finally{sarahPaint81=null;paint.restore();}sarahGhostTime81=elapsed;}
  ctx.save();for(const p of motionTrail){ctx.save();ctx.globalAlpha=p.life*.2;ctx.translate(p.x-camera,p.y);ctx.scale(p.face,1);ctx.rotate(p.angle||0);ctx.drawImage(sarahGhost81,-138,-96);ctx.restore();}ctx.restore();return true;}
-function installSarahDynamic81(){const baseUpdate=update,baseLoad=loadStage,baseTrail=drawMotionTrail;drawMotionTrail=function(){if(!drawSarahTrail81())baseTrail();};update=function(dt){baseUpdate(dt);updateSarahPose81(dt);};loadStage=function(){const out=baseLoad();resetSarahPose81();return out;};resetSarahPose81();}
+function installSarahDynamic81(){const baseUpdate=update,baseLoad=loadStage,baseTrail=drawMotionTrail,baseJump=jumpPose;jumpPose=function(){return mode!=='story'&&!(isTraining()&&trainingHero==='daddy')?sarahJumpPose82():baseJump();};drawMotionTrail=function(){if(!drawSarahTrail81())baseTrail();};update=function(dt){baseUpdate(dt);updateSarahPose81(dt);};loadStage=function(){const out=baseLoad();resetSarahPose81();return out;};resetSarahPose81();}

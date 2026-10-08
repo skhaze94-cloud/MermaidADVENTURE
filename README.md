@@ -1,6 +1,8 @@
-# Sarah Maria Family Adventure 8.1 — Dynamic Sarah
+# Sarah Maria Family Adventure 8.2 — Definitive Sarah
 
-8.1 focuses exclusively on Sarah: a matching painted 16-part rig, independent shoulders/elbows/wrists, neck and head movement, connected tail segments, individual fin flutter and flowing layered hair. Boosts blend smoothly into a streamlined pose. Cached afterimages match the new rig. Her face is always rigid artwork. See [8.1 release notes](docs/dynamic-sarah-v81.md).
+8.2 adds a graceful corkscrew jump, coordinated takeoff/tuck/re-entry poses, softer swimming strokes, turning follow-through and slightly fuller proportions. See [8.2 release notes](docs/definitive-sarah-v82.md).
+
+Sarah uses a matching painted 16-part rig, independent shoulders/elbows/wrists, neck and head movement, connected tail segments, individual fin flutter and flowing layered hair. Boosts blend smoothly into a streamlined pose. Cached afterimages match the new rig. Her face is always rigid artwork. See [8.1 release notes](docs/dynamic-sarah-v81.md).
 
 8.0 adds painted pearls, gems, shells, hearts, stars, chests and boost crystals; three distinct tutorial relics; exact live reward numbers; calmer exploration prompts and a rounded display font. Controls, level layouts, dialogue, bosses, movement and scoring values remain as before. Power-ups are protected against duplicate collection, and standalone exports share CSS artwork with the JavaScript asset registry rather than repeating image payloads.
 
