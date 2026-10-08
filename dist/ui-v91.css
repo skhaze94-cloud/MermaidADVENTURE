@@ -156,3 +156,5 @@ footer .definitive-controls{gap:18px;padding:12px 0;opacity:.85}.definitive-cont
 .game-shell.controls-suspended .dash-meter,.game-shell.controls-suspended .training-switch,.game-shell.controls-suspended .boss-lesson{visibility:hidden}
 @media(max-width:700px){.game-shell .hud .stage-hud{position:absolute;top:auto;left:10px;right:10px;bottom:7px}.hud .stage-copy{flex-direction:row;align-items:baseline;gap:8px}.hud .stage-copy>span{font-size:9px;flex:none}.hud .coin-objective{flex-direction:row}.game-shell .hud .coin-objective>div{display:none}}
 @media(max-height:550px) and (orientation:landscape){.game-shell .hud .stage-hud{position:relative;left:auto;right:auto;bottom:auto}.hud .stage-copy{flex-direction:column;gap:2px}}
+.game-shell .hud .stage-hud{top:auto!important}
+@media(max-height:550px) and (orientation:landscape){.title-screen .edition-seal{display:none}}

@@ -13,6 +13,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
   const context=await browser.newContext({viewport:{width:device.width,height:device.height},hasTouch:device.touch,isMobile:device.touch,deviceScaleFactor:1,reducedMotion:'reduce'});
   const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto('http://127.0.0.1:8765',{waitUntil:'networkidle'});await page.evaluate(()=>document.fonts.ready);
+  const menuBounds=await page.locator('.game-shell').boundingBox(),drawerBounds=await page.locator('#chapter-drawer summary').boundingBox();assert(drawerBounds.y+drawerBounds.height<=menuBounds.y+menuBounds.height+1,device.name+' stage chooser visible in menu');
   await page.screenshot({path:`qa/ui-v91/${device.name}-menu.png`});
   // Opening the chapter drawer must stay scrollable, including short landscape screens.
   await page.locator('#chapter-drawer summary').click();await page.locator('#stage-3').scrollIntoViewIfNeeded();assert(await page.locator('#stage-3').isVisible());
@@ -23,6 +24,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
    const box=s=>{const e=document.querySelector(s),r=e.getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height,visible:getComputedStyle(e).display!=='none'&&getComputedStyle(e).visibility!=='hidden'};};
    return {shell:box('.game-shell'),hud:box('.hud'),stage:box('.stage-hud'),score:box('.score-tile'),health:box('.timer-tile'),pause:box('#pause'),pad:box('.dpad'),actions:box('.splash-actions'),boost:box('.touch-dash'),jump:box('#touch-jump'),bubble:box('#touch-bubble'),meter:box('.dash-meter')};
   });
+  console.log(device.name+' layout '+JSON.stringify(boxes));
   const inside=(a,b)=>a.x>=b.x-1&&a.right<=b.right+1&&a.y>=b.y-1&&a.bottom<=b.bottom+1;
   assert(inside(boxes.hud,boxes.shell),device.name+' HUD bounded');assert(boxes.hud.height<=(device.width<=700?100:85),device.name+' HUD stays compact');assert(boxes.score.right<=boxes.health.x+1&&boxes.health.right<=boxes.pause.x+1,device.name+' essentials share a row');
   for(const n of ['stage','score','health','pause'])assert(inside(boxes[n],boxes.hud),device.name+' '+n+' fits HUD');
