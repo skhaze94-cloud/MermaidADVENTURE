@@ -78,6 +78,12 @@ func _ready() -> void:
     music_player.play()
     queue_redraw()
 
+func _exit_tree() -> void:
+    # Headless CI must release MP3 playback explicitly before ResourceCache cleanup.
+    if is_instance_valid(music_player):
+        music_player.stop()
+        music_player.stream = null
+
 func _input(event: InputEvent) -> void:
     if event is InputEventKey and event.pressed and not event.echo:
         match event.keycode:
