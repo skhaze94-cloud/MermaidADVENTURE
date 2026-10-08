@@ -630,6 +630,13 @@ func _update_waterfall(dt: float) -> void:
     waterfall_y = clampf(waterfall_y + waterfall_velocity.y * dt, -145.0, 205.0)
     var hero_x := get_viewport_rect().size.x * 0.5 + waterfall_x * half
     var hero_y := 384.0 + waterfall_y
+    # Dispersed spray and foam respond to the shaft's downward current.
+    for i in range(18):
+        var shift := sin(float(i) * 8.7) * half * 0.87
+        var yy := fposmod(float(i) * 71.0 + waterfall_time * 240.0, s.y + 100.0) - 50.0
+        var spray_x := cx + shift + sin(time * 1.6 + float(i)) * 8.0
+        draw_circle(Vector2(spray_x, yy), 2.0 + float(i % 3),
+            Color(0.83, 1.0, 0.98, 0.12 + 0.08 * float(i % 2)))
     for hazard in waterfall_hazards:
         if hazard["passed"]:
             continue
@@ -915,8 +922,26 @@ func _draw_waterfall(s: Vector2) -> void:
     draw_rect(Rect2(0, 0, s.x, s.y), Color(0.012, 0.11, 0.23, 0.72))
     var half := minf(s.x * 0.40, 520.0)
     var cx := s.x * 0.5
-    draw_rect(Rect2(cx - half - 105, 0, 105, s.y), Color("#173d4b"))
-    draw_rect(Rect2(cx + half, 0, 105, s.y), Color("#173d4b"))
+    # Opaque rock banks use existing painted reef material, split into three
+    # natural-height sections instead of one visibly stretched billboard.
+    var cliff := clampf(s.x * 0.085, 75.0, 122.0)
+    draw_rect(Rect2(cx - half - cliff, 0, cliff, s.y), Color("#123946"))
+    draw_rect(Rect2(cx + half, 0, cliff, s.y), Color("#123946"))
+    var piece_height := s.y / 3.0 + 8.0
+    for i in range(3):
+        var y := float(i) * (s.y / 3.0) - 4.0
+        var tint := Color(0.46, 0.78, 0.77, 0.44 - float(i) * 0.055)
+        draw_texture_rect(REEF, Rect2(cx - half - cliff, y, cliff, piece_height), false, tint)
+        draw_texture_rect(REEF, Rect2(cx + half, y, cliff, piece_height), false, tint)
+    draw_line(Vector2(cx - half, 0), Vector2(cx - half, s.y), Color(0.67, 0.98, 0.94, 0.29), 4.0)
+    draw_line(Vector2(cx + half, 0), Vector2(cx + half, s.y), Color(0.67, 0.98, 0.94, 0.29), 4.0)
+    # Distant shafts pass behind hazards and pearls; no duplicate transparent walls.
+    for i in range(7):
+        var fraction := float(i + 1) / 8.0
+        var xx := cx + (fraction * 2.0 - 1.0) * half
+        var alpha := 0.027 + float(i % 3) * 0.013
+        draw_line(Vector2(xx, 30), Vector2(xx + sin(time * 0.7 + i) * 18.0, s.y),
+            Color(0.72, 1.0, 0.98, alpha), 17.0 if i % 2 == 0 else 10.0)
     for i in range(33):
         var xx := cx + sin(float(i) * 6.2) * half * 0.93
         var yy := fposmod(float(i) * 91.0 - waterfall_time * 260.0, s.y + 100.0) - 50.0
