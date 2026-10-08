@@ -37,6 +37,7 @@ var head_joint: Node2D
 var front_hair: Node2D
 var near_arm: Node2D
 var far_arm: Node2D
+var hero_light: PointLight2D
 var velocity_value := Vector2.ZERO
 var facing_value := 1.0
 var boosting := false
@@ -104,6 +105,30 @@ func _ready() -> void:
     near_arm = _joint("NearArm", torso, Vector2(10, -31))
     _part(0, near_arm, 30, -13, 70, 45, true)
 
+    # A real Godot 2D light subtly lifts Sarah away from deep blue scenery.
+    # This is an independent light, not a blurry duplicate of her painted face.
+    hero_light = PointLight2D.new()
+    hero_light.name = "MermaidSoftKeyLight"
+    hero_light.texture = _radial_texture()
+    hero_light.texture_scale = 2.4
+    hero_light.color = Color("#8ef8dc")
+    hero_light.energy = 0.24
+    hero_light.position = Vector2(21.0, -12.0)
+    add_child(hero_light)
+
+func _radial_texture() -> Texture2D:
+    var image := Image.create(96, 96, false, Image.FORMAT_RGBA8)
+    image.fill(Color.TRANSPARENT)
+    for y in range(96):
+        for x in range(96):
+            var u := (float(x) - 47.5) / 47.5
+            var v := (float(y) - 47.5) / 47.5
+            var d := sqrt(u * u + v * v)
+            if d < 1.0:
+                image.set_pixel(x, y, Color(1.0, 1.0, 1.0,
+                    pow(maxf(0.0, 1.0 - d), 2.1) * 0.74))
+    return ImageTexture.create_from_image(image)
+
 func set_motion(velocity: Vector2, direction: float, is_boosting: bool, is_leaping: bool, opacity: float) -> void:
     velocity_value = velocity
     facing_value = direction
@@ -121,7 +146,9 @@ func _process(delta: float) -> void:
         amplitude *= 0.36
     var follow := 1.0 - exp(-delta * 12.0)
     var swim_phase := clock * (4.4 + intensity * 1.3)
-    scale.x = lerpf(scale.x, facing_value, follow)
+    # Do not continuously squash the painted face through zero on turns.
+    # An immediate horizontal flip maintains Sarah's recognizable identity.
+    scale.x = facing_value
     # Rigid face: head and hair only rotate via parent joints.
     tail_base.rotation = lerpf(tail_base.rotation, sin(swim_phase) * amplitude, follow)
     tail_tip.rotation = lerpf(tail_tip.rotation, sin(swim_phase - 0.8) * amplitude * 1.55, follow)
@@ -136,3 +163,7 @@ func _process(delta: float) -> void:
     near_arm.rotation = sin(swim_phase * 0.77 + 0.7) * amplitude * 1.2 + (-0.21 if boosting else 0.0)
     far_arm.rotation = sin(swim_phase * 0.77 - 1.2) * amplitude * 1.2 + (0.2 if boosting else 0.0)
     self_modulate.a = alpha_value
+    if is_instance_valid(hero_light):
+        hero_light.energy = lerpf(hero_light.energy,
+            0.0 if reduced_motion else (0.48 if boosting else 0.24), follow)
+        hero_light.color = Color("#b6f8ff") if boosting else Color("#8ef8dc")
