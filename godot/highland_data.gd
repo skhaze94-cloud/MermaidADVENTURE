@@ -91,7 +91,7 @@ static func waterfall_hazards() -> Array[Dictionary]:
     var result: Array[Dictionary] = []
     var offsets := [-0.56, 0.50, -0.45, 0.57, 0.0, -0.55]
     for i in range(12):
-        var kind := "eel" if i in [4, 7, 10] else ["reef", "jelly", "puffer"][i % 3]
+        var kind: String = "eel" if i in [4, 7, 10] else ["reef", "jelly", "puffer"][i % 3]
         result.append({"at": 2.3 + float(i) * 1.17, "x": offsets[i % 6], "kind": kind, "passed": false})
     return result
 
