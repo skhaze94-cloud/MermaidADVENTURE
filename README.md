@@ -1,4 +1,6 @@
-# Sarah Maria Family Adventure 8.5 — Ultimate Fun Tutorial Revamp
+# Sarah Maria Family Adventure 8.6 — World Polish & Sky Adventure Update
+
+8.6 brings six themed painted sky reef sets, optional airborne rewards in every chapter, full silhouette foreground artwork and stone-matched collision bands. Antonella swims into and out of her palace encounter at full opacity. The 8.5 tutorial, 8.4 jump routines, backgrounds, dialogue and boss attack timings are preserved. See [8.6 release notes](docs/world-polish-v86.md).
 
 The Ultimate Fun Tutorial Revamp gives King Daddy a connected royal rig, smooth neck tracking and expressive poses, with a painted thunder-and-parting-water entrance. Sarah learns through solid coral bends, safe sky reefs and spaced teaching bays. The six 8.4 jump routines and other chapters remain intact. See [8.5 tutorial details](docs/tutorial-revamp-v85.md).
 

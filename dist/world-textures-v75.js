@@ -17,7 +17,7 @@ function drawWorldScenery75(t){if(!sceneryReady75())return;const theme=WORLD75_T
  if(isTraining()){for(const p of [[620,2,200,320],[1560,3,260,180],[2750,7,190,240],[5750,0,170,330],[6660,0,170,340],[7110,0,170,340],[W-190,1,300,400]])sceneryPiece75(true,p[1],p[0]-camera-p[2]/2,H-p[3]+35,p[2],p[3],.68);}
  if(isPalace()){const step=1100,start=Math.floor(camera/step)-1;for(let i=start;i<=start+Math.ceil(vw/step)+2;i++)sceneryPiece75(true,i%3===0?1:0,i*step-camera,H-390,230,420,.52);}
  drawLevelLandmarks751(t);drawReefAtmosphere751(t,theme,surface);ctx.restore();}
-function drawTextureBarrier75(o,x,t,index=0){if(!sceneryReady75()||x+o.w<-100||x>vw+100)return false;const theme=WORLD75_THEMES[worldTheme75()],royal=theme.royal,art=royal?pearlGarden75:reefGarden75,cw=art.naturalWidth/4,ch=art.naturalHeight/3,idx=royal?(worldTheme75()==='palace'||isTraining()?8:9):0;
+function drawTextureBarrier75(o,x,t,index=0){if(typeof drawWorldSolid86==='function'&&drawWorldSolid86(o,x,t,index))return true;if(!sceneryReady75()||x+o.w<-100||x>vw+100)return false;const theme=WORLD75_THEMES[worldTheme75()],royal=theme.royal,art=royal?pearlGarden75:reefGarden75,cw=art.naturalWidth/4,ch=art.naturalHeight/3,idx=royal?(worldTheme75()==='palace'||isTraining()?8:9):0;
  ctx.save();reefContour751(x,o.y,o.w,o.h,index);ctx.clip();
  const vertical=o.h>o.w,face=royal?(vertical?0:8):(vertical?1:0);
  const crop=royal?(vertical?[.25,.03,.5,.94]:[.05,.49,.9,.47]):(vertical?[.23,.06,.54,.89]:[.05,.38,.9,.56]);
