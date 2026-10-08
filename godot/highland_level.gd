@@ -89,7 +89,7 @@ func _ready() -> void:
     add_child(music_player)
     # Headless Godot 4.4 has an MP3 playback shutdown leak. Play only with a real display.
     # This does not mute desktop, Android or browser releases.
-    if DisplayServer.get_name() != "headless":
+    if DisplayServer.get_name() != "headless" and not OS.has_environment("GODOT_CAPTURE_PREVIEW"):
         music_player.play()
     # Godot editor-authored child scenes, ready before the level controller.
     native_fx = get_node("NativeUnderwaterFX")
