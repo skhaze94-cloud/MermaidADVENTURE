@@ -69,6 +69,7 @@ var native_fx: Node2D
 var native_boss: Node2D
 var world_depth: Node2D
 var foreground_depth: Node2D
+var relief_obstacles: Node2D
 var high_depth_quality := true
 var reduced_fx := false
 var music_muted := false
@@ -94,6 +95,7 @@ func _ready() -> void:
     native_boss = get_node("CarloNativeBoss")
     world_depth = get_node("PaintedWorldDepth")
     foreground_depth = get_node("SparseForegroundDepth")
+    relief_obstacles = get_node("ReliefReefObstacles")
     native_fx.set_quality(high_depth_quality)
     _sync_native_visuals()
     queue_redraw()
@@ -358,6 +360,8 @@ func _sync_native_visuals() -> void:
         world_depth.set_camera(camera, fallen, reduced_fx)
     if is_instance_valid(foreground_depth):
         foreground_depth.set_camera(camera, not waterfall_active, reduced_fx)
+    if is_instance_valid(relief_obstacles):
+        relief_obstacles.set_camera(camera, not waterfall_active)
     native_fx.set_depth_profile(fallen)
     if is_instance_valid(native_boss):
         var boss_x := Highland.BOSS_X - camera
@@ -690,7 +694,7 @@ func _draw_world(s: Vector2) -> void:
         var x := r.position.x - camera
         if x > s.x + 160.0 or x + r.size.x < -160.0:
             continue
-        draw_texture_rect(REEF, Rect2(x - 22, r.position.y - 25, r.size.x + 44, r.size.y + 50), false)
+        # Actual textured geometry is the native ReliefReefObstacles node.
         if index % 2 == 0:
             draw_circle(Vector2(x + r.size.x * 0.5, r.position.y + r.size.y * 0.5), 9.0, Color(0.41, 0.95, 0.93, 0.18))
     if not fallen:
