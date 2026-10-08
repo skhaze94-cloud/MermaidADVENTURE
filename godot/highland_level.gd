@@ -12,6 +12,8 @@ const EEL = preload("res://dist/assets/eel-poses-v731.webp")
 const JELLY = preload("res://dist/assets/jelly-v731.webp")
 const CARLO = preload("res://dist/assets/carlo.webp")
 const MUSIC = preload("res://dist/assets/bubble-bell-adventure.mp3")
+const NATIVE_RIG = preload("res://godot/sarah_rig.gd")
+const NATIVE_FX = preload("res://godot/native_fx.gd")
 
 const WATER_SURFACE := 280.0
 const BOTTOM := 902.0
@@ -64,6 +66,11 @@ var waterfall_gold: Array[Dictionary] = []
 var waterfall_gold_count := 0
 var touches: Dictionary = {}
 var music_player: AudioStreamPlayer
+var native_rig: Node2D
+var native_fx: Node2D
+var reduced_fx := false
+var music_muted := false
+var joy_last: Dictionary = {}
 
 func _ready() -> void:
     obstacles = Highland.obstacles()
@@ -79,6 +86,16 @@ func _ready() -> void:
     # This does not mute desktop, Android or browser releases.
     if DisplayServer.get_name() != "headless":
         music_player.play()
+    # These are independent Godot nodes, not extra JavaScript-style canvas passes.
+    native_fx = Node2D.new()
+    native_fx.set_script(NATIVE_FX)
+    native_fx.name = "NativeUnderwaterFX"
+    add_child(native_fx)
+    native_rig = Node2D.new()
+    native_rig.set_script(NATIVE_RIG)
+    native_rig.name = "SarahAtlasRig"
+    add_child(native_rig)
+    _sync_native_visuals()
     queue_redraw()
 
 func _exit_tree() -> void:
@@ -101,6 +118,18 @@ func _input(event: InputEvent) -> void:
                 _jump()
             KEY_B, KEY_Z:
                 _fire_bubble()
+            KEY_M:
+                music_muted = not music_muted
+                if music_muted:
+                    music_player.volume_db = -80.0
+                else:
+                    music_player.volume_db = -17.0
+                _say("Music " + ("off" if music_muted else "on"), 1.5)
+            KEY_F3:
+                reduced_fx = not reduced_fx
+                native_fx.set_reduced_motion(reduced_fx)
+                native_rig.reduced_motion = reduced_fx
+                _say("Visual effects " + ("reduced" if reduced_fx else "enabled"), 1.5)
             KEY_ENTER:
                 if state == "victory":
                     _restart()
@@ -168,7 +197,46 @@ func _input_vector() -> Vector2:
             "right": direction.x += 1.0
             "up": direction.y -= 1.0
             "down": direction.y += 1.0
-    return direction.normalized()
+    # Native analogue steering with radial dead zone plus the controller D-pad.
+    if Input.get_connected_joypads().size() > 0:
+        var stick := Vector2(Input.get_joy_axis(0, JOY_AXIS_LEFT_X), Input.get_joy_axis(0, JOY_AXIS_LEFT_Y))
+        if stick.length() > 0.20:
+            direction += stick
+        if Input.is_joy_button_pressed(0, JOY_BUTTON_DPAD_RIGHT):
+            direction.x += 1.0
+        if Input.is_joy_button_pressed(0, JOY_BUTTON_DPAD_LEFT):
+            direction.x -= 1.0
+        if Input.is_joy_button_pressed(0, JOY_BUTTON_DPAD_DOWN):
+            direction.y += 1.0
+        if Input.is_joy_button_pressed(0, JOY_BUTTON_DPAD_UP):
+            direction.y -= 1.0
+    return direction.limit_length(1.0)
+
+func _poll_gamepad() -> void:
+    if Input.get_connected_joypads().is_empty():
+        joy_last.clear()
+        return
+    var buttons := {
+        "jump": Input.is_joy_button_pressed(0, JOY_BUTTON_A),
+        "boost": Input.is_joy_button_pressed(0, JOY_BUTTON_B),
+        "bubble": Input.is_joy_button_pressed(0, JOY_BUTTON_X),
+        "pause": Input.is_joy_button_pressed(0, JOY_BUTTON_START)
+    }
+    for action in buttons:
+        if buttons[action] and not joy_last.get(action, false):
+            if action == "jump":
+                _jump()
+            elif action == "boost":
+                _boost()
+            elif action == "bubble":
+                _fire_bubble()
+            elif action == "pause" and state != "victory":
+                state = "paused" if state == "playing" else "playing"
+    joy_last = buttons
+
+func _vibrate(soft: float, strong: float, duration: float) -> void:
+    if not Input.get_connected_joypads().is_empty():
+        Input.start_joy_vibration(0, soft, strong, duration)
 
 func _boost() -> void:
     if state != "playing" or energy < 0.4:
@@ -184,6 +252,8 @@ func _boost() -> void:
         waterfall_velocity = Vector2(direction.x * BOOST_SPEED / 520.0, direction.y * BOOST_SPEED)
         waterfall_boost = 0.30
         waterfall_boost_cooldown = 0.46
+        native_fx.splash(_hero_screen_position(), Color("#92ffff"), 13)
+        _vibrate(0.25, 0.08, 0.12)
         return
     if boost_cooldown > 0.0 or jump_time > 0.0:
         return
@@ -195,6 +265,8 @@ func _boost() -> void:
         direction = Vector2(facing, 0)
     boost_direction = direction
     player_velocity = direction * BOOST_SPEED
+    native_fx.splash(_hero_screen_position(), Color("#b4ffff"), 15)
+    _vibrate(0.18, 0.07, 0.10)
 
 func _jump() -> void:
     if state != "playing" or waterfall_phase != "" or energy < 0.4 or jump_time > 0 or leap_cooldown > 0:
@@ -204,6 +276,8 @@ func _jump() -> void:
     leap_cooldown = 1.5
     player_velocity = Vector2(maxf(player_velocity.x, 240.0) * facing, -780.0)
     _say("Sky leap! Steer through the air.", 1.8)
+    native_fx.splash(_hero_screen_position(), Color("#e2ffff"), 22)
+    _vibrate(0.24, 0.06, 0.14)
 
 func _fire_bubble() -> void:
     if state != "playing" or not bubble_unlocked or waterfall_phase != "":
@@ -211,6 +285,7 @@ func _fire_bubble() -> void:
     if bubble_shots.size() >= 8:
         return
     bubble_shots.append({"pos": player + Vector2(facing * 70, 0), "direction": facing, "life": 1.8})
+    native_fx.splash(_hero_screen_position() + Vector2(facing * 56, 0), Color("#b4dbff"), 7)
 
 func _say(text: String, duration: float = 3.0) -> void:
     message = text
@@ -218,9 +293,14 @@ func _say(text: String, duration: float = 3.0) -> void:
 
 func _process(delta: float) -> void:
     var dt := minf(delta, 0.04)
+    _poll_gamepad()
     if state != "playing":
+        if is_instance_valid(native_rig):
+            native_rig.set_process(false)
         queue_redraw()
         return
+    if is_instance_valid(native_rig):
+        native_rig.set_process(true)
     time += dt
     invulnerable = maxf(0.0, invulnerable - dt)
     boost_time = maxf(0.0, boost_time - dt)
@@ -239,9 +319,34 @@ func _process(delta: float) -> void:
         _update_bubbles(dt)
         _check_checkpoints()
     var view := get_viewport_rect().size
-    var camera_target := clampf(player.x - view.x * 0.43, 0.0, maxf(0.0, Highland.LEVEL_LENGTH - view.x))
-    camera = lerpf(camera, camera_target, 1.0 - exp(-dt * 5.8))
+    # Cinematic anticipation: the view looks ahead in Sarah's direction of travel.
+    var anticipation := 0.0 if waterfall_phase != "" else clampf(player_velocity.x * 0.18, -100.0, 160.0)
+    var camera_target := clampf(player.x - view.x * 0.43 + anticipation, 0.0, maxf(0.0, Highland.LEVEL_LENGTH - view.x))
+    camera = lerpf(camera, camera_target, 1.0 - exp(-dt * (7.2 if boost_time > 0.0 else 5.8)))
+    _sync_native_visuals()
     queue_redraw()
+
+func _hero_screen_position() -> Vector2:
+    if waterfall_phase == "":
+        return player - Vector2(camera, 0.0)
+    var viewport := get_viewport_rect().size
+    var half := minf(viewport.x * 0.40, 520.0)
+    var pos := Vector2(viewport.x * 0.5 + waterfall_x * half, 384.0 + waterfall_y)
+    if waterfall_phase == "pull":
+        return (player - Vector2(camera, 0.0)).lerp(pos, clampf(waterfall_time / Highland.FALL_ENTRY, 0.0, 1.0))
+    return pos
+
+func _sync_native_visuals() -> void:
+    if not is_instance_valid(native_rig) or not is_instance_valid(native_fx):
+        return
+    var pos := _hero_screen_position()
+    native_rig.position = pos
+    var waterfall_active := waterfall_phase != ""
+    var velocity := waterfall_velocity * Vector2(520.0, 1.0) if waterfall_active else player_velocity
+    var faded := 1.0 if invulnerable <= 0.0 else 0.65 + 0.35 * absf(sin(time * 13.0))
+    native_rig.set_motion(velocity, facing, boost_time > 0.0 or waterfall_boost > 0.0, jump_time > 0.0, faded)
+    native_rig.rotation = clampf(velocity.y / 1150.0, -0.26, 0.26) * facing
+    native_fx.set_motion(pos, velocity, jump_time <= 0.0)
 
 func _update_swimming(dt: float) -> void:
     var input_dir := _input_vector()
@@ -322,6 +427,8 @@ func _update_enemies(dt: float) -> void:
                 enemy["hp"] = 0
                 score += 50
                 _say("Boost boop! +50", 1.1)
+                native_fx.splash(pos - Vector2(camera, 0), Color("#e5ffce"), 17)
+                _vibrate(0.22, 0.08, 0.12)
             else:
                 _damage(pos)
 
@@ -344,6 +451,9 @@ func _update_collectibles() -> void:
                 picked_count += 1
                 if kind == "chest":
                     _say("Treasure chest! +100", 1.4)
+                    native_fx.splash(pos - Vector2(camera, 0), Color("#ffeaaa"), 29)
+                elif picked_count % 5 == 0:
+                    native_fx.splash(pos - Vector2(camera, 0), Color("#b2feff"), 12)
 
 func _damage(from_pos: Vector2) -> void:
     if invulnerable > 0.0 or state != "playing" or jump_time > 0.0:
@@ -352,6 +462,9 @@ func _damage(from_pos: Vector2) -> void:
     invulnerable = 1.5
     player_velocity = (player - from_pos).normalized() * 240.0
     _say("Ouch! Careful, Sarah.", 1.6)
+    native_fx.flash(Color("#ff9bad"), 0.27, 0.33)
+    native_fx.splash(_hero_screen_position(), Color("#ffc1cb"), 14)
+    _vibrate(0.65, 0.42, 0.20)
     if health <= 0:
         _respawn()
 
@@ -380,6 +493,9 @@ func _update_boss(dt: float) -> void:
             invulnerable = 0.65
             score += 200
             _say("Carlo hit! " + str(boss_hp) + " hearts remaining.", 1.8)
+            native_fx.splash(boss_pos - Vector2(camera, 0), Color("#fff1a4"), 32)
+            native_fx.flash(Color("#ffffc1"), 0.17, 0.22)
+            _vibrate(0.32, 0.40, 0.22)
             if boss_hp == 0:
                 score += 1000
                 bubble_unlocked = true
@@ -420,6 +536,9 @@ func _start_waterfall() -> void:
     boost_time = 0.0
     player_velocity = Vector2.ZERO
     _say("The waterfall! Swim in all four directions. Boost to dodge!", 5.0)
+    native_fx.flash(Color("#a5ffff"), 0.30, 0.90)
+    if not music_muted:
+        create_tween().tween_property(music_player, "volume_db", -23.0, 1.1)
 
 func _update_waterfall(dt: float) -> void:
     waterfall_time += dt
@@ -437,6 +556,9 @@ func _update_waterfall(dt: float) -> void:
             checkpoint = Highland.WATERFALL_EXIT
             invulnerable = 1.5
             _say("Secret Grotto! Keep swimming right.", 4.0)
+            native_fx.flash(Color("#e0ffff"), 0.18, 0.45)
+            if not music_muted:
+                create_tween().tween_property(music_player, "volume_db", -17.0, 1.0)
         return
     waterfall_boost = maxf(0.0, waterfall_boost - dt)
     waterfall_boost_cooldown = maxf(0.0, waterfall_boost_cooldown - dt)
@@ -513,6 +635,8 @@ func _restart() -> void:
     treasures = Highland.treasure()
     state = "playing"
     _say("Highland Gold — your adventure begins!", 3.0)
+    if is_instance_valid(native_fx):
+        native_fx.flash(Color("#d6ffff"), 0.16, 0.4)
 
 func _draw() -> void:
     var s := get_viewport_rect().size
@@ -636,7 +760,9 @@ func _draw_hero(pos: Vector2) -> void:
     var tilt := clampf(player_velocity.y / 1150.0, -0.30, 0.30) * facing
     var bob := sin(time * 5.0) * 3.0 if jump_time <= 0.0 else 0.0
     draw_set_transform(pos + Vector2(0, bob), tilt, Vector2(facing, 1.0))
-    draw_texture_rect(HERO, Rect2(-115, -77, 230, 154), false, Color(1, 1, 1, opacity))
+    # The character is now a native articulated Sprite2D hierarchy; keep fallback only.
+    if not is_instance_valid(native_rig):
+        draw_texture_rect(HERO, Rect2(-115, -77, 230, 154), false, Color(1, 1, 1, opacity))
     draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
     if boost_time > 0.0 or waterfall_boost > 0.0:
         for i in range(5):
@@ -689,6 +815,8 @@ func _draw_hud(s: Vector2) -> void:
     draw_rect(Rect2(12, 10, s.x - 24, 79), Color(0.035, 0.13, 0.22, 0.75))
     _draw_text(Vector2(30, 46), "HIGHLAND GOLD", 27, Color("#fff2d2"))
     _draw_text(Vector2(30, 76), "Carlo's Cold Kingdom", 18, Color("#b4edee"))
+    if s.x >= 1100:
+        _draw_text(Vector2(s.x - 340, 72), "F3: FX   M: MUSIC", 15, Color("#b4edee"))
     for i in range(MAX_HEALTH):
         draw_circle(Vector2(315.0 + float(i) * 29.0, 43.0), 11.0, Color("#ff8eb9") if i < health else Color("#465568"))
     _draw_text(Vector2(490, 48), "SCORE  " + str(score), 23, Color("#fff1bc"))
