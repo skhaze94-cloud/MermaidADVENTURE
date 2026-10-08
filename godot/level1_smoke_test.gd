@@ -16,8 +16,8 @@ func _run_checks() -> void:
     root.add_child(level)
     # Native-Godot v0.2: these are real editor scene nodes, not HTML-style canvas sprites.
     _check(level.native_rig.get_node("TailBase") is Node2D, "Articulated Sarah tail missing")
-    _check(level.native_rig.get_node("HeadNeck") is Node2D, "Native face joint missing")
-    _check(level.native_rig.get_node("NearArm") is Node2D, "Native arm joint missing")
+    _check(level.native_rig.get_node("Torso/HeadNeck") is Node2D, "Native face joint missing")
+    _check(level.native_rig.get_node("Torso/NearArm") is Node2D, "Native arm joint missing")
     _check(level.native_fx.water_overlay.material is ShaderMaterial, "Water GPU shader missing")
     _check(level.native_fx.trail is CPUParticles2D, "Native particle trail missing")
     _check(level.native_boss.sprite is Sprite2D, "Godot Carlo sprite missing")
