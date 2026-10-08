@@ -17,7 +17,7 @@
 .game-shell .hud .combo-readout{position:static;margin:0;display:flex;min-height:0;gap:0}
 .game-shell .hud #combo{min-width:0;color:var(--ui-gold);padding:5px;background:#ffdc9114;border-radius:7px}
 .game-shell .hud .stage-hud{position:static;flex:1;min-width:0;padding:0;background:none!important;border:0!important;box-shadow:none!important;gap:3px;text-shadow:none}
-.hud .stage-hud>span{font:800 10px/1.2 var(--ui-font);letter-spacing:.7px;color:var(--ui-muted)}
+.hud .stage-copy>span{font:800 10px/1.2 var(--ui-font);letter-spacing:.7px;color:var(--ui-muted)}
 .hud .stage-hud b{font:800 15px/1.2 var(--ui-font);color:var(--ui-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .game-shell .hud .timer-tile{width:auto;height:auto;min-width:115px;display:flex;flex-direction:column;gap:6px;align-items:center}
 .game-shell .hud #timer{font:900 24px/1 var(--ui-font)!important;text-shadow:none}
@@ -91,7 +91,7 @@ footer .definitive-controls{gap:18px;padding:12px 0;opacity:.85}.definitive-cont
  .game-shell .hud{left:10px;right:10px;padding:9px 10px;gap:12px;min-height:62px;flex-wrap:wrap;border-radius:14px}
  .game-shell .hud .score-tile{gap:7px}.game-shell .hud #score{font-size:22px!important}.hud .treasure-counters{gap:3px}.game-shell .hud .counter-pill{padding:3px}.hud .counter-pill i{width:15px;height:15px}.hud .counter-pill b,.game-shell .hud #combo{font-size:12px!important}
  .game-shell .hud .timer-tile{margin-left:auto;min-width:100px}.game-shell .hud .timer-tile .mini{display:none}.game-shell .hud .right-hud{gap:0}.game-shell .hud .best{display:none!important}
- .game-shell .hud .stage-hud{order:4;flex:1 0 100%;display:flex;flex-direction:row;align-items:baseline;gap:8px;border-top:1px solid #ffffff12!important;padding-top:6px}.hud .stage-hud>span{font-size:9px;flex:none}.hud .stage-hud b{font-size:12px}
+ .game-shell .hud .stage-hud{order:4;flex:1 0 100%;display:flex;flex-direction:row;align-items:baseline;gap:8px;border-top:1px solid #ffffff12!important;padding-top:6px}.hud .stage-copy>span{font-size:9px;flex:none}.hud .stage-hud b{font-size:12px}
  .game-shell .coin-objective,.game-shell .boss-hud{top:116px!important}.game-shell .tutorial-card,.game-shell .waterfall-help,.game-shell .toast{top:116px}.game-shell .boss-hud{width:55%;max-width:280px}
  .title-screen .title-content{width:100%;padding:16px 20px;max-width:440px}.title-screen .edition-seal{margin-bottom:14px}.title-screen .title-action{min-height:48px;font-size:15px!important}.title-screen .studio-credit{margin-bottom:6px}
  .game-shell .dialogue-card{padding:18px;border-radius:18px}.dialogue-card #dialogue-line,.dialogue-card #dialogue-response{font-size:15px;line-height:1.5}.dialogue-card #dialogue-speaker{font-size:20px}
@@ -145,3 +145,14 @@ footer .definitive-controls{gap:18px;padding:12px 0;opacity:.85}.definitive-cont
 @media(max-width:700px){.game-shell .hud .health-shells{gap:2px!important}.game-shell .hud #health-shells i{width:18px!important;height:18px!important;flex-basis:18px!important}}
 @media(max-width:360px){.game-shell .hud #score{font-size:20px!important}}
 .desktop-jump-action .desktop-jump-copy b{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Chapter and objective are part of the rail, rather than another floating panel. */
+.game-shell .hud .stage-hud{position:relative;top:auto;left:auto;right:auto;bottom:auto;display:flex;flex-direction:row;align-items:center;gap:10px}
+.hud .stage-copy{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.game-shell .hud .coin-objective{position:static;top:auto!important;left:auto;right:auto;bottom:auto;min-width:44px;padding:0!important;background:none!important;border:0!important;border-radius:0;box-shadow:none!important;gap:3px}
+.game-shell .hud .coin-objective .cue-icon{width:20px;height:20px}.game-shell .hud .coin-objective>div{width:44px;height:2px;box-shadow:none;border:0!important}.hud .coin-objective #objective-label{display:none}
+.game-shell .start-card .play{display:block;width:100%;max-width:320px;margin:10px auto;padding:12px 18px;min-height:44px;background:linear-gradient(135deg,#d9fff0,#8bdcca)!important;color:#123d49!important;border:1px solid #e8fff7!important;box-shadow:none!important;opacity:1}
+.game-shell .start-card .restart{display:block;width:100%;max-width:320px;margin:8px auto;padding:10px 14px;font:800 14px/1.4 var(--ui-font)!important;border:1px solid var(--ui-line)!important;background:#ffffff09!important;color:var(--ui-ink)!important;box-shadow:none!important;min-height:44px}
+.game-shell.controls-suspended .dash-meter,.game-shell.controls-suspended .training-switch,.game-shell.controls-suspended .boss-lesson{visibility:hidden}
+@media(max-width:700px){.game-shell .hud .stage-hud{position:absolute;top:auto;left:10px;right:10px;bottom:7px}.hud .stage-copy{flex-direction:row;align-items:baseline;gap:8px}.hud .stage-copy>span{font-size:9px;flex:none}.hud .coin-objective{flex-direction:row}.game-shell .hud .coin-objective>div{display:none}}
+@media(max-height:550px) and (orientation:landscape){.game-shell .hud .stage-hud{position:relative;left:auto;right:auto;bottom:auto}.hud .stage-copy{flex-direction:column;gap:2px}}

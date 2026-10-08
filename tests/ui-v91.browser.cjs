@@ -21,11 +21,11 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
   assert(await page.evaluate(()=>['#score','.stage-hud b'].every(s=>getComputedStyle(document.querySelector(s)).fontFamily.includes('Nunito'))),device.name+' shared UI font');
   const boxes=await page.evaluate(()=>{
    const box=s=>{const e=document.querySelector(s),r=e.getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height,visible:getComputedStyle(e).display!=='none'&&getComputedStyle(e).visibility!=='hidden'};};
-   return {shell:box('.game-shell'),hud:box('.hud'),score:box('.score-tile'),health:box('.timer-tile'),pause:box('#pause'),pad:box('.dpad'),actions:box('.splash-actions'),boost:box('.touch-dash'),jump:box('#touch-jump'),bubble:box('#touch-bubble'),meter:box('.dash-meter')};
+   return {shell:box('.game-shell'),hud:box('.hud'),stage:box('.stage-hud'),score:box('.score-tile'),health:box('.timer-tile'),pause:box('#pause'),pad:box('.dpad'),actions:box('.splash-actions'),boost:box('.touch-dash'),jump:box('#touch-jump'),bubble:box('#touch-bubble'),meter:box('.dash-meter')};
   });
   const inside=(a,b)=>a.x>=b.x-1&&a.right<=b.right+1&&a.y>=b.y-1&&a.bottom<=b.bottom+1;
   assert(inside(boxes.hud,boxes.shell),device.name+' HUD bounded');assert(boxes.hud.height<=(device.width<=700?100:85),device.name+' HUD stays compact');assert(boxes.score.right<=boxes.health.x+1&&boxes.health.right<=boxes.pause.x+1,device.name+' essentials share a row');
-  for(const n of ['score','health','pause'])assert(inside(boxes[n],boxes.hud),device.name+' '+n+' fits HUD');
+  for(const n of ['stage','score','health','pause'])assert(inside(boxes[n],boxes.hud),device.name+' '+n+' fits HUD');
   if(device.touch){
    assert(boxes.pad.visible&&boxes.actions.visible,device.name+' touch controls visible');
    assert(inside(boxes.pad,boxes.shell)&&inside(boxes.actions,boxes.shell),device.name+' controls bounded');
