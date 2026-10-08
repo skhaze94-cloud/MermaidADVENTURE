@@ -26,7 +26,7 @@ This is a **new Godot implementation**, not a one-to-one engine conversion. It i
 - Some terrain skins are stretched from the existing transparent painted images. Background crop and scene lighting need editor-side visual polish.
 - Source game music is reused, but HTML's Web Audio fades and dynamic cues are not yet ported.
 - The existing HTML version's later chapters, menus, Shadow Kingdom transition and tutorial are outside this Level 1 prototype.
-- The Godot editor and native executable have **not** been run in this environment; first import, syntax/runtime checks, controller QA and mobile packaging must be verified in Godot.
+- **GitHub Actions validates this project with Godot 4.4.1 headless editor import, scene launch and gameplay assertions** (waterfall duration and transitions, pickups, route geometry, Carlo state and portal victory). The game has **not** been visually or interactively play-tested in a native window; animation, mobile controls, audio and performance still require hands-on QA.
 
 ## Layout
 
@@ -40,7 +40,7 @@ godot/default_bus_layout.tres   # Audio
 ```
 
 ## Next milestones
-1. Run an editor import and the Godot debugger; resolve any script warnings.
+1. Run the Godot editor locally, inspect the Debugger panel and test movement/gamepad/touch rendering in an actual window.
 2. Capture screenshot and compare the first 4,060 units, waterfall, grotto and Carlo with HTML 9.1.
 3. Convert Sarah's painted 16-part rig into an AnimationTree or skeletal animation scene.
 4. Port the source's full enemy roster, AI, dialogue, particle effects and quest/bubble unlock sequences.
