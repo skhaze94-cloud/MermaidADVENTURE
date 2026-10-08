@@ -1,0 +1,33 @@
+name: Godot Level 1 smoke test
+
+on:
+  push:
+    branches:
+      - godot/highland-gold-level-1-prototype
+    paths:
+      - "project.godot"
+      - "godot/**"
+      - ".github/workflows/godot-level1.yml"
+  pull_request:
+    paths:
+      - "project.godot"
+      - "godot/**"
+      - ".github/workflows/godot-level1.yml"
+
+jobs:
+  godot-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.4.1
+          use-dotnet: false
+          include-templates: false
+      - name: Verify Godot
+        run: godot --version
+      - name: Import original art and Godot scenes
+        run: godot --headless --editor --path . --quit
+      - name: Launch first level headless
+        run: godot --headless --path . --quit-after 8
