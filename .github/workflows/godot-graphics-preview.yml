@@ -1,0 +1,43 @@
+name: Godot graphics visual previews
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - godot/highland-gold-level-1-prototype
+    paths:
+      - "godot/**"
+      - ".github/workflows/godot-graphics-preview.yml"
+
+jobs:
+  visual-previews:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    # The engine shader/gameplay smoke suite remains required separately.
+    # Software GL screenshot availability depends on the runner.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Xvfb software rendering
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb libgl1-mesa-dri libgl1
+      - uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.4.1
+          use-dotnet: false
+          include-templates: false
+      - name: Import game art and textures
+        run: godot --headless --editor --path . --quit
+      - name: Render four Level 1 visual checkpoints
+        run: |
+          mkdir -p godot/visual-previews
+          LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a -s "-screen 0 1400x960x24" \
+            godot --path . --script res://godot/capture_level1_previews.gd
+          ls -lh godot/visual-previews/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: godot-v04-level1-visual-checkpoints
+          path: godot/visual-previews/*.png
+          if-no-files-found: warn
