@@ -69,6 +69,75 @@ func _run_checks() -> void:
     _check(level.native_fx.cinematic_overlay.visible,
         "High preset must restore cinematic grade")
 
+    # v0.5 animation/performance regression checks; no FPS claims from headless CI.
+    _check(level.animated_enemies.sprites.size() > 0, "Pooled enemy sprite atlas missing")
+    _check(level.animated_enemies.sprites.size() == level.animated_enemies.atlases.size(),
+        "Pooled atlas textures do not match enemy sprites")
+    var enemy_idx: int = level.animated_enemies.indices[0]
+    var enemy_pos: float = float(level.enemies[enemy_idx]["x"])
+    level.animated_enemies.animate_visible(maxf(0.0, enemy_pos - 500.0),
+        3.0, false, 0.05, true, true)
+    _check(level.animated_enemies.active_count >= 1, "Nearby enemy must be visible")
+    var tick_before: int = level.animated_enemies.animation_ticks
+    level.animated_enemies.animate_visible(maxf(0.0, enemy_pos - 500.0),
+        3.001, false, 0.001, true, true)
+    _check(level.animated_enemies.animation_ticks == tick_before,
+        "Enemy atlas throttle did not skip redundant work")
+    level.animated_enemies.animate_visible(maxf(0.0, enemy_pos - 500.0),
+        3.1, false, 0.08, false, true)
+    _check(not level.animated_enemies.visible,
+        "Enemy pool should disappear during waterfall")
+
+    _check(level.native_fx.burst_pool.size() == level.native_fx.BURST_POOL_SIZE,
+        "Impact burst pool not preallocated")
+    var burst_count: int = level.native_fx.burst_pool.size()
+    var child_count: int = level.native_fx.get_child_count()
+    for i in range(24):
+        level.native_fx.splash(Vector2(210, 490), Color("#b5f9e8"), 6)
+    _check(level.native_fx.burst_pool.size() == burst_count,
+        "Impact bursts must not allocate new pool members")
+    _check(level.native_fx.get_child_count() == child_count,
+        "Impact bursts allocated extra particle nodes")
+    _check(level.native_fx.burst_events == 24,
+        "Expected pooled particle burst reuses")
+
+    level.native_rig.set_motion(Vector2(440, 5), 1.0, false, false, 1.0)
+    level.native_rig._process(0.10)
+    _check(level.native_rig.swim_blend > 0.0,
+        "Sarah swim animation must blend from idle")
+    level.native_rig.set_motion(Vector2(830, 0), -1.0, true, false, 1.0)
+    level.native_rig._process(0.12)
+    _check(level.native_rig.boost_blend > 0.2,
+        "Boost animation blend missing")
+    _check(level.native_rig.animation_mode == "boost",
+        "Animation mode must reflect boosting")
+    _check(level.native_rig.scale.x < 0.0,
+        "Sarah turn should flip without zero-width squashing")
+    level.native_rig.play_impact()
+    _check(level.native_rig.hit_kick > 0.0,
+        "Damage reaction must animate")
+    var hud_redraws: int = level.premium_hud.redraw_count
+    level.premium_hud.update_hud(level._hud_snapshot())
+    _check(level.premium_hud.redraw_count == hud_redraws,
+        "Static HUD should skip repeated redraw")
+    _check(level.performance_overlay is CanvasLayer,
+        "Runtime performance overlay missing")
+    _check(not level.performance_overlay.enabled,
+        "Profiling UI must default off")
+    level.performance_overlay.set_monitor_visible(true)
+    _check(level.performance_overlay.enabled and level.performance_overlay.visible,
+        "F6 diagnostics must be available")
+    level.performance_overlay.set_monitor_visible(false)
+    level.high_depth_quality = false
+    level._apply_visual_quality()
+    _check(not level.native_rig.hero_light.enabled and not level.native_boss.light.enabled,
+        "Economy mode must disable expensive native lights")
+    level.high_depth_quality = true
+    level._apply_visual_quality()
+    _check(level.native_rig.hero_light.enabled,
+        "High preset should restore character lighting")
+    _check(level.world_depth.placement_updates >= 1, "Parallax placement counters missing")
+
     _check(level.obstacles.size() == 19, "Source obstacle count changed")
     _check(level.enemies.size() >= 25, "Expected a playable enemy roster")
     _check(level.treasures.size() > 80, "Expected exploration treasure")
