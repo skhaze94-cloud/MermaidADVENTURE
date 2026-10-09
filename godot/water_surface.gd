@@ -8,6 +8,9 @@ var viewport_width := 1400.0
 var enabled := true
 var reduced_motion := false
 var foam: Array[Dictionary] = []
+var draw_accumulator := 0.0
+var last_draw_camera := -100000.0
+var draw_requests := 0
 
 func _ready() -> void:
     z_index = -1
@@ -26,12 +29,21 @@ func set_scene(camera_value: float, show_waterline: bool, motion_reduced: bool) 
     enabled = show_waterline
     reduced_motion = motion_reduced
     visible = enabled
-    queue_redraw()
+    if enabled and (absf(camera_x - last_draw_camera) >= 9.0 or reduced_motion):
+        last_draw_camera = camera_x
+        draw_requests += 1
+        queue_redraw()
 
 func _process(delta: float) -> void:
     if not enabled or reduced_motion:
         return
-    clock += delta
+    clock += minf(delta, 0.05)
+    draw_accumulator += minf(delta, 0.05)
+    if draw_accumulator < 1.0 / 30.0:
+        return
+    draw_accumulator = 0.0
+    last_draw_camera = camera_x
+    draw_requests += 1
     queue_redraw()
 
 func _draw() -> void:
