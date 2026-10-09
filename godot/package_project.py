@@ -26,7 +26,7 @@ Press F6 on godot/highland_level.tscn to go directly to Level 1.
 The main project runs the illustrated opening and menu first.
 
 v0.12: connected, deformable Sarah arms, hair, tail and fins, expressive gestures,
-flowing swim cycles, more responsive steering/braking and proportional touch controls.
+refined head/body/arm proportions, an elongated tail, flowing swim cycles, more responsive steering/braking and proportional touch controls.
 Includes all previous menu, enemy, environment, waterfall, jump and reliable ZIP improvements.
 F3: Reduced Motion. F4: Economy/High depth. M: music.
 

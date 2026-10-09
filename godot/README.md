@@ -263,3 +263,7 @@ Recommended next phases: visually test the shader and rig in a Godot editor wind
 ## Credits
 
 Artwork and soundtrack derive from assets already in this repository. Their copyright status does not change. Godot Engine is MIT-licensed.
+
+### Sarah silhouette refinement
+
+The v0.12 character refinement lengthens the tail from its fixed hip socket, reduces the head slightly, narrows the bodice and gives the arms more delicate proportions. Hair and neck sockets follow the new shoulder line; fins open into a coordinated, phase-offset fan rather than competing flutter frequencies. Gameplay collision and steering remain unchanged.

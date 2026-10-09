@@ -234,7 +234,7 @@ func airborne_clearance(screen_y: float) -> float:
     var angle := body_pitch * facing_value + spin_curve.sample_baked(clampf(jump_air_time/0.88,0.0,1.0)) * TAU * jump_direction
     var top := 0.0
     # Conservative painted-rig bounds protect fins/hair throughout the turn.
-    for corner in [Vector2(-146,-110),Vector2(135,-110),Vector2(-146,77),Vector2(135,77)]:
+    for corner in [Vector2(-162,-110),Vector2(135,-110),Vector2(-162,77),Vector2(135,77)]:
         top = minf(top,Vector2(corner.x*facing_value,corner.y).rotated(angle).y)
     return maxf(0.0,14.0-screen_y-top)
 
@@ -296,18 +296,23 @@ func _ready() -> void:
     gesture_player.add_animation_library("", PERFORMANCE)
     gesture_player.animation_finished.connect(func(_action: StringName): _clear_gesture_values())
     # Draw order is intentionally far to near, matching the HTML 8.1 rig.
-    back_hair = _joint("BackHair", self, Vector2(49, -23))
+    back_hair = _joint("BackHair", self, Vector2(46, -23))
     _ribbon(2, back_hair, Rect2(-105,-46,116,77),false)
+    back_hair.scale = Vector2(0.96,0.94)
     hair_strand = _joint("BackHairStrand", back_hair, Vector2.ZERO)
     _ribbon(15, hair_strand, Rect2(-109,-18,109,28),false)
 
     tail_base = _joint("TailBase", self, Vector2(13, 30))
+    # Lengthen the trailing silhouette from the fixed hip socket.
+    tail_base.scale = Vector2(1.14,0.96)
     tail_tip = _joint("TailTip", tail_base, Vector2(-62, -1))
     _ribbon(11, tail_tip, Rect2(-42,-13,50,29),true)
     var fins := _joint("FinSockets", tail_tip, Vector2(-34, -2))
     fin_lower = _joint("LowerFin", fins, Vector2.ZERO)
+    fin_lower.scale = Vector2(1.04,1.06)
     _ribbon(13, fin_lower, Rect2(-37,-7,46,38),true)
     fin_upper = _joint("UpperFin", fins, Vector2.ZERO)
+    fin_upper.scale = Vector2(1.04,1.06)
     _ribbon(12, fin_upper, Rect2(-40,-49,49,57),true)
     _ribbon(10, tail_base, Rect2(-70,-24,78,51),true)
 
@@ -315,17 +320,19 @@ func _ready() -> void:
     _part(14, side_fin, -36, -6, 43, 20)
 
     torso = _joint("Torso", self, Vector2(12, 24))
-    far_arm = _joint("FarArm", torso, Vector2(49, -26))
-    _arm(1, far_arm, 66, 43)
-    _part(0, torso, -7, -42, 75, 69)
+    far_arm = _joint("FarArm", torso, Vector2(46, -26))
+    _arm(1, far_arm, 61, 38)
+    _part(0, torso, -7, -42, 70, 67)
 
-    head_joint = _joint("HeadNeck", torso, Vector2(44, -29))
+    head_joint = _joint("HeadNeck", torso, Vector2(41, -29))
+    head_joint.scale = Vector2(0.91,0.91)
     _part(1, head_joint, -34, -69, 67, 73)
-    front_hair = _joint("FrontHair", torso, Vector2(34, -50))
+    front_hair = _joint("FrontHair", torso, Vector2(32, -49))
+    front_hair.scale = Vector2(0.94,0.94)
     _part(3, front_hair, -27, -4, 33, 49)
 
     near_arm = _joint("NearArm", torso, Vector2(10, -31))
-    _arm(0, near_arm, 70, 45)
+    _arm(0, near_arm, 64, 40)
 
     # A real Godot 2D light subtly lifts Sarah away from deep blue scenery.
     # This is an independent light, not a blurry duplicate of her painted face.
@@ -400,7 +407,7 @@ func _process(delta: float) -> void:
         play_gesture("greet")
         idle_elapsed = 0.0
     var slow_phase := clock * 1.6
-    var amount := (0.045 + 0.15 * swim_blend) * (1.0 - boost_blend * 0.65) * (1.0 - leap_blend * 0.62)
+    var amount := (0.04 + 0.135 * swim_blend) * (1.0 - boost_blend * 0.65) * (1.0 - leap_blend * 0.62)
     if reduced_motion:
         amount = 0.0
     var active_jump := jump_phase != ""
@@ -444,8 +451,8 @@ func _process(delta: float) -> void:
     var tail_tip_angle := sin(swim_phase - 0.91) * amount * 1.55 + turn_kick * 0.9 - curl * 0.85 + dive * 0.12 + brake_blend*0.24
     tail_base.rotation = lerpf(tail_base.rotation, tail_angle, ease)
     tail_tip.rotation = lerpf(tail_tip.rotation, tail_tip_angle, ease)
-    fin_upper.rotation = lerpf(fin_upper.rotation, sin(swim_phase * 1.23 - 0.95) * amount * 1.60 + tuck * 0.18 - dive * 0.12, fast_ease)
-    fin_lower.rotation = lerpf(fin_lower.rotation, sin(swim_phase * 1.32 + 1.16) * amount * 1.75 - tuck * 0.14 + dive * 0.10, fast_ease)
+    fin_upper.rotation = lerpf(fin_upper.rotation, sin(swim_phase - 1.25) * amount * 1.60 + tuck * 0.18 - dive * 0.12, fast_ease)
+    fin_lower.rotation = lerpf(fin_lower.rotation, sin(swim_phase - 0.70) * amount * 1.75 - tuck * 0.14 + dive * 0.10, fast_ease)
     side_fin.rotation = lerpf(side_fin.rotation, sin(swim_phase * 0.91) * amount + turn_kick * 0.27, ease)
     var current := 0.0 if reduced_motion else sin(slow_phase) * 0.035
     back_hair.rotation = lerpf(back_hair.rotation, current + turn_kick * 0.5 + swim_blend * 0.018 + hair_drag + horizontal_drag, ease)
