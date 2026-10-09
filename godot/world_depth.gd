@@ -18,6 +18,13 @@ var camera_x := 0.0
 var grotto := false
 var reduced_motion := false
 var tone := 0.0
+var last_camera := -100000.0
+var last_grotto := false
+var last_reduced := false
+var animation_accumulator := 0.0
+var animation_clock := 0.0
+var placement_updates := 0
+var sway_updates := 0
 
 func _ready() -> void:
     z_index = -3
@@ -80,17 +87,45 @@ func _resize() -> void:
     background.position = Vector2(-50.0, -12.0)
     background.size = screen_size + Vector2(120.0, 40.0)
     background_material.set_shader_parameter("surface_y", clampf(WATER_LINE / maxf(screen_size.y, 1.0), 0.0, 0.7))
+    last_camera = -100000.0
     set_camera(camera_x, grotto, reduced_motion)
+
+func _process(delta: float) -> void:
+    if reduced_motion:
+        return
+    animation_clock += minf(delta, 0.05)
+    animation_accumulator += minf(delta, 0.05)
+    if animation_accumulator < 1.0 / 24.0:
+        return
+    animation_accumulator = 0.0
+    sway_updates += 1
+    # Animate only visible plants, never the full 58-sprite level.
+    for entry in far_entries:
+        var sprite: Sprite2D = entry["sprite"]
+        if sprite.visible:
+            sprite.rotation = sin(animation_clock * 1.16 + float(entry["phase"])) * 0.015
+    for entry in middle_entries:
+        var sprite: Sprite2D = entry["sprite"]
+        if sprite.visible:
+            sprite.rotation = sin(animation_clock * 1.27 + float(entry["phase"])) * 0.026
 
 func set_camera(world_camera: float, is_grotto: bool, reduce_motion: bool) -> void:
     camera_x = world_camera
     grotto = is_grotto
     reduced_motion = reduce_motion
+    var profile_changed := last_grotto != grotto or last_reduced != reduced_motion
+    if profile_changed:
+        background_material.set_shader_parameter("grotto_mix", 1.0 if grotto else 0.0)
+        background_material.set_shader_parameter("motion_enabled", 0.0 if reduced_motion else 1.0)
+        last_grotto = grotto
+        last_reduced = reduced_motion
+    # Ignore subpixel camera changes: the current scene already moves smoothly.
+    if absf(camera_x - last_camera) < 2.0:
+        return
+    last_camera = camera_x
+    placement_updates += 1
     background_material.set_shader_parameter("camera_progress",
         clampf(camera_x / maxf(1.0, LEVEL_WIDTH - screen_size.x), 0.0, 1.0))
-    background_material.set_shader_parameter("grotto_mix", 1.0 if grotto else 0.0)
-    background_material.set_shader_parameter("motion_enabled", 0.0 if reduced_motion else 1.0)
-    # One depth-perceived image parallax. No duplicate backdrop layers.
     background.position.x = -50.0 - camera_x / LEVEL_WIDTH * 24.0
     for entry in far_entries:
         _position_entry(entry)
