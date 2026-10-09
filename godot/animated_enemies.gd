@@ -65,7 +65,8 @@ func bind_enemies(data: Array[Dictionary]) -> void:
         last_frames.append(-1)
     frame_accumulator = 1.0
 
-func animate_visible(camera_x: float, elapsed: float, reduced_motion: bool, dt: float, enabled: bool = true) -> void:
+func animate_visible(camera_x: float, elapsed: float, reduced_motion: bool, dt: float,
+        enabled: bool = true, high_quality: bool = true) -> void:
     if not enabled:
         visible = false
         active_count = 0
@@ -74,7 +75,8 @@ func animate_visible(camera_x: float, elapsed: float, reduced_motion: bool, dt: 
     frame_accumulator += minf(dt, 0.05)
     # Cap skeleton/atlas updates at 30Hz on 60/120Hz monitors.
     # Fast panning invalidates the LOD throttle to prevent noticeable lag.
-    if frame_accumulator < 1.0 / VISUAL_HZ and absf(camera_x - last_camera) < 7.0:
+    var visual_rate := VISUAL_HZ if high_quality else 20.0
+    if frame_accumulator < 1.0 / visual_rate and absf(camera_x - last_camera) < 7.0:
         return
     frame_accumulator = 0.0
     last_camera = camera_x
