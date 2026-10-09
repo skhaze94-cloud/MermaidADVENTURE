@@ -9,6 +9,10 @@ var camera_x := 0.0
 var screen_size := Vector2(1400, 960)
 var reduced_motion := false
 var active := true
+var last_camera := -999999.0
+var sway_clock := 0.0
+var sway_accumulator := 0.0
+var placement_updates := 0
 
 func _ready() -> void:
     z_index = 2
@@ -41,13 +45,33 @@ func _atlas_crop(i: int) -> AtlasTexture:
 
 func _update_size() -> void:
     screen_size = get_viewport_rect().size
+    last_camera = -999999.0
     set_camera(camera_x, active, reduced_motion)
+
+func _process(dt: float) -> void:
+    if not active or reduced_motion:
+        return
+    sway_clock += minf(dt, 0.05)
+    sway_accumulator += minf(dt, 0.05)
+    if sway_accumulator < 1.0 / 24.0:
+        return
+    sway_accumulator = 0.0
+    for entry in entries:
+        var sprite: Sprite2D = entry["sprite"]
+        if sprite.visible:
+            sprite.rotation = sin(sway_clock * 0.7 + float(entry["phase"])) * 0.017
 
 func set_camera(world_camera: float, enabled: bool, reduce_motion: bool) -> void:
     camera_x = world_camera
     active = enabled
     reduced_motion = reduce_motion
     visible = active
+    if not active:
+        return
+    if absf(camera_x - last_camera) < 2.0:
+        return
+    last_camera = camera_x
+    placement_updates += 1
     for entry in entries:
         var sprite: Sprite2D = entry["sprite"]
         var world_x := float(entry["x"])
@@ -55,4 +79,5 @@ func set_camera(world_camera: float, enabled: bool, reduce_motion: bool) -> void
         var sx := (world_x - camera_x) * factor + screen_size.x * 0.5 * (1.0 - factor)
         sprite.position = Vector2(sx, screen_size.y - 46.0)
         sprite.visible = sx > -160.0 and sx < screen_size.x + 160.0
-        sprite.rotation = 0.0 if reduced_motion else sin(Time.get_ticks_msec() * 0.0005 + float(entry["phase"])) * 0.017
+        if reduced_motion:
+            sprite.rotation = 0.0
