@@ -2,6 +2,7 @@ extends Node2D
 ## Native Sprite2D / AtlasTexture hierarchy derived from dist/sarah-dynamic-v81.js.
 ## Parent-child transforms preserve the face while animating hair, tail and fins.
 const ATLAS: Texture2D = preload("res://dist/assets/sarah-parts-v81.webp")
+const JUMP_LIBRARY: AnimationLibrary = preload("res://godot/animations/sarah_jump.tres")
 const ARMS: Texture2D = preload("res://dist/assets/sarah-arms-refined-v81.webp")
 const BODY_CROPS := [
     [0.0078125,0.0185546875,0.234375,0.212890625],
@@ -55,6 +56,66 @@ var smoothed_speed := 0.0
 var animation_mode := "idle"
 var last_facing := 1.0
 
+# Timeline poses are independent of collision and input timing.
+var jump_player: AnimationPlayer
+var launch_curl := 0.0
+var launch_stretch := 0.0
+var landing_compress := 0.0
+var jump_phase := ""
+var jump_air_time := 0.0
+var jump_chain := 0
+var jump_direction := 1.0
+var jump_pose_blend := 0.0
+var spin_curve: Curve
+var hair_drag := 0.0
+var hair_drag_speed := 0.0
+var previous_vertical_speed := 0.0
+var body_pitch := 0.0
+
+func start_jump(chain: int, direction: float) -> void:
+    jump_chain = chain
+    jump_direction = direction
+    landing_compress = 0.0
+    jump_player.play("launch")
+    jump_player.advance(0.0)
+
+func land_jump() -> void:
+    launch_curl = 0.0
+    launch_stretch = 0.0
+    jump_player.play("land")
+    jump_player.advance(0.0)
+
+func set_jump_state(phase: String, air_time: float, chain: int, direction: float) -> void:
+    jump_phase = phase
+    jump_air_time = air_time
+    jump_chain = chain
+    jump_direction = direction
+
+func airborne_clearance(screen_y: float) -> float:
+    if jump_phase != "airborne" or reduced_motion:
+        return 0.0
+    var angle := body_pitch * facing_value + spin_curve.sample_baked(clampf(jump_air_time/0.88,0.0,1.0)) * TAU * jump_direction
+    var top := 0.0
+    # Conservative painted-rig bounds protect fins/hair throughout the turn.
+    for corner in [Vector2(-146,-110),Vector2(135,-110),Vector2(-146,77),Vector2(135,77)]:
+        top = minf(top,Vector2(corner.x*facing_value,corner.y).rotated(angle).y)
+    return maxf(0.0,14.0-screen_y-top)
+
+func reset_jump() -> void:
+    jump_player.stop()
+    launch_curl = 0.0
+    launch_stretch = 0.0
+    landing_compress = 0.0
+    jump_phase = ""
+    jump_air_time = 0.0
+    jump_pose_blend = 0.0
+    hair_drag = 0.0
+    hair_drag_speed = 0.0
+    previous_vertical_speed = 0.0
+    body_pitch = 0.0
+    rotation = 0.0
+    scale = Vector2(facing_value,1.0)
+
 func _joint(name: String, parent: Node2D, where: Vector2) -> Node2D:
     var node := Node2D.new()
     node.name = name
@@ -82,6 +143,15 @@ func _part(index: int, parent: Node2D, x: float, y: float, w: float, h: float, a
     return sprite
 
 func _ready() -> void:
+    jump_player = AnimationPlayer.new()
+    jump_player.name = "JumpAnimationPlayer"
+    add_child(jump_player)
+    jump_player.add_animation_library("", JUMP_LIBRARY)
+    spin_curve = Curve.new()
+    spin_curve.add_point(Vector2(0.0,0.0),0.0,0.0)
+    spin_curve.add_point(Vector2(0.22,0.06),0.65,0.65)
+    spin_curve.add_point(Vector2(0.62,0.85),1.3,1.3)
+    spin_curve.add_point(Vector2(1.0,1.0),0.0,0.0)
     # Draw order is intentionally far to near, matching the HTML 8.1 rig.
     back_hair = _joint("BackHair", self, Vector2(49, -23))
     _part(2, back_hair, -105, -46, 116, 77)
@@ -171,28 +241,53 @@ func _process(delta: float) -> void:
     var amount := (0.045 + 0.15 * swim_blend) * (1.0 - boost_blend * 0.65) * (1.0 - leap_blend * 0.62)
     if reduced_motion:
         amount = 0.0
+    var active_jump := jump_phase != ""
+    jump_pose_blend = lerpf(jump_pose_blend, 1.0 if active_jump else 0.0, fast_ease)
+    var air_progress := clampf(jump_air_time / 0.88,0.0,1.0)
+    var tuck := sin(air_progress * PI) * jump_pose_blend if jump_phase == "airborne" else 0.0
+    var dive := smoothstep(0.60,0.93,air_progress) * jump_pose_blend if jump_phase == "airborne" else 0.0
+    var lift := jump_pose_blend if jump_phase == "ascent" else (1.0 - dive) * jump_pose_blend
+    var curl := launch_curl * 0.22 + tuck * (0.42 + minf(jump_chain,3) * 0.035)
+    var stretch := launch_stretch * 0.065 - landing_compress * 0.085
+    var vertical_acceleration := clampf((velocity_value.y - previous_vertical_speed) / maxf(dt,0.001), -1800.0,1800.0)
+    previous_vertical_speed = velocity_value.y
+    # Damped secondary motion follows launches, apex and re-entry.
+    var drag_target := clampf(velocity_value.y / 3600.0 - vertical_acceleration / 20000.0,-0.24,0.24)
+    hair_drag_speed += ((drag_target - hair_drag) * 95.0 - hair_drag_speed * 17.0) * dt
+    hair_drag += hair_drag_speed * dt
+    body_pitch = lerp_angle(body_pitch,clampf(velocity_value.y / 1150.0,-0.26,0.26),ease)
+    rotation = body_pitch * facing_value
+    if jump_phase == "airborne" and not reduced_motion:
+        rotation += spin_curve.sample_baked(air_progress) * TAU * jump_direction
+    if reduced_motion:
+        curl = 0.0
+        stretch = 0.0
+        hair_drag = 0.0
+        hair_drag_speed = 0.0
+        lift *= 0.3
+        dive *= 0.3
     # All motion is local to joints; collision location and face stay stable.
-    scale.x = facing_value
-    var tail_angle := sin(swim_phase) * amount + turn_kick * 0.8
-    var tail_tip_angle := sin(swim_phase - 0.91) * amount * 1.55 + turn_kick * 0.9
+    scale = Vector2(facing_value * (1.0 + stretch), 1.0 - stretch * 0.65)
+    var tail_angle := sin(swim_phase) * amount + turn_kick * 0.8 - curl - lift * 0.10 + landing_compress * 0.08
+    var tail_tip_angle := sin(swim_phase - 0.91) * amount * 1.55 + turn_kick * 0.9 - curl * 0.85 + dive * 0.12
     tail_base.rotation = lerpf(tail_base.rotation, tail_angle, ease)
     tail_tip.rotation = lerpf(tail_tip.rotation, tail_tip_angle, ease)
-    fin_upper.rotation = lerpf(fin_upper.rotation, sin(swim_phase * 1.23 - 0.95) * amount * 1.60, fast_ease)
-    fin_lower.rotation = lerpf(fin_lower.rotation, sin(swim_phase * 1.32 + 1.16) * amount * 1.75, fast_ease)
+    fin_upper.rotation = lerpf(fin_upper.rotation, sin(swim_phase * 1.23 - 0.95) * amount * 1.60 + tuck * 0.18 - dive * 0.12, fast_ease)
+    fin_lower.rotation = lerpf(fin_lower.rotation, sin(swim_phase * 1.32 + 1.16) * amount * 1.75 - tuck * 0.14 + dive * 0.10, fast_ease)
     side_fin.rotation = lerpf(side_fin.rotation, sin(swim_phase * 0.91) * amount + turn_kick * 0.27, ease)
     var current := 0.0 if reduced_motion else sin(slow_phase) * 0.035
-    back_hair.rotation = lerpf(back_hair.rotation, current + turn_kick * 0.5 + swim_blend * 0.018, ease)
-    hair_strand.rotation = lerpf(hair_strand.rotation, -current * 1.6 + turn_kick * 0.85, ease)
-    front_hair.rotation = lerpf(front_hair.rotation, -current * 0.6 - turn_kick * 0.25, ease)
+    back_hair.rotation = lerpf(back_hair.rotation, current + turn_kick * 0.5 + swim_blend * 0.018 + hair_drag, ease)
+    hair_strand.rotation = lerpf(hair_strand.rotation, -current * 1.6 + turn_kick * 0.85 + hair_drag * 0.75, ease)
+    front_hair.rotation = lerpf(front_hair.rotation, -current * 0.6 - turn_kick * 0.25 + hair_drag * 0.32, ease)
     var rise := 0.0 if reduced_motion else sin(slow_phase * 1.2) * 1.6
-    torso.position = Vector2(12.0, 24.0 + rise * (1.0 - boost_blend))
+    torso.position = Vector2(12.0, 24.0 + rise * (1.0 - boost_blend) + landing_compress * 2.0)
     torso.rotation = lerpf(torso.rotation, -velocity_value.y / 1400.0 * 0.12 + turn_kick * 0.18, ease)
     head_joint.rotation = lerpf(head_joint.rotation, -torso.rotation * 0.3, ease)
     var arm_sweep := 0.0 if reduced_motion else sin(swim_phase * 0.74 + 0.65) * amount
     near_arm.rotation = lerpf(near_arm.rotation,
-        arm_sweep * 1.2 - 0.26 * boost_blend - 0.13 * leap_blend + hit_kick * 0.14, fast_ease)
+        arm_sweep * 1.2 - 0.26 * boost_blend - 0.13 * leap_blend - lift * 0.34 + tuck * 0.20 - dive * 0.18 + hit_kick * 0.14, fast_ease)
     far_arm.rotation = lerpf(far_arm.rotation,
-        -arm_sweep + 0.21 * boost_blend + 0.12 * leap_blend - hit_kick * 0.12, fast_ease)
+        -arm_sweep + 0.21 * boost_blend + 0.12 * leap_blend - lift * 0.24 - tuck * 0.19 - dive * 0.12 - hit_kick * 0.12, fast_ease)
     self_modulate.a = alpha_value
     if is_instance_valid(hero_light):
         var target_energy := 0.0 if reduced_motion else (0.24 + 0.24 * boost_blend)

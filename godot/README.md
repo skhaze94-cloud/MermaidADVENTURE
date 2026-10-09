@@ -1,4 +1,4 @@
-# Sarah Maria — Mermaid Adventure, Godot 4 (creature refresh v0.9)
+# Sarah Maria — Mermaid Adventure, Godot 4 (flowing jumps v0.10)
 
 This project is the **Godot-native vertical slice** of Mermaid Sarah's first story chapter, built from the existing HTML 9.1 repository. It is a real Godot scene and scripts rather than a webpage embedded in a Godot window. The browser version in `dist/` remains available and unchanged. Godot loads the existing artwork and MP3 directly from `res://dist/assets/`.
 
@@ -9,6 +9,20 @@ This project is the **Godot-native vertical slice** of Mermaid Sarah's first sto
 3. Import **`project.godot` at the repository root**, not the `godot/` directory.
 4. Allow asset import, then press **F5**. The storybook opening leads to the main menu; select **Begin adventure** to enter Highland Gold.
 5. The menu supports portrait and landscape. Play the adventure in landscape. The project window is 1400 × 960 with stretch scaling.
+
+## v0.10: flowing Sarah jumps
+
+Native `AnimationPlayer` timelines in `animations/sarah_jump.tres` drive launch anticipation, a tail kick/stretch, and a springy landing/recovery. Sarah's articulated tail, individual fins, arms and hair blend through ascent, airborne tuck, a smooth forward turn and a reaching dive. A baked Godot `Curve` eases the turn; its direction is locked at launch and its clock follows physics rather than deriving the spin from vertical velocity. A damped secondary-motion spring gives her hair follow-through at launch, apex and re-entry.
+
+`JumpChoreographyFX` adds a short gradient/width-curve `Line2D` ribbon, a pearl accent, expanding elliptical surface ripples and pooled `CPUParticles2D` water droplets with gravity and colour fades. Sprays appear at the actual waterline on breach and landing, remain anchored while the camera pans, and grow slightly with the existing splash chain. The ribbon stores at most 20 samples and four spray/ripple slots are reused. Economy reduces sprays and hides the accent; Gentle motion removes the turn, stretch, ribbons and spray. Pause freezes native timelines and effects; restart clears their state.
+
+Jump input, energy cost, ascent/air trajectory, reef blocking, damage rules, buffer/chain timing and rewards remain. Anticipation is visual, so it adds no input delay. Chaining cancels the landing compression before the next launch. No new Sarah raster assets are needed; the existing painted rig is articulated natively.
+
+`jump_animation_test.gd` covers AnimationPlayer keys, monotonic turn progression, deep-water breach and landing, locked direction, waterline sprays, chain cancellation, bounded effects, camera anchoring, Gentle motion, pause and restart. `capture_jump_previews.gd` samples the real fixed-tick jump into ten Godot renders. The existing five suites remain required. Device checks remain simulated.
+
+[Actual jump storyboard](../docs/jump-choreography-v010.jpg) · [Native pose animation preview](../docs/jump-choreography-v010.gif)
+
+A small visual clearance offset keeps the painted fins and hair inside the viewport during the turn; it does not move the collision body. The fin ribbon follows the articulated fin socket and fades promptly after landing.
 
 ## v0.9: expressive Level 1 creatures
 

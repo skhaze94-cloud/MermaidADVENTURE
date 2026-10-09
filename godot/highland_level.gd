@@ -84,6 +84,9 @@ var music_muted := false
 var joy_last: Dictionary = {}
 var active_joy := -1
 var touch_vectors: Dictionary = {}
+var jump_effects: Node2D
+var leap_air_time := 0.0
+var leap_spin_direction := 1.0
 var leap_phase := ""
 var jump_buffer := 0.0
 var splash_window := 0.0
@@ -117,6 +120,7 @@ func _ready() -> void:
     # Godot editor-authored child scenes, ready before the level controller.
     native_fx = get_node("NativeUnderwaterFX")
     native_rig = get_node("SarahAtlasRig")
+    jump_effects = get_node("JumpChoreographyFX")
     native_boss = get_node("CarloNativeBoss")
     animated_enemies = get_node("AnimatedEnemySprites")
     animated_enemies.bind_enemies(enemies)
@@ -393,6 +397,9 @@ func _begin_leap(chained: bool) -> void:
         score += 100 * splash_chain
         _say("Splash chain! +" + str(100 * splash_chain), 1.0)
     leap_phase = "ascent"
+    leap_air_time = 0.0
+    leap_spin_direction = facing
+    native_rig.start_jump(splash_chain, facing)
     jump_time = 10.0
     jump_buffer = 0.0
     splash_window = 0.0
@@ -511,9 +518,10 @@ func _sync_native_visuals() -> void:
     var velocity := waterfall_velocity * Vector2(520.0, 1.0) if waterfall_active else player_velocity
     var faded := 1.0 if invulnerable <= 0.0 else 0.65 + 0.35 * absf(sin(time * 13.0))
     native_rig.set_motion(velocity, facing, boost_time > 0.0 or waterfall_boost > 0.0, jump_time > 0.0, faded)
-    native_rig.rotation = clampf(velocity.y / 1150.0, -0.26, 0.26) * facing
-    if leap_phase == "airborne" and not reduced_fx:
-        native_rig.rotation += clampf((player_velocity.y + 700.0) / 1400.0, 0.0, 1.0) * TAU * facing
+    native_rig.set_jump_state(leap_phase, leap_air_time, splash_chain, leap_spin_direction)
+    native_rig.position.y += native_rig.airborne_clearance(pos.y)
+    var fin_world: Vector2 = native_rig.tail_tip.to_global(Vector2(-34,-2)) + Vector2(camera,0)
+    jump_effects.update_jump(fin_world, camera, leap_phase, time, reduced_fx, high_depth_quality)
     # Depth shaders affect scenery without refracting Sarah or covering the HUD.
     # During the waterfall, render the refractive field in front of the shaft.
     native_fx.z_index = -1
@@ -559,14 +567,19 @@ func _update_swimming(dt: float) -> void:
         player += player_velocity * dt
         if player.y <= WATER_SURFACE - 12.0:
             leap_phase = "airborne"
+            leap_air_time = 0.0
+            jump_effects.emit_surface(Vector2(player.x, WATER_SURFACE), splash_chain, false)
             player_velocity.y = -700.0
     elif leap_phase == "airborne":
+        leap_air_time += dt
         player_velocity.y += 1250.0 * dt
         player_velocity.x = move_toward(player_velocity.x, input_dir.x * 420.0, dt * 400.0)
         player += player_velocity * dt
         if player.y >= WATER_SURFACE + 40.0 and player_velocity.y > 0.0:
             player.y = WATER_SURFACE + 45.0
             leap_phase = ""
+            native_rig.land_jump()
+            jump_effects.emit_surface(Vector2(player.x, WATER_SURFACE), splash_chain, true)
             jump_time = 0.0
             splash_window = 0.24
             leap_cooldown = 0.35
@@ -591,6 +604,8 @@ func _update_swimming(dt: float) -> void:
                 leap_phase = ""
                 jump_time = 0.0
                 leap_cooldown = 0.25
+                native_rig.reset_jump()
+                jump_effects.reset_jump()
             break
     if not fallen and player.x >= Highland.WATERFALL_START and leap_phase == "":
         _start_waterfall()
@@ -720,6 +735,9 @@ func _reset_transients() -> void:
     jump_buffer = 0.0
     splash_window = 0.0
     splash_chain = 0
+    leap_air_time = 0.0
+    native_rig.reset_jump()
+    jump_effects.reset_jump()
     leap_cooldown = 0.0
     boost_time = 0.0
     boost_cooldown = 0.0
