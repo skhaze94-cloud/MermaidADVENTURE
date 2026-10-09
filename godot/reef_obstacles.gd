@@ -2,7 +2,8 @@ extends Node2D
 ## Original HTML collision rectangles, now rendered by native Sprite2D with
 ## directional relief materials. Geometry remains owned by HighlandData.
 const Highland = preload("res://godot/highland_data.gd")
-const REEF: Texture2D = preload("res://dist/assets/barrier-reef.webp")
+const Art = preload("res://godot/environment_art.gd")
+var materials: Array[ShaderMaterial] = []
 const RELIEF_SHADER: Shader = preload("res://godot/shaders/reef_rock_relief.gdshader")
 var sprites: Array[Sprite2D] = []
 var positions: Array[Rect2] = []
@@ -12,22 +13,25 @@ var view_width := 1400.0
 func _ready() -> void:
     z_index = -1
     positions = Highland.obstacles()
-    var sea_floor_material := ShaderMaterial.new()
-    sea_floor_material.shader = RELIEF_SHADER
-    sea_floor_material.set_shader_parameter("ceiling_rock", 0.0)
-    var overhead_material := ShaderMaterial.new()
-    overhead_material.shader = RELIEF_SHADER
-    overhead_material.set_shader_parameter("ceiling_rock", 1.0)
     for i in range(positions.size()):
         var r := positions[i]
+        var overhead := r.position.y < 340.0
+        var frame := (i % 2) if overhead else (2 + i % 2)
         var sprite := Sprite2D.new()
         sprite.name = "ReliefReef_%02d" % i
-        sprite.texture = REEF
+        sprite.texture = Art.rock(frame)
         sprite.centered = false
+        sprite.flip_v = overhead
         sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-        sprite.material = overhead_material if r.position.y < 340.0 else sea_floor_material
-        sprite.scale = Vector2((r.size.x + 44.0) / float(REEF.get_width()),
-            (r.size.y + 50.0) / float(REEF.get_height()))
+        var material := ShaderMaterial.new()
+        material.shader = RELIEF_SHADER
+        material.set_shader_parameter("ceiling_rock", 1.0 if overhead else 0.0)
+        var region: Rect2 = Art.ROCK_REGIONS[frame]
+        var tex_size := Vector2(Art.ROCKS.get_width(), Art.ROCKS.get_height())
+        material.set_shader_parameter("atlas_bounds", Vector4(region.position.x / tex_size.x, region.position.y / tex_size.y, region.end.x / tex_size.x, region.end.y / tex_size.y))
+        sprite.material = material
+        materials.append(material)
+        sprite.scale = Vector2((r.size.x + 44.0) / sprite.texture.get_width(), (r.size.y + 50.0) / sprite.texture.get_height())
         add_child(sprite)
         sprites.append(sprite)
     get_viewport().size_changed.connect(_resize)
@@ -48,3 +52,7 @@ func set_camera(next_x: float, show_rocks: bool) -> void:
         var sprite := sprites[i]
         sprite.position = Vector2(sx, r.position.y - 25.0)
         sprite.visible = sx > -350.0 and sx < view_width + 350.0
+
+func set_quality(high: bool) -> void:
+    for material in materials:
+        material.set_shader_parameter("high_quality", high)

@@ -1,8 +1,7 @@
 extends Node2D
 ## Sparse close-plane foreground silhouettes. The outer edges provide depth cues
 ## without painting over Sarah, the HUD or the original gameplay targets.
-const FLORA: Texture2D = preload("res://dist/assets/flora-layer.webp")
-const GARDENS: Texture2D = preload("res://dist/assets/reef-garden-v75.webp")
+const Art = preload("res://godot/environment_art.gd")
 const REEF_SHADER: Shader = preload("res://godot/shaders/reef_material.gdshader")
 var entries: Array[Dictionary] = []
 var camera_x := 0.0
@@ -25,23 +24,16 @@ func _ready() -> void:
     for i in range(18):
         var sprite := Sprite2D.new()
         sprite.name = "Foreground_%02d" % i
-        sprite.texture = FLORA if i % 3 != 0 else _atlas_crop(i)
-        sprite.scale = Vector2(0.17 + float(i % 3) * 0.035, 0.15 + float(i % 4) * 0.018)
+        sprite.texture = Art.garden(i * 3)
+        sprite.scale = Vector2.ONE * (210.0 + float(i % 4) * 24.0) / sprite.texture.get_width()
+        sprite.offset.y = -sprite.texture.get_height() * 0.5
         sprite.material = material
-        sprite.modulate.a = 0.22 + float(i % 3) * 0.025
+        sprite.modulate.a = 0.46 + float(i % 3) * 0.035
         sprite.flip_h = i % 2 == 0
         add_child(sprite)
         entries.append({"sprite": sprite, "x": 290.0 + float(i) * 1170.0, "phase": float(i) * 0.77})
     get_viewport().size_changed.connect(_update_size)
     _update_size()
-
-func _atlas_crop(i: int) -> AtlasTexture:
-    var crop := AtlasTexture.new()
-    crop.atlas = GARDENS
-    var cw := GARDENS.get_width() / 4.0
-    var ch := GARDENS.get_height() / 3.0
-    crop.region = Rect2(Vector2(float(i % 4) * cw, float((i / 4) % 3) * ch), Vector2(cw, ch))
-    return crop
 
 func _update_size() -> void:
     screen_size = get_viewport_rect().size
@@ -64,6 +56,8 @@ func _process(dt: float) -> void:
 func set_camera(world_camera: float, enabled: bool, reduce_motion: bool) -> void:
     camera_x = world_camera
     active = enabled
+    if reduce_motion != reduced_motion:
+        last_camera = -999999.0
     reduced_motion = reduce_motion
     visible = active
     if not active:

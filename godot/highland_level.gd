@@ -44,6 +44,8 @@ var message_time := 5.0
 
 var obstacles: Array[Rect2] = []
 var enemies: Array[Dictionary] = []
+const EnvironmentArt = preload("res://godot/environment_art.gd")
+var collectible_art := {"pearl": EnvironmentArt.prop("pearl"), "chest": EnvironmentArt.prop("chest"), "heart": EnvironmentArt.prop("heart"), "boost": EnvironmentArt.prop("boost")}
 var treasures: Array[Dictionary] = []
 var bubbles: Array[Dictionary] = []
 var boss_hp := BOSS_MAX_HEALTH
@@ -75,6 +77,7 @@ var water_surface: Node2D
 var waterfall_models: Array[Dictionary] = []
 var waterfall_enemies: Node2D
 var waterfall_world: Node2D
+var environment_landmarks: Node2D
 var world_depth: Node2D
 var foreground_depth: Node2D
 var relief_obstacles: Node2D
@@ -134,6 +137,7 @@ func _ready() -> void:
     premium_hud = get_node("PremiumHud")
     water_surface = get_node("PaintedWaterSurface")
     waterfall_world = get_node("PaintedWaterfallCavern")
+    environment_landmarks = get_node("EnvironmentLandmarks")
     world_depth = get_node("PaintedWorldDepth")
     foreground_depth = get_node("SparseForegroundDepth")
     relief_obstacles = get_node("ReliefReefObstacles")
@@ -479,7 +483,10 @@ func _hero_screen_position() -> Vector2:
     return pos
 
 func _apply_visual_quality() -> void:
+    environment_landmarks.set_quality(high_depth_quality)
     native_fx.set_quality(high_depth_quality)
+    world_depth.set_quality(high_depth_quality)
+    relief_obstacles.set_quality(high_depth_quality)
     # Lights are the costliest effects on lower-powered/mobile GPUs.
     native_rig.hero_light.enabled = high_depth_quality
     native_boss.light.enabled = high_depth_quality
@@ -548,6 +555,7 @@ func _sync_native_visuals() -> void:
         relief_obstacles.set_camera(camera, not waterfall_active)
     if is_instance_valid(water_surface):
         water_surface.set_scene(camera, not waterfall_active, reduced_fx)
+    environment_landmarks.set_scene(camera, fallen, waterfall_active, boss_hp <= 0, reduced_fx)
     native_fx.set_depth_profile(fallen)
     if is_instance_valid(premium_hud):
         premium_hud.update_hud(_hud_snapshot())
@@ -1025,29 +1033,13 @@ func _draw_world(s: Vector2) -> void:
         var x := fposmod(float(i) * 223.0 - camera * 0.37 + time * (9.0 + float(i % 4)), s.x + 120.0) - 50.0
         var y := WATER_SURFACE + 80.0 + fmod(float(i) * 133.0, maxf(10.0, s.y - WATER_SURFACE - 90.0))
         draw_circle(Vector2(x, y), 2.5 + float(i % 3), Color(0.72, 1.0, 0.97, 0.34))
-    # Far and medium garden textures are rendered by PaintedWorldDepth.
-    for index in range(obstacles.size()):
-        var r := obstacles[index]
-        var x := r.position.x - camera
-        if x > s.x + 160.0 or x + r.size.x < -160.0:
-            continue
-        # Actual textured geometry is the native ReliefReefObstacles node.
-        if index % 2 == 0:
-            draw_circle(Vector2(x + r.size.x * 0.5, r.position.y + r.size.y * 0.5), 9.0, Color(0.41, 0.95, 0.93, 0.18))
-    if not fallen:
-        var fall_x := 3220.0 - camera
-        if fall_x > -230 and fall_x < s.x + 230:
-            draw_rect(Rect2(fall_x - 125, WATER_SURFACE, 250, s.y - WATER_SURFACE), Color("#b0fff7", 0.18))
-            for i in range(9):
-                var yy := WATER_SURFACE + fposmod(float(i) * 97.0 + time * 160.0, s.y - WATER_SURFACE)
-                draw_line(Vector2(fall_x + sin(time * 2.0 + i) * 93.0, yy), Vector2(fall_x + sin(time * 2.0 + i) * 72.0, yy + 70), Color(0.81, 1.0, 1.0, 0.42), 3.0)
     for treasure in treasures:
         if treasure["taken"]:
             continue
         var x := float(treasure["x"]) - camera
         if x < -80 or x > s.x + 80:
             continue
-        var y := float(treasure["y"]) + sin(time * 2.0 + float(treasure["phase"])) * 5.0
+        var y := float(treasure["y"]) + (0.0 if reduced_fx else sin(time * 2.0 + float(treasure["phase"])) * 5.0)
         _draw_collectible(Vector2(x, y), String(treasure["kind"]))
     for enemy in enemies:
         if int(enemy["hp"]) <= 0:
@@ -1066,57 +1058,15 @@ func _draw_world(s: Vector2) -> void:
         var pos := Vector2(shot["pos"]) - Vector2(camera, 0)
         draw_circle(pos, 24.0, Color(0.55, 0.96, 1.0, 0.45))
         draw_arc(pos, 20.0, 0, TAU, 40, Color("#d9ffff"), 3.0)
-    if boss_hp <= 0:
-        var portal_x := Highland.PORTAL_X - camera
-        if portal_x > -150 and portal_x < s.x + 150:
-            draw_arc(Vector2(portal_x, 530), 95.0, 0, TAU, 80, Color("#ffe79c"), 11.0)
-            draw_arc(Vector2(portal_x, 530), 81.0, 0, TAU, 80, Color("#a1ffff"), 4.0)
     _draw_hero(player - Vector2(camera, 0))
-    draw_rect(Rect2(0, s.y - 60, s.x, 60), Color(0.02, 0.14, 0.24, 0.24))
+
 
 func _draw_collectible(pos: Vector2, kind: String) -> void:
-    var pulse := 1.0 + sin(time * 3.1 + pos.x * 0.015) * 0.065
-    var r := 21.0 * pulse
-    if kind == "heart":
-        draw_circle(pos, r + 7.0, Color(0.93, 0.39, 0.67, 0.14))
-        draw_circle(pos + Vector2(-9, -5), 15.0, Color("#f580a8"))
-        draw_circle(pos + Vector2(9, -5), 15.0, Color("#f580a8"))
-        draw_colored_polygon(PackedVector2Array([
-            pos + Vector2(-24, -2), pos + Vector2(24, -2),
-            pos + Vector2(0, 28)]), Color("#f580a8"))
-        draw_circle(pos + Vector2(-10, -10), 5, Color(1.0, 0.93, 0.98, 0.72))
-        draw_arc(pos, 31.0, time * 0.4, time * 0.4 + PI * 0.78, 19,
-            Color(1, 0.84, 0.94, 0.35), 2.0, true)
-    elif kind == "boost":
-        draw_circle(pos, r + 13.0, Color(0.15, 0.96, 0.83, 0.16))
-        draw_colored_polygon(PackedVector2Array([
-            pos + Vector2(0, -29), pos + Vector2(24, -5), pos + Vector2(0, 29),
-            pos + Vector2(-24, -5)]), Color("#41d9d6"))
-        draw_colored_polygon(PackedVector2Array([
-            pos + Vector2(0, -24), pos + Vector2(0, 25),
-            pos + Vector2(18, -4)]), Color("#c3fff3"))
-        draw_line(pos + Vector2(-4, -19), pos + Vector2(9, -9), Color.WHITE, 3)
-        draw_arc(pos, 32.0, time * 1.4, time * 1.4 + PI * 0.5, 15,
-            Color(0.61, 1.0, 0.95, 0.66), 2.0, true)
-    elif kind == "chest":
-        draw_circle(pos, 45.0, Color(1.0, 0.72, 0.35, 0.12))
-        draw_rect(Rect2(pos + Vector2(-31, -15), Vector2(62, 43)), Color("#623b36"))
-        draw_rect(Rect2(pos + Vector2(-33, -28), Vector2(66, 24)), Color("#e5a854"))
-        draw_rect(Rect2(pos + Vector2(-30, -24), Vector2(60, 7)), Color("#ffe1a2"))
-        draw_rect(Rect2(pos + Vector2(-6, -19), Vector2(12, 47)), Color("#eec775"))
-        draw_circle(pos + Vector2(0, 4), 6, Color("#fff0bd"))
-        draw_line(pos + Vector2(-24, 17), pos + Vector2(24, 17), Color("#d89c56"), 3)
-    else:
-        draw_circle(pos, r + 7, Color(0.22, 0.78, 1.0, 0.18))
-        draw_circle(pos, r, Color(0.70, 0.93, 1.0, 0.73))
-        draw_circle(pos, r * 0.72, Color("#e6faff"))
-        draw_circle(pos + Vector2(-6, -7), 5, Color(1, 1, 1, 0.87))
-        draw_arc(pos, r + 3, PI * 0.9, PI * 1.65, 14, Color("#fff7dd"), 2)
-    # Sparse four-point sparkle reads better than dozens of particle sprites.
-    if int(floor(time * 1.8 + pos.x * 0.007)) % 4 == 0:
-        var sp := pos + Vector2(r + 13, -r - 7)
-        draw_line(sp + Vector2(-6, 0), sp + Vector2(6, 0), Color(1, 1, 1, 0.69), 2)
-        draw_line(sp + Vector2(0, -6), sp + Vector2(0, 6), Color(1, 1, 1, 0.69), 2)
+    var texture: Texture2D = collectible_art.get(kind, collectible_art["pearl"])
+    var pulse := 1.0 if reduced_fx else 1.0 + sin(time * 3.1 + pos.x * 0.015) * 0.035
+    var width := (80.0 if kind == "chest" else 55.0) * pulse
+    var size := Vector2(width, width * texture.get_height() / texture.get_width())
+    draw_texture_rect(texture, Rect2(pos - size * 0.5, size), false)
 
 
 func _draw_boss() -> void:

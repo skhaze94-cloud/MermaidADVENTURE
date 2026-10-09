@@ -34,6 +34,15 @@ jobs:
           GODOT_CAPTURE_PREVIEW=1 LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a -s "-screen 0 1400x960x24" \
             godot --audio-driver Dummy --path . --script res://godot/capture_level1_previews.gd
           ls -lh godot/visual-previews/
+      - name: Render environment landmarks and responsive biomes
+        shell: bash
+        run: |
+          set -o pipefail
+          GODOT_CAPTURE_PREVIEW=1 LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a -s "-screen 0 1400x960x24" \
+            godot --audio-driver Dummy --path . --script res://godot/capture_environment_previews.gd 2>&1 | tee /tmp/environment-renders.log
+          if grep -E 'SCRIPT ERROR|Parse Error|Compile Error|^ERROR:' /tmp/environment-renders.log; then
+            exit 1
+          fi
       - name: Render phone, tablet, desktop and rotation profiles
         shell: bash
         run: |

@@ -1,6 +1,6 @@
-# Sarah Maria — Mermaid Adventure, Godot 4 (flowing jumps v0.10)
+# Sarah Maria — Mermaid Adventure, Godot 4 (environment refresh v0.11)
 
-This project is the **Godot-native vertical slice** of Mermaid Sarah's first story chapter, built from the existing HTML 9.1 repository. It is a real Godot scene and scripts rather than a webpage embedded in a Godot window. The browser version in `dist/` remains available and unchanged. Godot loads the existing artwork and MP3 directly from `res://dist/assets/`.
+This project is the **Godot-native vertical slice** of Mermaid Sarah's first story chapter, built from the existing HTML 9.1 repository. It is a real Godot scene and scripts rather than a webpage embedded in a Godot window. The browser version in `dist/` remains available and unchanged. Godot loads the Sarah rig and music from `res://dist/assets/`, alongside new native artwork in `res://godot/assets/`.
 
 ## Open the project
 
@@ -9,6 +9,16 @@ This project is the **Godot-native vertical slice** of Mermaid Sarah's first sto
 3. Import **`project.godot` at the repository root**, not the `godot/` directory.
 4. Allow asset import, then press **F5**. The storybook opening leads to the main menu; select **Begin adventure** to enter Highland Gold.
 5. The menu supports portrait and landscape. Play the adventure in landscape. The project window is 1400 × 960 with stretch scaling.
+
+## v0.11: painted environments and reliable ZIP import
+
+Level 1 now has separate illustrated Highland-lake and flooded-grotto backdrops, seven selectable reef gardens, four obstacle variants, shell pearls, carved treasure chests, heart gems, boost crystals and a carved victory portal. Plants use measured atlas bounds, uniform scale and base-rooted sway. Rock materials derive gentle directional relief from painted texture gradients; Economy skips those extra samples. Reduced Motion immediately resets plant sway and stops reward bobbing and landmark flow. Collision rectangles and pickup rules remain owned by the existing gameplay data.
+
+The previous ZIP omitted explicit directory entries. Godot 4.4.1's Project Manager creates directories only when it encounters those entries, which caused nested assets, music and scripts to fail extraction. The v0.11 packager puts `project.godot` at the archive root and writes parent directories before files. Validation reproduces Godot's extraction sequence: the old ZIP fails, while the new ZIP extracts every file and passes fresh editor import.
+
+**Import:** download the v0.11 ZIP, choose **Import** in Godot 4.4.1 or newer, select the ZIP and an empty project folder. Alternatively, extract it normally and select its `project.godot` file. Do not place these files over an older imported folder.
+
+Validation includes seven native logic suites, actual software-OpenGL game captures and simulated phone/tablet/desktop layouts. These checks do not measure performance on physical devices.
 
 ## v0.10: flowing Sarah jumps
 
