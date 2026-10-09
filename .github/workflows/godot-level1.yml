@@ -59,6 +59,19 @@ jobs:
           if grep -E 'SCRIPT ERROR|Parse Error|Compile Error|^ERROR:' /tmp/godot-gameplay.log; then
             exit 1
           fi
+      - name: Exercise simulated device sizes, safe areas and multitouch
+        shell: bash
+        run: |
+          set -o pipefail
+          timeout -k 3s 45s godot --headless --path . --script res://godot/device_layout_test.gd 2>&1 | tee /tmp/godot-device.log
+          grep -q 'GODOT DEVICE LAYOUT TEST PASSED' /tmp/godot-device.log
+          if grep -E 'SCRIPT ERROR|Parse Error|Compile Error|^ERROR:' /tmp/godot-device.log; then
+            exit 1
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: godot-v07-device-layout-report
+          path: godot/device-qa/*.json
       - name: Launch first level headless
         shell: bash
         run: |

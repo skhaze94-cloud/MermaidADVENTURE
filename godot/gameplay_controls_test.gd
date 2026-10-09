@@ -75,13 +75,13 @@ func _run() -> void:
     check(level.waterfall_boost == 0 and level.hostile_shots.is_empty(), "retry leaves transient attacks")
     # Input and drawing share geometry; diagonals are one finger, actions separate.
     var size := Vector2(1400, 960)
-    var center := Controls.pad_rect(size).get_center()
+    var center: Vector2 = level._pad_rect().get_center()
     level._set_touch(8, center + Vector2(45, -45), "pad")
-    level._set_touch(12, Controls.rect("boost", size).get_center(), "boost")
+    level._set_touch(12, level._touch_rect("boost", size).get_center(), "boost")
     var steering: Vector2 = level._input_vector()
     check(steering.x > 0.6 and steering.y < -0.6, "single-finger diagonal steering missing")
     check(level.touches[12] == "boost", "second finger ownership lost")
-    check(Controls.pad_vector(center, size) == Vector2.ZERO, "pad dead zone missing")
+    check(Controls.pad_vector(Controls.pad_rect(size).get_center(), size) == Vector2.ZERO, "pad dead zone missing")
     check(Controls.radial_stick(Vector2(0.1, 0)) == Vector2.ZERO, "controller dead zone missing")
     check(is_equal_approx(Controls.radial_stick(Vector2(0.6, 0)).x, 0.5), "controller analogue range discontinuous")
     check(Controls.controller_id(-1, [4]) == 4, "controller assumes device zero")
@@ -90,13 +90,13 @@ func _run() -> void:
     level._set_paused(true)
     check(paused and level.touches.is_empty() and level.touch_vectors.is_empty(), "pause fails to clear held touch")
     check(not level.world_depth.can_process() and not level.native_rig.can_process(), "world animations continue while paused")
-    check(level._touch_target(Controls.rect("resume", size).get_center()) == "resume", "resume button cannot be reached")
+    check(level._touch_target(level._touch_rect("resume", size).get_center()) == "resume", "resume button cannot be reached")
     var paused_time: float = level.time
     level._physics_process(1)
     check(level.time == paused_time, "gameplay clock advances while paused")
     level._touch_action("resume")
     check(not paused and level.state == "playing", "touch resume fails")
-    check(level._touch_target(Controls.rect("restart", size).get_center()) != "restart", "invisible restart active during gameplay")
+    check(level._touch_target(level._touch_rect("restart", size).get_center()) != "restart", "invisible restart active during gameplay")
     # Species lock aim before attack; player movement cannot instantly retarget it.
     for kind in ["eel", "swordfish", "crab", "puffer", "jelly"]:
         var enemy := {"kind": kind, "x": 1000.0, "y": 600.0, "bx": 1000.0, "by": 600.0, "phase": 0.0, "hp": 1, "dir": 1}

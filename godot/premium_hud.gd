@@ -7,6 +7,9 @@ var info: Dictionary = {}
 var redraw_count := 0
 var skipped_redraws := 0
 var game_size := Vector2(1400, 960)
+var ui_scale := 1.0
+var safe_frame := Rect2(0, 0, 1400, 960)
+var portrait := false
 const DISPLAY_FONT: FontFile = preload("res://dist/fonts/treasure-display.ttf")
 var panel_style: StyleBoxFlat
 var chip_style: StyleBoxFlat
@@ -40,9 +43,29 @@ func _panel(fill: Color, outline: Color, radius: int) -> StyleBoxFlat:
     return p
 
 func _resize() -> void:
-    game_size = get_viewport().get_visible_rect().size
+    var window_size := Vector2(get_viewport().get_window().size)
+    var safe_pixels := Rect2()
+    if OS.get_name() in ["Android", "iOS"]:
+        var screen_safe := Rect2(DisplayServer.get_display_safe_area())
+        screen_safe.position -= Vector2(DisplayServer.window_get_position())
+        safe_pixels = screen_safe
+    configure_layout(get_viewport().get_visible_rect().size, window_size, safe_pixels)
+
+func configure_layout(viewport_size: Vector2, window_size: Vector2, safe_pixels := Rect2()) -> void:
+    safe_frame = Controls.safe_frame(viewport_size, window_size, safe_pixels)
+    ui_scale = Controls.ui_scale(viewport_size, window_size)
+    game_size = safe_frame.size / ui_scale
+    portrait = window_size.y > window_size.x
+    canvas.position = safe_frame.position
+    canvas.scale = Vector2.ONE * ui_scale
     canvas.size = game_size
     canvas.queue_redraw()
+
+func to_ui(point: Vector2) -> Vector2:
+    return (point - safe_frame.position) / ui_scale
+
+func to_game(rect: Rect2) -> Rect2:
+    return Rect2(safe_frame.position + rect.position * ui_scale, rect.size * ui_scale)
 
 func update_hud(next_info: Dictionary) -> void:
     # The gameplay publishes a snapshot every frame, but we only redraw
@@ -66,6 +89,8 @@ func update_hud(next_info: Dictionary) -> void:
     changed = changed or next_info.get("pressed", []) != info.get("pressed", [])
     changed = changed or next_info.get("pad", Vector2.ZERO) != info.get("pad", Vector2.ZERO)
     changed = changed or next_info.get("boss_phase", "") != info.get("boss_phase", "")
+    changed = changed or next_info.get("waterfall", "") != info.get("waterfall", "")
+    changed = changed or int(float(next_info.get("fall_progress", 0.0)) * 100) != int(float(info.get("fall_progress", 0.0)) * 100)
     info = next_info
     if changed:
         redraw_count += 1
@@ -120,9 +145,10 @@ func _draw_hud() -> void:
     _backed(Rect2(margin, margin, left_width, 86), panel_style)
     canvas.draw_line(Vector2(margin + 17, margin + 19), Vector2(margin + 17, margin + 69),
         Color("#81f4df"), 3)
-    _text(Vector2(margin + 29, 49), "HIGHLAND GOLD", 23 if not compact else 19, GOLD)
-    _text(Vector2(margin + 29, 76), "CARLO'S COLD KINGDOM", 13 if not compact else 11, PALE)
-    var right_x := w - right_width - margin
+    var falling := not String(info.get("waterfall", "")).is_empty()
+    _text(Vector2(margin + 29, 49), "THE WATERFALL" if falling else "HIGHLAND GOLD", 23 if not compact else 19, GOLD)
+    _text(Vector2(margin + 29, 76), "SECRET GROTTO DESCENT" if falling else "CARLO'S COLD KINGDOM", 13 if not compact else 11, PALE)
+    var right_x := w - right_width - margin - (82.0 if bool(info.get("touch", false)) else 0.0)
     _backed(Rect2(right_x, margin, right_width, 86), panel_style)
     _bead(Vector2(right_x + 22, 38), 9)
     _text(Vector2(right_x + 44, 45), "PEARLS  " + str(info.get("pearls", 0)), 18, INK)
@@ -144,14 +170,14 @@ func _draw_hud() -> void:
     # Thin route ruler across the bottom, discreet but readable.
     var bottom := h - 15.0
     var route_width := maxf(70.0, w - 42.0)
-    _bar(Rect2(21, bottom - 12, route_width, 11), float(info.get("progress", 0.0)), GOLD)
+    _bar(Rect2(21, bottom - 12, route_width, 11), float(info.get("fall_progress" if falling else "progress", 0.0)), GOLD)
     var checkpoint_fraction := 0.78
     canvas.draw_circle(Vector2(25.0 + (route_width - 10.0) * checkpoint_fraction, bottom - 6.7), 4.0,
         Color(1, 1, 1, 0.42))
     var caption := String(info.get("message", ""))
-    if float(info.get("message_time", 0.0)) > 0.0 and not caption.is_empty():
+    if float(info.get("message_time", 0.0)) > 0.0 and not caption.is_empty() and not (bool(info.get("boss_active", false)) and h < 580):
         var width := minf(w - 35.0, 750.0)
-        var top := 192.0 if h >= 580 else 170.0
+        var top := 272.0 if bool(info.get("boss_active", false)) else (192.0 if h >= 580 else 170.0)
         var rect := Rect2((w - width) * 0.5, top, width, 47)
         _backed(rect, chip_style)
         var clipped := caption
@@ -161,14 +187,19 @@ func _draw_hud() -> void:
     if bool(info.get("boss_active", false)):
         var bw := minf(w - 40.0, 385.0)
         var bx := (w - bw) / 2.0
-        _backed(Rect2(bx, 106, bw, 67), warning_style)
-        _text(Vector2(bx + 16, 131), "CARLO THE CRAB", 17, GOLD)
-        _bar(Rect2(bx + 16, 140, bw - 32, 17), float(info.get("boss_health", 1.0)),
+        var boss_top := 188.0
+        _backed(Rect2(bx, boss_top, bw, 67), warning_style)
+        _text(Vector2(bx + 16, boss_top + 25), "CARLO THE CRAB", 17, GOLD)
+        _bar(Rect2(bx + 16, boss_top + 34, bw - 32, 17), float(info.get("boss_health", 1.0)),
             Color("#7ffec4") if bool(info.get("boss_vulnerable", false)) else Color("#ffac94"))
-    if bool(info.get("touch", false)):
+    if bool(info.get("touch", false)) and not portrait:
         _draw_touch_ui(w, h)
     if bool(info.get("paused", false)) or bool(info.get("victory", false)):
         _draw_modal(w, h, bool(info.get("victory", false)))
+    if portrait:
+        canvas.draw_rect(Rect2(0, 0, w, h), Color(0.01, 0.04, 0.08, 0.9))
+        _text(Vector2(0, h * 0.46), "ROTATE TO LANDSCAPE", 26, GOLD, HORIZONTAL_ALIGNMENT_CENTER, w)
+        _text(Vector2(0, h * 0.46 + 40), "Your adventure is paused", 18, PALE, HORIZONTAL_ALIGNMENT_CENTER, w)
 
 func _draw_touch_ui(w: float, h: float) -> void:
     var size := Vector2(w, h)
@@ -190,7 +221,7 @@ func _draw_touch_ui(w: float, h: float) -> void:
         var rect: Rect2 = positions[action]
         _backed(rect, warning_style if action in info.get("pressed", []) else chip_style)
         _text(rect.position + Vector2(rect.size.x * 0.5, rect.size.y * 0.56), labels[action],
-            14 if action == "bubble" else 17, INK, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x)
+            19, INK, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x)
 
 func _draw_modal(w: float, h: float, victory: bool) -> void:
     canvas.draw_rect(Rect2(0, 0, w, h), Color(0.005, 0.03, 0.07, 0.79))

@@ -15,7 +15,6 @@ jobs:
     timeout-minutes: 12
     # The engine shader/gameplay smoke suite remains required separately.
     # Software GL screenshot availability depends on the runner.
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - name: Install Xvfb software rendering
@@ -33,8 +32,18 @@ jobs:
         run: |
           mkdir -p godot/visual-previews
           GODOT_CAPTURE_PREVIEW=1 LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a -s "-screen 0 1400x960x24" \
-            godot --path . --script res://godot/capture_level1_previews.gd
+            godot --audio-driver Dummy --path . --script res://godot/capture_level1_previews.gd
           ls -lh godot/visual-previews/
+      - name: Render phone, tablet, desktop and rotation profiles
+        shell: bash
+        run: |
+          set -o pipefail
+          GODOT_CAPTURE_PREVIEW=1 LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a -s "-screen 0 1920x1080x24" \
+            godot --audio-driver Dummy --path . --script res://godot/capture_device_previews.gd 2>&1 | tee /tmp/device-renders.log
+          grep -q 'GODOT DEVICE RENDER TEST PASSED' /tmp/device-renders.log
+          if grep -E 'SCRIPT ERROR|Parse Error|Compile Error|^ERROR:' /tmp/device-renders.log; then
+            exit 1
+          fi
       - name: Publish compact real-render preview thumbnails in logs
         run: |
           python3 - <<'PY'
@@ -45,9 +54,22 @@ jobs:
               if path.exists():
                   print("PREVIEW_B64_"+prefix+"="+base64.b64encode(path.read_bytes()).decode())
           PY
+      - name: Publish actual device profile thumbnails in logs
+        run: |
+          python3 - <<'PYTHON'
+          import base64
+          from pathlib import Path
+          for prefix in ["phone-small-waterfall", "phone-wide-pause", "tablet-4x3-waterfall", "phone-portrait-portrait"]:
+              path = Path("godot/device-qa") / (prefix + "-review.jpg")
+              if path.exists():
+                  print("PREVIEW_B64_"+prefix+"="+base64.b64encode(path.read_bytes()).decode())
+          PYTHON
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: godot-v04-level1-visual-checkpoints
-          path: godot/visual-previews/*.png
+          name: godot-v07-waterfall-and-device-previews
+          path: |
+            godot/visual-previews/*.png
+            godot/device-qa/*.png
+            godot/device-qa/*.json
           if-no-files-found: warn

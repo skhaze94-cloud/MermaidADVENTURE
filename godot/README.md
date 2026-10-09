@@ -1,4 +1,4 @@
-# Sarah Maria — Highland Gold, Godot 4 (gameplay & controls v0.6)
+# Sarah Maria — Highland Gold, Godot 4 (waterfall art & device QA v0.7)
 
 This project is the **Godot-native vertical slice** of Mermaid Sarah's first story chapter, built from the existing HTML 9.1 repository. It is a real Godot scene and scripts rather than a webpage embedded in a Godot window. The browser version in `dist/` remains available and unchanged. Godot loads the existing artwork and MP3 directly from `res://dist/assets/`.
 
@@ -9,6 +9,16 @@ This project is the **Godot-native vertical slice** of Mermaid Sarah's first sto
 3. Import **`project.godot` at the repository root**, not the `godot/` directory.
 4. Allow asset import, then press **F5**. You can inspect `godot/highland_level.tscn` and its native child nodes in the scene editor.
 5. Play in landscape orientation. Current project window is 1400 × 960 with stretch scaling.
+
+## v0.7: dedicated waterfall art and simulated device QA
+
+The waterfall now uses one dedicated opaque painted cavern instead of the Highland lake/sky backdrop and narrow panel walls. Continuous mossy cliff faces frame a clear teal centre; restrained shader depth, phase crossfades and bounded current/spray accents imply descent. Sarah and hazards draw after refraction so their silhouettes remain sharp. The original 17-second descent, steering bounds, hazards and rewards remain.
+
+The interface scales independently of the expanded game viewport, so phone text and controls stay readable. Safe-area geometry is shared with input; simulated notch and home-indicator insets keep controls clear. One-second inlet text replaces the persistent waterfall hint, and descent progress appears in the existing HUD rail. Touch pause no longer overlaps the score card; compact boss/caption layout is separated from action controls. Portrait rotation pauses gameplay and shows a clear landscape instruction.
+
+**Automated QA is simulated, not physical hardware testing.** `device_layout_test.gd` checks 640×360 and 844×390 phones, 1024×768 and 1280×800 tablets, 1920×1080 desktop and 390×844 portrait. It exercises safe-area bounds, minimum 44-pixel targets (48 pixels minimum in the smallest current profile), two-finger diagonal boost, release, drag ownership, touch pause/resume, resize cleanup, portrait guard and waterfall phase/quality state. `capture_device_previews.gd` renders the same profiles using software OpenGL in CI, with waterfall and pause screenshots and JSON reports.
+
+Local import and all three logic suites are required; graphics CI rejects script/shader errors and missing captures. This does not measure Android/iPad GPU, battery, touch latency, thermal throttling or native export behaviour. Follow [the physical-device QA checklist](../docs/device-qa-v07.md) before a device release. Art provenance and the generation prompt are recorded in [waterfall art notes](assets/waterfall-art-v07.md).
 
 ## v0.6: gameplay and controls update
 

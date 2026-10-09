@@ -11,6 +11,7 @@ config/description="First story level ported from Sarah Maria Family Adventure 9
 window/size/viewport_width=1400
 window/size/viewport_height=960
 window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
 window/size/resizable=true
 
 [rendering]

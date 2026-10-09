@@ -65,6 +65,7 @@ var waterfall_hazards: Array[Dictionary] = []
 var waterfall_gold: Array[Dictionary] = []
 var waterfall_gold_count := 0
 var touches: Dictionary = {}
+var simulated_touch := false
 var music_player: AudioStreamPlayer
 var native_rig: Node2D
 var native_fx: Node2D
@@ -73,6 +74,7 @@ var animated_enemies: Node2D
 var performance_overlay: CanvasLayer
 var premium_hud: CanvasLayer
 var water_surface: Node2D
+var waterfall_world: Node2D
 var world_depth: Node2D
 var foreground_depth: Node2D
 var relief_obstacles: Node2D
@@ -120,6 +122,7 @@ func _ready() -> void:
     performance_overlay = get_node("PerformanceOverlay")
     premium_hud = get_node("PremiumHud")
     water_surface = get_node("PaintedWaterSurface")
+    waterfall_world = get_node("PaintedWaterfallCavern")
     world_depth = get_node("PaintedWorldDepth")
     foreground_depth = get_node("SparseForegroundDepth")
     relief_obstacles = get_node("ReliefReefObstacles")
@@ -128,6 +131,7 @@ func _ready() -> void:
         child.process_mode = Node.PROCESS_MODE_PAUSABLE
     premium_hud.process_mode = Node.PROCESS_MODE_ALWAYS
     performance_overlay.process_mode = Node.PROCESS_MODE_ALWAYS
+    get_viewport().size_changed.connect(_on_viewport_resized)
     _save_checkpoint()
     _apply_visual_quality()
     _sync_native_visuals()
@@ -214,7 +218,10 @@ func _touch_action(action: String) -> void:
         _restart()
 
 func _touch_target(point: Vector2) -> String:
-    var size := get_viewport_rect().size
+    if premium_hud.portrait:
+        return ""
+    point = premium_hud.to_ui(point)
+    var size: Vector2 = premium_hud.game_size
     if state != "playing":
         for action in ["resume", "restart"]:
             if action == "resume" and state == "victory":
@@ -232,15 +239,15 @@ func _touch_target(point: Vector2) -> String:
     return ""
 
 func _touch_rect(action: String, size: Vector2) -> Rect2:
-    return Controls.rect(action, size)
+    return premium_hud.to_game(Controls.rect(action, premium_hud.game_size))
 
 func _set_touch(index: int, point: Vector2, action: String) -> void:
     touches[index] = action
     if action == "pad":
-        touch_vectors[index] = Controls.pad_vector(point, get_viewport_rect().size)
+        touch_vectors[index] = Controls.pad_vector(premium_hud.to_ui(point), premium_hud.game_size)
 
 func _set_paused(paused: bool) -> void:
-    if state == "victory":
+    if state == "victory" or (not paused and premium_hud.portrait):
         return
     state = "paused" if paused else "playing"
     touches.clear()
@@ -463,11 +470,13 @@ func _hud_snapshot() -> Dictionary:
         "bubble": bubble_unlocked,
         "paused": state == "paused",
         "victory": state == "victory",
-        "touch": DisplayServer.is_touchscreen_available(),
+        "touch": simulated_touch or DisplayServer.is_touchscreen_available(),
         "pressed": touches.values(),
         "pad": _touch_direction(),
         "boss_phase": boss_phase,
-        "boss_pattern": boss_pattern
+        "boss_pattern": boss_pattern,
+        "waterfall": waterfall_phase,
+        "fall_progress": clampf(waterfall_time / 17.0, 0.0, 1.0) if waterfall_phase == "descent" else (1.0 if waterfall_phase == "outflow" else 0.0)
     }
 
 func _sync_native_visuals() -> void:
@@ -485,14 +494,15 @@ func _sync_native_visuals() -> void:
         native_rig.rotation += clampf((player_velocity.y + 700.0) / 1400.0, 0.0, 1.0) * TAU * facing
     # Depth shaders affect scenery without refracting Sarah or covering the HUD.
     # During the waterfall, render the refractive field in front of the shaft.
-    native_fx.z_index = 1 if waterfall_active else -1
+    native_fx.z_index = -1
+    waterfall_world.set_phase(waterfall_phase, waterfall_time, reduced_fx, high_depth_quality)
     native_fx.set_motion(pos, velocity, jump_time <= 0.0)
     if is_instance_valid(animated_enemies):
         animated_enemies.animate_visible(camera, time, reduced_fx,
             get_process_delta_time(), not waterfall_active, high_depth_quality)
     if is_instance_valid(world_depth):
-        world_depth.visible = not waterfall_active
-        world_depth.set_camera(camera, fallen, reduced_fx)
+        world_depth.visible = waterfall_phase != "descent"
+        world_depth.set_camera(camera, fallen or waterfall_phase == "outflow", reduced_fx)
     if is_instance_valid(foreground_depth):
         foreground_depth.set_camera(camera, not waterfall_active, reduced_fx)
     if is_instance_valid(relief_obstacles):
@@ -825,7 +835,7 @@ func _start_waterfall() -> void:
     waterfall_boost_cooldown = 0.0
     boost_time = 0.0
     player_velocity = Vector2.ZERO
-    _say("The waterfall! Swim in all four directions. Boost to dodge!", 5.0)
+    _say("Into the waterfall!", 1.2)
     native_fx.flash(Color("#a5ffff"), 0.30, 0.90)
     if not music_muted:
         _fade_music(-23.0, 1.1)
@@ -942,6 +952,7 @@ func _restart() -> void:
         native_fx.flash(Color("#d6ffff"), 0.16, 0.4)
     if is_instance_valid(premium_hud):
         premium_hud.update_hud(_hud_snapshot())
+    _on_viewport_resized()
 
 func _draw() -> void:
     var s := get_viewport_rect().size
@@ -1175,40 +1186,9 @@ func _draw_hero(pos: Vector2) -> void:
             draw_circle(pos - boost_direction * float(25 + i * 25), float(12 - i), Color(0.7, 1.0, 1.0, 0.23))
 
 func _draw_waterfall(s: Vector2) -> void:
-    draw_texture_rect(BACKGROUND, Rect2(0, 0, s.x, s.y), false, Color("#a7d9e8"))
-    draw_rect(Rect2(0, 0, s.x, s.y), Color(0.018, 0.14, 0.22, 0.60))
+    # Backdrop, continuous walls and mist belong to PaintedWaterfallCavern.
     var half := minf(s.x * 0.40, 520.0)
     var cx := s.x * 0.5
-    var cliff := clampf(s.x * 0.085, 75.0, 122.0)
-    # Organic chasm silhouettes replace the previous ruler-straight wall columns.
-    # The original painted Highlands stay visible between irregular rock edges.
-    for side in [-1, 1]:
-        var edge_x := cx + float(side) * half
-        var rock := PackedVector2Array()
-        var outer := edge_x + float(side) * cliff * 1.6
-        rock.append(Vector2(outer, -20.0))
-        for i in range(11):
-            var fy := -15.0 + float(i) * (s.y + 30.0) / 10.0
-            var notch := sin(float(i) * 2.34 + float(side) * 0.48) * 9.0
-            rock.append(Vector2(edge_x + float(side) * notch, fy))
-        rock.append(Vector2(outer, s.y + 20.0))
-        draw_colored_polygon(rock, Color("#143e4b"))
-        # Only fragments of the existing reef artwork are laid over the
-        # painted chasm. Low opacity avoids billboard seams and tiled pillars.
-        for i in range(4):
-            var fy := float(i) * s.y / 4.0 + float(i % 2) * 22.0
-            var tx := edge_x + float(side) * (cliff * 0.69)
-            var tint := Color(0.48, 0.77, 0.73, 0.105 + float(i % 2) * 0.025)
-            draw_texture_rect(REEF,
-                Rect2(tx - cliff * 0.30, fy, cliff * 0.60, s.y * 0.19),
-                false, tint)
-        for i in range(8):
-            var fy := 35.0 + float(i) * s.y / 8.0
-            var ix := edge_x + float(side) * (12.0 + float(i % 3) * 8.0)
-            draw_line(Vector2(ix, fy), Vector2(ix + float(side) * 11.0, fy + 39),
-                Color(0.57, 0.88, 0.79, 0.13), 1.7)
-        draw_line(Vector2(edge_x, -5), Vector2(edge_x, s.y + 5),
-            Color(0.56, 0.97, 0.91, 0.16), 2.0)
     # Veiled currents are light, narrow and staggered. Avoid opaque overlays.
     for i in range(8):
         var fraction := float(i + 1) / 9.0
@@ -1221,19 +1201,19 @@ func _draw_waterfall(s: Vector2) -> void:
         var yy := float(i) * s.y * 0.26
         draw_line(Vector2(cx - half * 0.8, yy), Vector2(cx + half * 0.8, yy + 45.0),
             Color(0.34, 0.81, 0.85, 0.045), 3.0)
-    for i in range(33):
+    for i in range(12 if reduced_fx else 28):
         var xx := cx + sin(float(i) * 6.2) * half * 0.93
-        var yy := fposmod(float(i) * 91.0 - waterfall_time * 260.0, s.y + 100.0) - 50.0
+        var yy := fposmod(float(i) * 91.0 - time * (0.0 if reduced_fx else 260.0), s.y + 100.0) - 50.0
         draw_line(Vector2(xx, yy), Vector2(xx + sin(time * 2.0 + float(i)) * 8.0, yy + 55), Color(0.73, 1.0, 1.0, 0.20 if i % 3 else 0.40), 2.0)
     # Dispersed spray and foam respond to the shaft's downward current.
-    for i in range(18):
+    for i in range(6 if reduced_fx else 18):
         var shift := sin(float(i) * 8.7) * half * 0.87
-        var yy := fposmod(float(i) * 71.0 + waterfall_time * 240.0, s.y + 100.0) - 50.0
+        var yy := fposmod(float(i) * 71.0 + time * (0.0 if reduced_fx else 240.0), s.y + 100.0) - 50.0
         var spray_x := cx + shift + sin(time * 1.6 + float(i)) * 8.0
         draw_circle(Vector2(spray_x, yy), 2.0 + float(i % 3),
             Color(0.83, 1.0, 0.98, 0.12 + 0.08 * float(i % 2)))
     for hazard in waterfall_hazards:
-        if hazard["passed"]:
+        if hazard["passed"] or waterfall_phase != "descent":
             continue
         var yy := 384.0 + (float(hazard["at"]) - waterfall_time) * 350.0
         if yy < -180 or yy > s.y + 180:
@@ -1248,9 +1228,9 @@ func _draw_waterfall(s: Vector2) -> void:
         elif kind == "reef":
             draw_texture_rect(REEF, Rect2(xx - 115, yy - 90, 230, 180), false)
         else:
-            draw_circle(Vector2(xx, yy), 48, Color("#b8deab"))
+            _draw_puffer(Vector2(xx, yy), time * 2.5)
     for pearl in waterfall_gold:
-        if pearl["taken"]:
+        if pearl["taken"] or waterfall_phase != "descent":
             continue
         var yy := 384.0 + (float(pearl["at"]) - waterfall_time) * 350.0
         if yy < -50 or yy > s.y + 50:
@@ -1261,8 +1241,7 @@ func _draw_waterfall(s: Vector2) -> void:
         var u := clampf(waterfall_time / Highland.FALL_ENTRY, 0.0, 1.0)
         hero_pos = (player - Vector2(camera, 0)).lerp(hero_pos, u)
     _draw_hero(hero_pos)
-    draw_rect(Rect2(cx - half, 88, half * 2.0 * clampf(waterfall_time / Highland.FALL_DURATION, 0, 1), 7), Color("#a5ffeb"))
-    _draw_text(Vector2(cx - 150, 74), "THE WATERFALL", 29, Color("#f5ffff"))
+
 
 func _draw_hud(s: Vector2) -> void:
     draw_rect(Rect2(12, 10, s.x - 24, 79), Color(0.035, 0.13, 0.22, 0.75))
@@ -1336,3 +1315,14 @@ func _fade_music(volume: float, duration: float) -> void:
         music_tween.kill()
     music_tween = create_tween().bind_node(music_player)
     music_tween.tween_property(music_player, "volume_db", volume, duration)
+
+func _on_viewport_resized() -> void:
+    touches.clear()
+    touch_vectors.clear()
+    if is_instance_valid(premium_hud):
+        premium_hud._resize()
+        if premium_hud.portrait and state == "playing":
+            _set_paused(true)
+
+func _pad_rect() -> Rect2:
+    return premium_hud.to_game(Controls.pad_rect(premium_hud.game_size))

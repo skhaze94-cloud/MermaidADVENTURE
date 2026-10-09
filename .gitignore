@@ -5,3 +5,7 @@
 *.exe
 *.x86_64
 *.app/
+
+# Generated QA captures and reports.
+godot/visual-previews/
+godot/device-qa/
