@@ -17,6 +17,9 @@ func _capture() -> void:
     level.health = 5
     level.invulnerable = 10.0
     level.message_time = 0.0
+    if "--reverse" in OS.get_cmdline_user_args():
+        level.native_rig.jump_style_cursor = 1
+        output += "/reverse"
     level._jump()
     DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(output))
     var indices := [4,12,17,25,33,43,54,67,78,89]

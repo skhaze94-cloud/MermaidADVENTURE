@@ -29,6 +29,7 @@ v0.12: connected, deformable Sarah arms, hair, tail and fins, expressive gesture
 refined head/body/arm proportions, an elongated tail, flowing swim cycles, more responsive steering/braking and proportional touch controls.
 Includes the dimensional jump pass: elastic launch/landing, faux yaw, limb overlap,
 rounded lighting, apex fin fan and curved intertwined fin trails.
+Adds alternating small left/right corkscrews and independent celebratory arm/wrist lifts.
 Includes all previous menu, enemy, environment, waterfall, jump and reliable ZIP improvements.
 F3: Reduced Motion. F4: Economy/High depth. M: music.
 

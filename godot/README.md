@@ -273,3 +273,9 @@ The v0.12 character refinement lengthens the tail from its fixed hip socket, red
 Jump launch and landing timelines now use a stronger elastic coil/stretch and a longer damped rebound. A monotonic spin curve holds the midair tuck before opening into the dive. Bounded faux yaw foreshortens the bodice and arms, changes arm overlap and back-arm shading, and opens the fins into an apex fan. Atlas-local rounded lighting gives the bodice, arms and tail more volume while leaving Sarah's face artwork intact. The hip follows the torso bob to keep the seam connected.
 
 The fin trail now uses bounded Catmull-Rom smoothing and an intertwining pearl-pink accent. Economy uses the simple polyline and omits extra volume shading; Gentle motion removes faux yaw, perspective and the trails. Pause/retry clear depth state. Physics, hitboxes, jump input and trajectories remain unchanged. `godot/sarah-dimensional-jump.gif` shows native Godot viewport frames along a real fixed-tick jump.
+
+### Corkscrew and joyful jump refinement
+
+The jump presentation cycles through a small left corkscrew, a small right corkscrew and the full aerial roll. Side-to-side axial depth, a slight bank/skew and opposite tail follow-through make the corkscrews distinct from somersaults. The airborne apex raises each arm on its own envelope, with a delayed far arm and independent wrist flourishes, before easing both into the dive. All visual timing follows the existing airborne clock.
+
+Gentle motion omits corkscrews and arm flourishes; retry resets the variation sequence. Controls, physics, jump chaining and collision are unchanged. `godot/sarah-corkscrew-jump.gif` contains real native captures of both handedness variants.

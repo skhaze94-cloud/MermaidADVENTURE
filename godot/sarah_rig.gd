@@ -98,6 +98,11 @@ var horizontal_drag := 0.0
 var horizontal_drag_speed := 0.0
 var idle_elapsed := 0.0
 var last_gesture := ""
+var jump_style := 0
+var jump_style_cursor := 0
+var jump_joy_near := 0.0
+var jump_joy_far := 0.0
+var corkscrew := 0.0
 var depth_turn := 0.0
 var volume_materials: Array[ShaderMaterial] = []
 var painted_parts: Array[Node2D] = []
@@ -135,6 +140,8 @@ func reset_performance() -> void:
     _clear_gesture_values()
     last_gesture = ""
     idle_elapsed = 0.0
+    jump_style_cursor = 0
+    jump_style = 0
     swim_clock = 0.0
     turn_elapsed = 1.0
     brake_blend = 0.0
@@ -182,6 +189,10 @@ func _volume_material(crop: Array) -> ShaderMaterial:
 
 func _reset_depth_pose() -> void:
     depth_turn = 0.0
+    corkscrew = 0.0
+    jump_joy_near = 0.0
+    jump_joy_far = 0.0
+    torso.skew = 0.0
     torso.scale = Vector2.ONE
     near_arm.scale = Vector2.ONE
     far_arm.scale = Vector2.ONE
@@ -234,14 +245,17 @@ func _update_ribbons(dt: float, phase: float, swim_amount: float) -> void:
     # Keep the hip seam stable; more of the travelling wave lives at the fin.
     ribbons[5].deform(phase,strength*0.40,0.0)
     var expression := 0.25 if leaping or boosting else 1.0
-    arm_meshes[1].skin(0.12+sin(phase-0.8)*swim_amount*0.15-boost_blend*0.08+gesture_wave*expression*0.12, sin(phase-1.4)*0.025+gesture_wave*expression*0.14-gesture_reach*expression*0.08)
-    arm_meshes[0].skin(0.10+sin(phase+1.6)*swim_amount*0.12-boost_blend*0.06, -sin(phase+0.8)*0.025-gesture_wave*expression*0.10)
+    arm_meshes[1].skin(0.12+jump_joy_far*0.22+sin(phase-0.8)*swim_amount*0.15-boost_blend*0.08+gesture_wave*expression*0.12, sin(phase-1.4)*0.025+gesture_wave*expression*0.14-gesture_reach*expression*0.08 + jump_joy_far*sin(jump_air_time*18.0)*0.12)
+    arm_meshes[0].skin(0.10+jump_joy_near*0.17+sin(phase+1.6)*swim_amount*0.12-boost_blend*0.06, -sin(phase+0.8)*0.025-gesture_wave*expression*0.10 + jump_joy_near*sin(jump_air_time*16.0+0.8)*0.10)
     for material in ribbon_materials:
         material.set_shader_parameter("motion_clock", clock)
         material.set_shader_parameter("charge_mix", boost_blend)
         material.set_shader_parameter("motion_enabled", not reduced_motion)
 
 func start_jump(chain: int, direction: float) -> void:
+    # Two small opposing corkscrews, then the familiar full aerial roll.
+    jump_style = jump_style_cursor % 3
+    jump_style_cursor += 1
     jump_chain = chain
     jump_direction = direction
     landing_compress = 0.0
@@ -260,10 +274,19 @@ func set_jump_state(phase: String, air_time: float, chain: int, direction: float
     jump_chain = chain
     jump_direction = direction
 
+func _jump_roll(progress: float) -> float:
+    if jump_style == 2:
+        return spin_curve.sample_baked(progress)*TAU*jump_direction
+    var handedness := 1.0 if jump_style == 0 else -1.0
+    return sin(progress*TAU*1.15)*sin(progress*PI)*0.30*handedness*jump_direction
+
+func _joy_envelope(progress: float, delay: float) -> float:
+    return smoothstep(0.12+delay,0.30+delay,progress)*(1.0-smoothstep(0.62+delay,0.88,progress))
+
 func airborne_clearance(screen_y: float) -> float:
     if jump_phase != "airborne" or reduced_motion:
         return 0.0
-    var angle := body_pitch * facing_value + spin_curve.sample_baked(clampf(jump_air_time/0.88,0.0,1.0)) * TAU * jump_direction
+    var angle := body_pitch * facing_value + _jump_roll(clampf(jump_air_time/0.88,0.0,1.0))
     var top := 0.0
     # Conservative painted-rig bounds protect fins/hair throughout the turn.
     for corner in [Vector2(-185,-125),Vector2(150,-125),Vector2(-185,95),Vector2(150,95)]:
@@ -463,6 +486,11 @@ func _process(delta: float) -> void:
     var active_jump := jump_phase != ""
     jump_pose_blend = lerpf(jump_pose_blend, 1.0 if active_jump else 0.0, fast_ease)
     var air_progress := clampf(jump_air_time / 0.88,0.0,1.0)
+    var playful_air := jump_phase == "airborne" and not reduced_motion
+    var handedness := 1.0 if jump_style == 0 else -1.0
+    corkscrew = sin(air_progress*TAU*1.35)*sin(air_progress*PI)*handedness if playful_air and jump_style != 2 else 0.0
+    jump_joy_near = _joy_envelope(air_progress,0.0)*jump_pose_blend if playful_air else 0.0
+    jump_joy_far = _joy_envelope(air_progress,0.07)*jump_pose_blend if playful_air else 0.0
     var tuck := sin(air_progress * PI) * jump_pose_blend if jump_phase == "airborne" else 0.0
     var dive := smoothstep(0.60,0.93,air_progress) * jump_pose_blend if jump_phase == "airborne" else 0.0
     var lift := jump_pose_blend if jump_phase == "ascent" else (1.0 - dive) * jump_pose_blend
@@ -487,7 +515,7 @@ func _process(delta: float) -> void:
         body_pitch = clampf(body_pitch,-0.22,0.22)
     rotation = body_pitch * facing_value
     if jump_phase == "airborne" and not reduced_motion:
-        rotation += spin_curve.sample_baked(air_progress) * TAU * jump_direction
+        rotation += _jump_roll(air_progress)
     if reduced_motion:
         curl = 0.0
         stretch = 0.0
@@ -497,8 +525,8 @@ func _process(delta: float) -> void:
         dive *= 0.3
     # All motion is local to joints; collision location and face stay stable.
     scale = Vector2(facing_value * (1.0 + stretch) * (1.0 - turn_pose*0.12), 1.0 - stretch * 0.65)
-    var tail_angle := sin(swim_phase) * amount + turn_kick * 0.8 - curl - lift * 0.10 + landing_compress * 0.08 + brake_blend*0.18 - arch*0.12
-    var tail_tip_angle := sin(swim_phase - 0.91) * amount * 1.55 + turn_kick * 0.9 - curl * 0.85 + dive * 0.12 + brake_blend*0.24
+    var tail_angle := sin(swim_phase) * amount + turn_kick * 0.8 + corkscrew*0.12 - curl - lift * 0.10 + landing_compress * 0.08 + brake_blend*0.18 - arch*0.12
+    var tail_tip_angle := sin(swim_phase - 0.91) * amount * 1.55 + turn_kick * 0.9 - corkscrew*0.18 - curl * 0.85 + dive * 0.12 + brake_blend*0.24
     tail_base.rotation = lerpf(tail_base.rotation, tail_angle, ease)
     tail_tip.rotation = lerpf(tail_tip.rotation, tail_tip_angle, ease)
     fin_upper.rotation = lerpf(fin_upper.rotation, sin(swim_phase - 1.25) * amount * 1.60 + tuck * 0.34 - dive * 0.12, fast_ease)
@@ -515,14 +543,15 @@ func _process(delta: float) -> void:
     head_joint.rotation = lerpf(head_joint.rotation, -torso.rotation * 0.3 + nod * 0.10, ease)
     var arm_sweep := 0.0 if reduced_motion else sin(swim_phase * 0.74 + 0.65) * amount
     near_arm.rotation = lerpf(near_arm.rotation,
-        arm_sweep * 1.2 - 0.26 * boost_blend - 0.13 * leap_blend - lift * 0.34 + tuck * 0.08 - dive * 0.10 + hit_kick * 0.14 + wave*0.32 - reach*0.22 - brake_blend*0.18, fast_ease)
+        arm_sweep * 1.2 - 0.26 * boost_blend - 0.13 * leap_blend - lift * 0.34 + tuck * 0.08 - dive * 0.10 + hit_kick * 0.14 + wave*0.32 - reach*0.22 - brake_blend*0.18 - jump_joy_near*0.95, fast_ease)
     far_arm.rotation = lerpf(far_arm.rotation,
-        -arm_sweep + 0.21 * boost_blend + 0.12 * leap_blend - lift * 0.24 - tuck * 0.07 - dive * 0.20 - hit_kick * 0.12 - wave*0.34 - reach*0.18 + brake_blend*0.14, fast_ease)
+        -arm_sweep + 0.21 * boost_blend + 0.12 * leap_blend - lift * 0.24 - tuck * 0.07 - dive * 0.20 - hit_kick * 0.12 - wave*0.34 - reach*0.18 + brake_blend*0.14 - jump_joy_far*1.20, fast_ease)
     # A readable faux yaw: foreshortening, overlap and lighting agree on depth.
     var roll := sin(air_progress*TAU-0.45)*sin(air_progress*PI) if jump_phase == "airborne" else 0.0
-    var yaw_target := (roll*0.82 + turn_pose*0.45 + sin(swim_phase*0.5)*swim_blend*0.10)
+    var yaw_target := clampf((corkscrew*0.95 if jump_style != 2 and playful_air else roll*0.82) + turn_pose*0.45 + sin(swim_phase*0.5)*swim_blend*0.10,-0.9,0.9)
     depth_turn = 0.0 if reduced_motion else lerpf(depth_turn,yaw_target,fast_ease)
     var depth := absf(depth_turn)
+    torso.skew = depth_turn*0.055
     torso.scale = Vector2(1.0-depth*0.10,1.0+(0.0 if reduced_motion else tuck*0.025))
     near_arm.scale = Vector2(1.0-maxf(depth_turn,0.0)*0.20,1.0)
     far_arm.scale = Vector2(1.0-maxf(-depth_turn,0.0)*0.20,1.0)
