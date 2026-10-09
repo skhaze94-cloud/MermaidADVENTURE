@@ -1,0 +1,38 @@
+; Engine configuration file.
+; Open the REPOSITORY ROOT in Godot 4.4+ so the existing dist/assets are imported.
+config_version=5
+
+[application]
+config/name="Sarah Maria — Mermaid Adventure (Godot v0.14 — Pearl & Crown)"
+run/main_scene="res://godot/title_screen.tscn"
+config/description="Sarah Maria Mermaid Adventure — a magical storybook opening and Highland Gold adventure."
+
+[autoload]
+AppPreferences="*res://godot/app_preferences.gd"
+
+[input_devices]
+pointing/emulate_mouse_from_touch=true
+
+[display]
+window/size/viewport_width=1400
+window/size/viewport_height=960
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/size/resizable=true
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/default_filters/use_nearest_mipmap_filter=false
+
+[physics]
+common/physics_ticks_per_second=60
+
+[audio]
+buses/default_bus_layout="res://godot/default_bus_layout.tres"
+
+[shader_globals]
+gameplay_time={
+"type": "float",
+"value": 0.0
+}
