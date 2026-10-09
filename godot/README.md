@@ -1,4 +1,4 @@
-# Sarah Maria — Highland Gold, Godot 4 (animation & performance v0.5)
+# Sarah Maria — Highland Gold, Godot 4 (gameplay & controls v0.6)
 
 This project is the **Godot-native vertical slice** of Mermaid Sarah's first story chapter, built from the existing HTML 9.1 repository. It is a real Godot scene and scripts rather than a webpage embedded in a Godot window. The browser version in `dist/` remains available and unchanged. Godot loads the existing artwork and MP3 directly from `res://dist/assets/`.
 
@@ -9,6 +9,28 @@ This project is the **Godot-native vertical slice** of Mermaid Sarah's first sto
 3. Import **`project.godot` at the repository root**, not the `godot/` directory.
 4. Allow asset import, then press **F5**. You can inspect `godot/highland_level.tscn` and its native child nodes in the scene editor.
 5. Play in landscape orientation. Current project window is 1400 × 960 with stretch scaling.
+
+## v0.6: gameplay and controls update
+
+- **Fixed 60 Hz gameplay:** simulation now runs in `_physics_process`; render cadence no longer clamps gameplay elapsed time. Waterfall phase transitions carry fractional overshoot and preserve the 1.8 + 17 + 1.6 second sequence.
+- **Deep-water jumps:** distinct ascent, airborne flip and splashdown phases. J or Shift launches from any clear underwater position; Space remains Boost. Horizontal momentum works in either direction. A 220 ms pre-splash input buffer and 240 ms landing window allow up to three free chained jumps with +100/+200/+300 rewards. Solid reef overhead still blocks ascent; underwater ascent does not grant damage immunity.
+- **Shared touch layout:** a sliding eight-direction swim pad, neutral centre, independent action-finger ownership, pressed-state feedback, and visible Resume/Restart buttons. Mouse can activate pause/result buttons too. Hidden gameplay Restart and locked Bubble buttons no longer accept touches.
+- **Controller reliability:** select an actual connected device ID, retain it until disconnected, and rescale the radial dead zone for smooth analogue speed. A/B/X/Start retain jump/boost/bubble/pause. Holding Boost or Bubble repeats at the existing energy/cooldown limits.
+- **Readable species combat:** crab snaps, eel and swordfish committed lunges, puffer inflation/spit, and jelly pulses now have windup/attack/recovery phases. Gold rings and locked direction lines announce attacks. Attack paths respect reef blockers; hostile pearls are bounded and can be boost-blocked.
+- **Carlo's three-pattern fight:** claw sweep, three-pearl volley and committed dash rotate through a 0.95 second warning, 0.65 second attack and 2.1 second green recovery. Boost contact damages Carlo during recovery. Five-health balance and Bubble reward remain.
+- **Consistent checkpoints:** retries roll score, collected rewards and enemy/boss state back to the checkpoint together, preventing repeated waterfall scoring. Transient projectiles, inputs, boosts, music fades, flashes and boss defeat tweens are cleared on retry/restart.
+- **Coherent pause:** Godot's paused scene tree freezes scenery, rig animation, shaders using game time, particles and bound tweens. Music pauses, held touches clear, and application focus loss pauses play. Victory presents its result panel immediately.
+- **Smooth enemy placement:** visible sprite transforms update every rendered frame; atlas animation retains its bounded cadence.
+
+Additional regression coverage: `godot/gameplay_controls_test.gd`, also required by the Godot workflow. Run both suites after import:
+
+```sh
+godot --headless --editor --path . --quit
+godot --headless --path . --script res://godot/level1_smoke_test.gd
+godot --headless --path . --script res://godot/gameplay_controls_test.gd
+```
+
+This update remains a Level 1 vertical slice. Combat is more developed but is not a full port of every HTML attack or power-up. Device playtesting and exported-build performance are still required.
 
 ## v0.5: native animation and performance update
 
@@ -112,8 +134,8 @@ The current playable Level 1 retains the full 20,748-unit Highland Gold route, t
 | Input | Action |
 | --- | --- |
 | WASD / arrow keys | Swim in four directions |
-| Space / Shift | Boost |
-| J | Leap from underwater |
+| Space | Boost |
+| J / Shift | Leap; tap near splashdown to chain |
 | B / Z | Mermaid Bubble (after Carlo) |
 | P / Esc | Pause |
 | R | Restart |

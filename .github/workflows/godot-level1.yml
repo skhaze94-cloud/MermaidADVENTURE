@@ -7,13 +7,15 @@ on:
     paths:
       - "project.godot"
       - "godot/**"
-      - "dist/assets/*.import"
+      - "dist/assets/**"
+      - "dist/fonts/**"
       - ".github/workflows/godot-level1.yml"
   pull_request:
     paths:
       - "project.godot"
       - "godot/**"
-      - "dist/assets/*.import"
+      - "dist/assets/**"
+      - "dist/fonts/**"
       - ".github/workflows/godot-level1.yml"
 
 jobs:
@@ -46,6 +48,15 @@ jobs:
           grep -q 'GODOT LEVEL 1 LOGIC TEST PASSED' /tmp/godot-logic.log
           if grep -E 'SCRIPT ERROR|Parse Error|Compile Error|^ERROR:' /tmp/godot-logic.log; then
             echo "Godot gameplay smoke test emitted errors"
+            exit 1
+          fi
+      - name: Exercise gameplay, controls, combat and checkpoint rollback
+        shell: bash
+        run: |
+          set -o pipefail
+          timeout -k 3s 45s godot --headless --path . --script res://godot/gameplay_controls_test.gd 2>&1 | tee /tmp/godot-gameplay.log
+          grep -q 'GODOT GAMEPLAY CONTROLS TEST PASSED' /tmp/godot-gameplay.log
+          if grep -E 'SCRIPT ERROR|Parse Error|Compile Error|^ERROR:' /tmp/godot-gameplay.log; then
             exit 1
           fi
       - name: Launch first level headless

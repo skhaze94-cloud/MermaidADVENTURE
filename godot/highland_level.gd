@@ -2,6 +2,8 @@ extends Node2D
 ## Sarah Maria — Highland Gold, Godot 4 playable port (prototype 0.1).
 ## Source of truth: dist/game.js, dist/highland.js, dist/creature-sprites-v731.js
 ## Import artwork and soundtrack from the SAME repository, res://dist/assets/.
+const Controls = preload("res://godot/control_layout.gd")
+const Combat = preload("res://godot/enemy_combat.gd")
 const Highland = preload("res://godot/highland_data.gd")
 const BACKGROUND = preload("res://dist/assets/highlands.webp")
 const HERO = preload("res://dist/assets/sarah-mermaid.webp")
@@ -78,6 +80,22 @@ var high_depth_quality := true
 var reduced_fx := false
 var music_muted := false
 var joy_last: Dictionary = {}
+var active_joy := -1
+var touch_vectors: Dictionary = {}
+var leap_phase := ""
+var jump_buffer := 0.0
+var splash_window := 0.0
+var splash_chain := 0
+var fire_cooldown := 0.0
+var checkpoint_snapshot: Dictionary = {}
+var boss_phase := "windup"
+var boss_phase_time := 0.0
+var boss_pattern := 0
+var boss_target := Vector2.ZERO
+var boss_position := Vector2(Highland.BOSS_X, 570)
+var hostile_shots: Array[Dictionary] = []
+var retry_serial := 0
+var music_tween: Tween
 
 func _ready() -> void:
     obstacles = Highland.obstacles()
@@ -105,6 +123,12 @@ func _ready() -> void:
     world_depth = get_node("PaintedWorldDepth")
     foreground_depth = get_node("SparseForegroundDepth")
     relief_obstacles = get_node("ReliefReefObstacles")
+    process_mode = Node.PROCESS_MODE_ALWAYS
+    for child in get_children():
+        child.process_mode = Node.PROCESS_MODE_PAUSABLE
+    premium_hud.process_mode = Node.PROCESS_MODE_ALWAYS
+    performance_overlay.process_mode = Node.PROCESS_MODE_ALWAYS
+    _save_checkpoint()
     _apply_visual_quality()
     _sync_native_visuals()
     queue_redraw()
@@ -120,16 +144,18 @@ func _input(event: InputEvent) -> void:
         match event.keycode:
             KEY_ESCAPE, KEY_P:
                 if state != "victory":
-                    state = "paused" if state == "playing" else "playing"
+                    _toggle_pause()
             KEY_R:
                 _restart()
-            KEY_SPACE, KEY_SHIFT:
+            KEY_SPACE:
                 _boost()
-            KEY_J:
+            KEY_J, KEY_SHIFT:
                 _jump()
             KEY_B, KEY_Z:
                 _fire_bubble()
             KEY_M:
+                if music_tween and music_tween.is_running():
+                    music_tween.kill()
                 music_muted = not music_muted
                 if music_muted:
                     music_player.volume_db = -80.0
@@ -152,18 +178,22 @@ func _input(event: InputEvent) -> void:
             KEY_ENTER:
                 if state == "victory":
                     _restart()
+    elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+        if state != "playing":
+            _touch_action(_touch_target(event.position))
     elif event is InputEventScreenTouch:
         if event.pressed:
             var action := _touch_target(event.position)
             touches[event.index] = action
+            _set_touch(event.index, event.position, action)
             _touch_action(action)
         else:
             touches.erase(event.index)
+            touch_vectors.erase(event.index)
     elif event is InputEventScreenDrag:
-        var action := _touch_target(event.position)
-        if touches.get(event.index, "") != action:
-            touches[event.index] = action
-            _touch_action(action)
+        if touches.get(event.index, "") == "pad":
+            _set_touch(event.index, event.position, "pad")
+        # Actions retain finger ownership: sliding does not fire another button.
     if is_instance_valid(premium_hud):
         premium_hud.update_hud(_hud_snapshot())
     queue_redraw()
@@ -177,30 +207,64 @@ func _touch_action(action: String) -> void:
         _fire_bubble()
     elif action == "pause":
         if state != "victory":
-            state = "paused" if state == "playing" else "playing"
+            _toggle_pause()
+    elif action == "resume":
+        _set_paused(false)
     elif action == "restart":
         _restart()
 
 func _touch_target(point: Vector2) -> String:
-    var s := get_viewport_rect().size
-    for action in ["left", "right", "up", "down", "boost", "jump", "bubble", "pause", "restart"]:
-        if _touch_rect(action, s).has_point(point):
+    var size := get_viewport_rect().size
+    if state != "playing":
+        for action in ["resume", "restart"]:
+            if action == "resume" and state == "victory":
+                continue
+            if Controls.rect(action, size).has_point(point):
+                return action
+        return ""
+    if Controls.pad_rect(size).has_point(point):
+        return "pad"
+    for action in ["boost", "jump", "bubble", "pause"]:
+        if action == "bubble" and not bubble_unlocked:
+            continue
+        if Controls.rect(action, size).has_point(point):
             return action
     return ""
 
-func _touch_rect(action: String, s: Vector2) -> Rect2:
-    var y := s.y - 172.0
-    match action:
-        "left": return Rect2(16, y + 55, 82, 76)
-        "right": return Rect2(190, y + 55, 82, 76)
-        "up": return Rect2(103, y - 12, 82, 76)
-        "down": return Rect2(103, y + 94, 82, 66)
-        "boost": return Rect2(s.x - 225, y + 57, 102, 91)
-        "jump": return Rect2(s.x - 110, y - 20, 94, 91)
-        "bubble": return Rect2(s.x - 335, y - 20, 94, 91)
-        "pause": return Rect2(s.x - 84, 12, 70, 52)
-        "restart": return Rect2(s.x * 0.5 - 110, s.y * 0.5 + 95, 220, 65)
-    return Rect2()
+func _touch_rect(action: String, size: Vector2) -> Rect2:
+    return Controls.rect(action, size)
+
+func _set_touch(index: int, point: Vector2, action: String) -> void:
+    touches[index] = action
+    if action == "pad":
+        touch_vectors[index] = Controls.pad_vector(point, get_viewport_rect().size)
+
+func _set_paused(paused: bool) -> void:
+    if state == "victory":
+        return
+    state = "paused" if paused else "playing"
+    touches.clear()
+    touch_vectors.clear()
+    jump_buffer = 0.0
+    get_tree().paused = paused
+    music_player.stream_paused = paused
+    premium_hud.update_hud(_hud_snapshot())
+    queue_redraw()
+
+func _toggle_pause() -> void:
+    _set_paused(state == "playing")
+
+func _notification(what: int) -> void:
+    if what == NOTIFICATION_APPLICATION_FOCUS_OUT and is_node_ready():
+        touches.clear()
+        touch_vectors.clear()
+        joy_last.clear()
+        if state == "playing":
+            _set_paused(true)
+
+func _controller_id() -> int:
+    active_joy = Controls.controller_id(active_joy, Input.get_connected_joypads())
+    return active_joy
 
 func _input_vector() -> Vector2:
     var direction := Vector2.ZERO
@@ -212,36 +276,26 @@ func _input_vector() -> Vector2:
         direction.y += 1.0
     if Input.is_key_pressed(KEY_UP) or Input.is_key_pressed(KEY_W):
         direction.y -= 1.0
-    for action in touches.values():
-        match action:
-            "left": direction.x -= 1.0
-            "right": direction.x += 1.0
-            "up": direction.y -= 1.0
-            "down": direction.y += 1.0
-    # Native analogue steering with radial dead zone plus the controller D-pad.
-    if Input.get_connected_joypads().size() > 0:
-        var stick := Vector2(Input.get_joy_axis(0, JOY_AXIS_LEFT_X), Input.get_joy_axis(0, JOY_AXIS_LEFT_Y))
-        if stick.length() > 0.20:
-            direction += stick
-        if Input.is_joy_button_pressed(0, JOY_BUTTON_DPAD_RIGHT):
-            direction.x += 1.0
-        if Input.is_joy_button_pressed(0, JOY_BUTTON_DPAD_LEFT):
-            direction.x -= 1.0
-        if Input.is_joy_button_pressed(0, JOY_BUTTON_DPAD_DOWN):
-            direction.y += 1.0
-        if Input.is_joy_button_pressed(0, JOY_BUTTON_DPAD_UP):
-            direction.y -= 1.0
+    for vector in touch_vectors.values():
+        direction += Vector2(vector)
+    var device := _controller_id()
+    if device >= 0:
+        var stick := Vector2(Input.get_joy_axis(device, JOY_AXIS_LEFT_X), Input.get_joy_axis(device, JOY_AXIS_LEFT_Y))
+        direction += Controls.radial_stick(stick)
+        direction.x += float(Input.is_joy_button_pressed(device, JOY_BUTTON_DPAD_RIGHT)) - float(Input.is_joy_button_pressed(device, JOY_BUTTON_DPAD_LEFT))
+        direction.y += float(Input.is_joy_button_pressed(device, JOY_BUTTON_DPAD_DOWN)) - float(Input.is_joy_button_pressed(device, JOY_BUTTON_DPAD_UP))
     return direction.limit_length(1.0)
 
 func _poll_gamepad() -> void:
-    if Input.get_connected_joypads().is_empty():
+    var device := _controller_id()
+    if device < 0:
         joy_last.clear()
         return
     var buttons := {
-        "jump": Input.is_joy_button_pressed(0, JOY_BUTTON_A),
-        "boost": Input.is_joy_button_pressed(0, JOY_BUTTON_B),
-        "bubble": Input.is_joy_button_pressed(0, JOY_BUTTON_X),
-        "pause": Input.is_joy_button_pressed(0, JOY_BUTTON_START)
+        "jump": Input.is_joy_button_pressed(device, JOY_BUTTON_A),
+        "boost": Input.is_joy_button_pressed(device, JOY_BUTTON_B),
+        "bubble": Input.is_joy_button_pressed(device, JOY_BUTTON_X),
+        "pause": Input.is_joy_button_pressed(device, JOY_BUTTON_START)
     }
     for action in buttons:
         if buttons[action] and not joy_last.get(action, false):
@@ -252,12 +306,13 @@ func _poll_gamepad() -> void:
             elif action == "bubble":
                 _fire_bubble()
             elif action == "pause" and state != "victory":
-                state = "paused" if state == "playing" else "playing"
+                _toggle_pause()
     joy_last = buttons
 
 func _vibrate(soft: float, strong: float, duration: float) -> void:
-    if not Input.get_connected_joypads().is_empty():
-        Input.start_joy_vibration(0, soft, strong, duration)
+    var device := _controller_id()
+    if device >= 0:
+        Input.start_joy_vibration(device, soft, strong, duration)
 
 func _boost() -> void:
     if state != "playing" or energy < 0.4:
@@ -290,21 +345,39 @@ func _boost() -> void:
     _vibrate(0.18, 0.07, 0.10)
 
 func _jump() -> void:
-    if state != "playing" or waterfall_phase != "" or energy < 0.4 or jump_time > 0 or leap_cooldown > 0:
+    if state != "playing" or waterfall_phase != "":
         return
-    energy -= 0.4
-    jump_time = 1.1
-    leap_cooldown = 1.5
-    player_velocity = Vector2(maxf(player_velocity.x, 240.0) * facing, -780.0)
-    _say("Sky leap! Steer through the air.", 1.8)
+    if leap_phase != "":
+        jump_buffer = 0.22
+        return
+    if splash_window > 0.0 and splash_chain < 3:
+        _begin_leap(true)
+    elif leap_cooldown <= 0.0 and energy >= 0.4:
+        _begin_leap(false)
+
+func _begin_leap(chained: bool) -> void:
+    if not chained:
+        energy -= 0.4
+        splash_chain = 0
+    else:
+        splash_chain += 1
+        score += 100 * splash_chain
+        _say("Splash chain! +" + str(100 * splash_chain), 1.0)
+    leap_phase = "ascent"
+    jump_time = 10.0
+    jump_buffer = 0.0
+    splash_window = 0.0
+    leap_cooldown = 0.0
+    player_velocity = Vector2(maxf(absf(player_velocity.x), 240.0) * facing, -780.0)
     native_fx.splash(_hero_screen_position(), Color("#e2ffff"), 22)
     _vibrate(0.24, 0.06, 0.14)
 
 func _fire_bubble() -> void:
     if state != "playing" or not bubble_unlocked or waterfall_phase != "":
         return
-    if bubble_shots.size() >= 8:
+    if fire_cooldown > 0.0 or bubble_shots.size() >= 8:
         return
+    fire_cooldown = 0.20
     bubble_shots.append({"pos": player + Vector2(facing * 70, 0), "direction": facing, "life": 1.8})
     native_fx.splash(_hero_screen_position() + Vector2(facing * 56, 0), Color("#b4dbff"), 7)
 
@@ -312,20 +385,28 @@ func _say(text: String, duration: float = 3.0) -> void:
     message = text
     message_time = duration
 
-func _process(delta: float) -> void:
-    var dt := minf(delta, 0.04)
+func _process(_delta: float) -> void:
+    if state != "playing":
+        return
+    _sync_native_visuals()
+    queue_redraw()
+
+func _physics_process(dt: float) -> void:
     _poll_gamepad()
     if state != "playing":
-        if is_instance_valid(native_rig):
-            native_rig.set_process(false)
-        # Paused gameplay is static: no redraw or full-HUD rebuild per frame.
         return
-    if is_instance_valid(native_rig):
-        native_rig.set_process(true)
+    var serial := retry_serial
+    if _action_held("boost"):
+        _boost()
+    if _action_held("bubble"):
+        _fire_bubble()
     time += dt
     invulnerable = maxf(0.0, invulnerable - dt)
     boost_time = maxf(0.0, boost_time - dt)
     boost_cooldown = maxf(0.0, boost_cooldown - dt)
+    jump_buffer = maxf(0.0, jump_buffer - dt)
+    splash_window = maxf(0.0, splash_window - dt)
+    fire_cooldown = maxf(0.0, fire_cooldown - dt)
     leap_cooldown = maxf(0.0, leap_cooldown - dt)
     boss_hit_cooldown = maxf(0.0, boss_hit_cooldown - dt)
     energy = minf(1.0, energy + dt * 0.23)
@@ -335,17 +416,21 @@ func _process(delta: float) -> void:
     else:
         _update_swimming(dt)
         _update_enemies(dt)
+        if retry_serial != serial:
+            return
         _update_collectibles()
         _update_boss(dt)
+        if retry_serial != serial:
+            return
         _update_bubbles(dt)
+        _update_hostile_shots(dt)
         _check_checkpoints()
     var view := get_viewport_rect().size
     # Cinematic anticipation: the view looks ahead in Sarah's direction of travel.
     var anticipation := 0.0 if waterfall_phase != "" else clampf(player_velocity.x * 0.18, -100.0, 160.0)
     var camera_target := clampf(player.x - view.x * 0.43 + anticipation, 0.0, maxf(0.0, Highland.LEVEL_LENGTH - view.x))
     camera = lerpf(camera, camera_target, 1.0 - exp(-dt * (7.2 if boost_time > 0.0 else 5.8)))
-    _sync_native_visuals()
-    queue_redraw()
+    # Presentation is refreshed once per rendered frame in _process().
 
 func _hero_screen_position() -> Vector2:
     if waterfall_phase == "":
@@ -378,10 +463,15 @@ func _hud_snapshot() -> Dictionary:
         "bubble": bubble_unlocked,
         "paused": state == "paused",
         "victory": state == "victory",
-        "touch": DisplayServer.is_touchscreen_available()
+        "touch": DisplayServer.is_touchscreen_available(),
+        "pressed": touches.values(),
+        "pad": _touch_direction(),
+        "boss_phase": boss_phase,
+        "boss_pattern": boss_pattern
     }
 
 func _sync_native_visuals() -> void:
+    RenderingServer.global_shader_parameter_set("gameplay_time", time)
     if not is_instance_valid(native_rig) or not is_instance_valid(native_fx):
         return
     var pos := _hero_screen_position()
@@ -391,6 +481,8 @@ func _sync_native_visuals() -> void:
     var faded := 1.0 if invulnerable <= 0.0 else 0.65 + 0.35 * absf(sin(time * 13.0))
     native_rig.set_motion(velocity, facing, boost_time > 0.0 or waterfall_boost > 0.0, jump_time > 0.0, faded)
     native_rig.rotation = clampf(velocity.y / 1150.0, -0.26, 0.26) * facing
+    if leap_phase == "airborne" and not reduced_fx:
+        native_rig.rotation += clampf((player_velocity.y + 700.0) / 1400.0, 0.0, 1.0) * TAU * facing
     # Depth shaders affect scenery without refracting Sarah or covering the HUD.
     # During the waterfall, render the refractive field in front of the shaft.
     native_fx.z_index = 1 if waterfall_active else -1
@@ -411,8 +503,8 @@ func _sync_native_visuals() -> void:
     if is_instance_valid(premium_hud):
         premium_hud.update_hud(_hud_snapshot())
     if is_instance_valid(native_boss):
-        var boss_x := Highland.BOSS_X - camera
-        var boss_y := 570.0 + sin(boss_clock * 1.3) * 67.0
+        var boss_x := boss_position.x - camera
+        var boss_y := boss_position.y
         native_boss.set_boss_state(boss_hp, _boss_vulnerable(), boss_clock, boss_x, boss_y, get_viewport_rect().size.x)
 
 func _update_swimming(dt: float) -> void:
@@ -420,34 +512,57 @@ func _update_swimming(dt: float) -> void:
     var previous := player
     if input_dir.x != 0.0:
         facing = signf(input_dir.x)
-    if jump_time > 0.0:
-        jump_time -= dt
-        player_velocity.y += 1250.0 * dt
-        player_velocity.x = lerpf(player_velocity.x, input_dir.x * 420.0, dt * 2.2)
+    if leap_phase == "ascent":
+        player_velocity.x = move_toward(player_velocity.x, input_dir.x * 420.0, dt * 400.0)
+        player_velocity.y = -780.0
         player += player_velocity * dt
-        if jump_time <= 0.0 or player.y >= WATER_SURFACE + 40.0:
+        if player.y <= WATER_SURFACE - 12.0:
+            leap_phase = "airborne"
+            player_velocity.y = -700.0
+    elif leap_phase == "airborne":
+        player_velocity.y += 1250.0 * dt
+        player_velocity.x = move_toward(player_velocity.x, input_dir.x * 420.0, dt * 400.0)
+        player += player_velocity * dt
+        if player.y >= WATER_SURFACE + 40.0 and player_velocity.y > 0.0:
+            player.y = WATER_SURFACE + 45.0
+            leap_phase = ""
             jump_time = 0.0
-            player.y = maxf(player.y, WATER_SURFACE + 40.0)
+            splash_window = 0.24
+            leap_cooldown = 0.35
+            native_fx.splash(_hero_screen_position(), Color("#e2ffff"), 18)
+            if jump_buffer > 0.0 and splash_chain < 3:
+                _begin_leap(true)
     elif boost_time > 0.0:
         player += player_velocity * dt
     else:
         player_velocity = player_velocity.move_toward(input_dir * SWIM_SPEED, dt * 1200.0)
         player += player_velocity * dt
-        if input_dir == Vector2.ZERO:
-            player.y += sin(time * 3.0) * 0.15
     player.x = clampf(player.x, 50.0 if not fallen else Highland.WATERFALL_EXIT, Highland.LEVEL_LENGTH - 40.0)
-    player.y = clampf(player.y, 80.0 if jump_time > 0 else WATER_SURFACE + 45.0, BOTTOM - 26.0)
+    if player.y < 80.0:
+        player.y = 80.0
+        player_velocity.y = maxf(player_velocity.y, 0.0)
+    player.y = clampf(player.y, 80.0 if leap_phase != "" else WATER_SURFACE + 45.0, BOTTOM - 26.0)
     for obstacle in obstacles:
         if obstacle.grow(HERO_RADIUS * 0.73).has_point(player):
             player = previous
             player_velocity *= 0.25
+            if leap_phase == "ascent":
+                leap_phase = ""
+                jump_time = 0.0
+                leap_cooldown = 0.25
             break
-    if not fallen and player.x >= Highland.WATERFALL_START and jump_time <= 0:
+    if not fallen and player.x >= Highland.WATERFALL_START and leap_phase == "":
         _start_waterfall()
         return
     if player.x >= Highland.PORTAL_X and boss_hp <= 0:
         state = "victory"
+        touches.clear()
+        touch_vectors.clear()
         _say("Highland Gold complete! Mermaid Bubble unlocked.", 1000.0)
+        get_tree().paused = true
+        music_player.stream_paused = true
+        premium_hud.update_hud(_hud_snapshot())
+        queue_redraw()
 
 func _check_checkpoints() -> void:
     var positions := [
@@ -461,43 +576,35 @@ func _check_checkpoints() -> void:
         if player.x > float(item[0]) and checkpoint < float(item[0]):
             checkpoint = float(item[0])
             health = MAX_HEALTH
+            _save_checkpoint()
             _say("Checkpoint: " + String(item[1]))
     if player.x > Highland.BOSS_X - 900 and checkpoint < Highland.BOSS_X - 1000:
         checkpoint = Highland.BOSS_X - 900
+        _save_checkpoint()
         _say("Checkpoint: Carlo's arena")
 
 func _update_enemies(dt: float) -> void:
+    var serial := retry_serial
     for enemy in enemies:
-        if int(enemy["hp"]) <= 0:
+        if int(enemy["hp"]) <= 0 or absf(float(enemy["x"]) - player.x) > 1200.0:
             continue
-        if absf(float(enemy["x"]) - player.x) > 1200:
-            continue
-        var kind: String = enemy["kind"]
-        var phase := float(enemy["phase"])
-        var bx := float(enemy["bx"])
-        if kind == "crab":
-            var direction := float(enemy["dir"])
-            var ex := float(enemy["x"]) + direction * dt * 110.0
-            if ex < float(enemy["min"]) or ex > float(enemy["max"]):
-                direction *= -1.0
-                enemy["dir"] = int(direction)
-                ex = clampf(ex, float(enemy["min"]), float(enemy["max"]))
-            enemy["x"] = ex
-            enemy["y"] = 832.0 + sin(time * 9.0 + phase) * 5.0
-        else:
-            enemy["x"] = bx + sin(time * (1.0 + phase * 0.025) + phase) * (68.0 if kind == "eel" else 37.0)
-            enemy["y"] = float(enemy["by"]) + cos(time * 1.6 + phase) * (55.0 if kind == "eel" else 30.0)
+        var event := Combat.step(enemy, player, time, dt, obstacles)
+        if event == "fire":
+            _spawn_hostile(Vector2(enemy["x"], enemy["y"]), Vector2(enemy["aim"]), 290.0)
         var pos := Vector2(float(enemy["x"]), float(enemy["y"]))
-        var radius := 96.0 if kind == "eel" else 79.0
-        if player.distance_to(pos) < radius:
+        var radius := 96.0 if enemy["kind"] == "eel" else 79.0
+        if String(enemy.get("mode", "patrol")) == "recover":
+            radius *= 0.75
+        if player.distance_to(pos) < radius and player.y > WATER_SURFACE:
             if boost_time > 0.0:
                 enemy["hp"] = 0
                 score += 50
-                _say("Boost boop! +50", 1.1)
                 native_fx.splash(pos - Vector2(camera, 0), Color("#e5ffce"), 17)
                 _vibrate(0.22, 0.08, 0.12)
             else:
                 _damage(pos)
+                if retry_serial != serial:
+                    return
 
 func _update_collectibles() -> void:
     for treasure in treasures:
@@ -523,7 +630,7 @@ func _update_collectibles() -> void:
                     native_fx.splash(pos - Vector2(camera, 0), Color("#b2feff"), 12)
 
 func _damage(from_pos: Vector2) -> void:
-    if invulnerable > 0.0 or state != "playing" or jump_time > 0.0:
+    if invulnerable > 0.0 or state != "playing" or player.y < WATER_SURFACE:
         return
     health -= 1
     invulnerable = 1.5
@@ -536,54 +643,163 @@ func _damage(from_pos: Vector2) -> void:
     if health <= 0:
         _respawn()
 
+func _save_checkpoint() -> void:
+    checkpoint_snapshot = {
+        "score": score, "picked": picked_count, "treasures": treasures.duplicate(true),
+        "enemies": enemies.duplicate(true), "boss_hp": boss_hp, "bubble": bubble_unlocked
+    }
+
 func _respawn() -> void:
+    retry_serial += 1
+    if not checkpoint_snapshot.is_empty():
+        score = int(checkpoint_snapshot["score"])
+        picked_count = int(checkpoint_snapshot["picked"])
+        treasures.assign(checkpoint_snapshot["treasures"].duplicate(true))
+        enemies.assign(checkpoint_snapshot["enemies"].duplicate(true))
+        animated_enemies.bind_enemies(enemies)
+        boss_hp = int(checkpoint_snapshot["boss_hp"])
+        bubble_unlocked = bool(checkpoint_snapshot["bubble"])
+    _reset_transients()
     health = MAX_HEALTH
     energy = 1.0
-    jump_time = 0.0
-    boost_time = 0.0
-    waterfall_phase = ""
     fallen = checkpoint >= Highland.WATERFALL_EXIT
     player = Vector2(checkpoint, 480.0)
-    player_velocity = Vector2.ZERO
+    camera = maxf(0.0, player.x - get_viewport_rect().size.x * 0.43)
     invulnerable = 2.0
+    native_boss.reset_boss()
+    if not music_muted:
+        music_player.volume_db = -17.0
     _say("Back to your checkpoint!", 2.6)
+
+func _reset_transients() -> void:
+    if music_tween and music_tween.is_running():
+        music_tween.kill()
+    leap_phase = ""
+    jump_time = 0.0
+    jump_buffer = 0.0
+    splash_window = 0.0
+    splash_chain = 0
+    leap_cooldown = 0.0
+    boost_time = 0.0
+    boost_cooldown = 0.0
+    waterfall_phase = ""
+    waterfall_boost = 0.0
+    waterfall_boost_cooldown = 0.0
+    waterfall_time = 0.0
+    waterfall_gold_count = 0
+    player_velocity = Vector2.ZERO
+    boost_direction = Vector2.RIGHT
+    facing = 1.0
+    touches.clear()
+    touch_vectors.clear()
+    bubble_shots.clear()
+    hostile_shots.clear()
+    fire_cooldown = 0.0
+    boss_clock = 0.0
+    boss_phase = "windup"
+    boss_phase_time = 0.0
+    boss_pattern = 0
+    boss_position = Vector2(Highland.BOSS_X, 570)
+    boss_target = boss_position
+    boss_hit_cooldown = 0.0
+    native_fx.reset_transients()
 
 func _update_boss(dt: float) -> void:
     if player.x < Highland.BOSS_X - 850.0 or boss_hp <= 0:
         return
+    var serial := retry_serial
     boss_clock += dt
-    var vulnerable := _boss_vulnerable()
-    var boss_pos := Vector2(Highland.BOSS_X, 570.0 + sin(boss_clock * 1.3) * 67.0)
-    if player.distance_to(boss_pos) < 180.0:
-        if boost_time > 0.0 and vulnerable and boss_hit_cooldown <= 0:
+    boss_phase_time += dt
+    if boss_phase == "windup":
+        if boss_phase_time <= dt:
+            boss_target = player
+        if boss_phase_time >= 0.95:
+            boss_phase = "attack"
+            boss_phase_time = 0.0
+            if boss_pattern == 1:
+                var aim := (boss_target - boss_position).normalized()
+                for angle in [-0.24, 0.0, 0.24]:
+                    _spawn_hostile(boss_position, aim.rotated(angle), 360.0)
+    elif boss_phase == "attack":
+        if boss_pattern == 2:
+            boss_position = boss_position.move_toward(boss_target, 530.0 * dt)
+            boss_position.x = clampf(boss_position.x, Highland.BOSS_X - 680.0, Highland.BOSS_X + 70.0)
+            boss_position.y = clampf(boss_position.y, WATER_SURFACE + 190.0, BOTTOM - 180.0)
+        if boss_pattern == 0 and player.distance_to(boss_position) < 280.0:
+            _damage(boss_position)
+            if retry_serial != serial:
+                return
+        if boss_phase_time >= 0.65:
+            boss_phase = "recover"
+            boss_phase_time = 0.0
+    elif boss_phase_time >= 2.1:
+        boss_phase = "windup"
+        boss_phase_time = 0.0
+        boss_pattern = (boss_pattern + 1) % 3
+        boss_target = player
+    if boss_phase != "attack":
+        boss_position = boss_position.move_toward(Vector2(Highland.BOSS_X, 570), 190.0 * dt)
+    if player.distance_to(boss_position) < 180.0 and player.y > WATER_SURFACE:
+        if boost_time > 0.0 and _boss_vulnerable() and boss_hit_cooldown <= 0.0:
             boss_hp -= 1
-            boss_hit_cooldown = 1.15
+            boss_hit_cooldown = 2.2
             invulnerable = 0.65
             score += 200
-            _say("Carlo hit! " + str(boss_hp) + " hearts remaining.", 1.8)
-            native_fx.splash(boss_pos - Vector2(camera, 0), Color("#fff1a4"), 32)
-            native_fx.flash(Color("#ffffc1"), 0.17, 0.22)
             native_boss.play_hit()
+            native_fx.splash(boss_position - Vector2(camera, 0), Color("#fff1a4"), 32)
             _vibrate(0.32, 0.40, 0.22)
             if boss_hp == 0:
                 score += 1000
                 bubble_unlocked = true
-                _say("Carlo defeated! Mermaid Bubble unlocked. Find the portal!", 7.0)
+                hostile_shots.clear()
+                _say("Carlo defeated! Mermaid Bubble unlocked. Find the portal!", 5.0)
                 native_boss.defeat()
-                native_fx.splash(boss_pos - Vector2(camera, 0), Color("#b5ffdc"), 48)
-        elif boost_time <= 0.0:
-            _damage(boss_pos)
-    if boss_hp > 0 and fmod(boss_clock, 6.0) > 4.9 and player.distance_to(boss_pos) < 450.0:
-        if absf(player.y - boss_pos.y) < 110.0:
-            _damage(boss_pos)
+            else:
+                _say("Carlo hit! " + str(boss_hp) + " hearts remaining.", 1.2)
+        elif boost_time <= 0.0 and boss_phase != "recover":
+            _damage(boss_position)
 
 func _boss_vulnerable() -> bool:
-    return fmod(boss_clock, 5.5) > 2.3 and fmod(boss_clock, 5.5) < 4.4
+    return boss_hp > 0 and boss_phase == "recover"
+
+func _spawn_hostile(pos: Vector2, direction: Vector2, speed: float) -> void:
+    if hostile_shots.size() < 32:
+        hostile_shots.append({"pos": pos, "velocity": direction * speed, "life": 2.8})
+
+func _update_hostile_shots(dt: float) -> void:
+    var serial := retry_serial
+    for shot in hostile_shots:
+        shot["pos"] = Vector2(shot["pos"]) + Vector2(shot["velocity"]) * dt
+        shot["life"] = float(shot["life"]) - dt
+        var pos := Vector2(shot["pos"])
+        for obstacle in obstacles:
+            if obstacle.grow(12).has_point(pos):
+                shot["life"] = 0.0
+        if float(shot["life"]) > 0.0 and player.distance_to(pos) < 48.0:
+            shot["life"] = 0.0
+            if boost_time <= 0.0:
+                _damage(pos)
+                if retry_serial != serial:
+                    return
+            else:
+                native_fx.splash(pos - Vector2(camera, 0), Color("#b5ffdc"), 8)
+    hostile_shots = hostile_shots.filter(func(shot): return float(shot["life"]) > 0.0)
+
+func _touch_direction() -> Vector2:
+    var result := Vector2.ZERO
+    for vector in touch_vectors.values():
+        result += Vector2(vector)
+    return result.limit_length(1.0)
 
 func _update_bubbles(dt: float) -> void:
     for shot in bubble_shots:
         shot["pos"] = Vector2(shot["pos"]) + Vector2(float(shot["direction"]) * 700.0 * dt, 0)
         shot["life"] = float(shot["life"]) - dt
+        for obstacle in obstacles:
+            if obstacle.grow(20).has_point(Vector2(shot["pos"])):
+                shot["life"] = 0.0
+        if float(shot["life"]) <= 0.0:
+            continue
         for enemy in enemies:
             if int(enemy["hp"]) <= 0:
                 continue
@@ -604,27 +820,31 @@ func _start_waterfall() -> void:
     waterfall_gold = Highland.waterfall_gold()
     waterfall_gold_count = 0
     checkpoint = 2770.0
+    _save_checkpoint()
+    waterfall_boost = 0.0
+    waterfall_boost_cooldown = 0.0
     boost_time = 0.0
     player_velocity = Vector2.ZERO
     _say("The waterfall! Swim in all four directions. Boost to dodge!", 5.0)
     native_fx.flash(Color("#a5ffff"), 0.30, 0.90)
     if not music_muted:
-        create_tween().tween_property(music_player, "volume_db", -23.0, 1.1)
+        _fade_music(-23.0, 1.1)
 
 func _update_waterfall(dt: float) -> void:
     waterfall_time += dt
     if waterfall_phase == "pull":
-        if waterfall_time >= Highland.FALL_ENTRY:
+        if waterfall_time + 0.000001 >= Highland.FALL_ENTRY:
             waterfall_phase = "descent"
-            waterfall_time = 0.0
+            waterfall_time = maxf(0.0, waterfall_time - Highland.FALL_ENTRY)
         return
     if waterfall_phase == "outflow":
-        if waterfall_time >= Highland.FALL_EXIT:
+        if waterfall_time + 0.000001 >= Highland.FALL_EXIT:
             waterfall_phase = ""
             fallen = true
             player = Vector2(Highland.WATERFALL_EXIT, 610.0)
             camera = player.x - get_viewport_rect().size.x * 0.4
             checkpoint = Highland.WATERFALL_EXIT
+            _save_checkpoint()
             invulnerable = 1.5
             _say("Secret Grotto! Keep swimming right.", 4.0)
             native_fx.flash(Color("#e0ffff"), 0.18, 0.45)
@@ -663,6 +883,8 @@ func _update_waterfall(dt: float) -> void:
                 score += 50
             elif invulnerable <= 0.0:
                 _damage(Vector2(player.x + h_x - hero_x, player.y + h_y - hero_y))
+                if waterfall_phase != "descent":
+                    return
     for pearl in waterfall_gold:
         if pearl["taken"]:
             continue
@@ -673,12 +895,16 @@ func _update_waterfall(dt: float) -> void:
             waterfall_gold_count += 1
             picked_count += 1
             score += 20
-    if waterfall_time >= Highland.FALL_DURATION:
+    if waterfall_time + 0.000001 >= Highland.FALL_DURATION:
         waterfall_phase = "outflow"
-        waterfall_time = 0.0
+        waterfall_time = maxf(0.0, waterfall_time - Highland.FALL_DURATION)
         _say("There it is — the secret grotto!", 3.0)
 
 func _restart() -> void:
+    get_tree().paused = false
+    music_player.stream_paused = false
+    _reset_transients()
+    retry_serial += 1
     player = Vector2(220.0, 460.0)
     player_velocity = Vector2.ZERO
     camera = 0.0
@@ -708,6 +934,9 @@ func _restart() -> void:
     animated_enemies.bind_enemies(enemies)
     treasures = Highland.treasure()
     state = "playing"
+    _save_checkpoint()
+    if not music_muted:
+        music_player.volume_db = -17.0
     _say("Highland Gold — your adventure begins!", 3.0)
     if is_instance_valid(native_fx):
         native_fx.flash(Color("#d6ffff"), 0.16, 0.4)
@@ -766,11 +995,16 @@ func _draw_world(s: Vector2) -> void:
         var x := float(enemy["x"]) - camera
         if x < -200 or x > s.x + 200:
             continue
+        _draw_enemy_cue(enemy, Vector2(x, float(enemy["y"])))
         if not is_instance_valid(animated_enemies) or (String(enemy["kind"]) != "crab"
                 and String(enemy["kind"]) != "eel" and String(enemy["kind"]) != "jelly"):
             _draw_enemy(enemy, Vector2(x, float(enemy["y"])))
     if player.x > Highland.BOSS_X - s.x - 200 or camera > Highland.BOSS_X - s.x - 200:
         _draw_boss()
+    for shot in hostile_shots:
+        var pos := Vector2(shot["pos"]) - Vector2(camera, 0)
+        draw_circle(pos, 12, Color("#ffa382"))
+        draw_arc(pos, 17, 0, TAU, 16, Color("#ffe4ab"), 2)
     for shot in bubble_shots:
         var pos := Vector2(shot["pos"]) - Vector2(camera, 0)
         draw_circle(pos, 24.0, Color(0.55, 0.96, 1.0, 0.45))
@@ -850,7 +1084,10 @@ func _draw_enemy(enemy: Dictionary, pos: Vector2) -> void:
         draw_arc(pos + Vector2(0, -16), 42.0, -PI * 0.8, -PI * 0.1, 20,
             Color(0.82, 0.95, 1.0, 0.32), 2.0)
     elif kind == "puffer":
-        _draw_puffer(pos, ph)
+        var inflation := 1.25 if String(enemy.get("mode", "")) == "windup" else 1.0
+        draw_set_transform(pos, 0, Vector2.ONE * inflation)
+        _draw_puffer(Vector2.ZERO, ph)
+        draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
     elif kind == "swordfish":
         _draw_swordfish(pos, ph)
     else:
@@ -905,17 +1142,24 @@ func _draw_swordfish(pos: Vector2, phase: float) -> void:
 func _draw_boss() -> void:
     if boss_hp <= 0:
         return
-    var x := Highland.BOSS_X - camera
+    var x := boss_position.x - camera
     if x < -360 or x > get_viewport_rect().size.x + 360:
         return
-    var y := 570.0 + sin(boss_clock * 1.3) * 67.0
+    var y := boss_position.y
     var glow := Color(0.28, 1.0, 0.58, 0.22) if _boss_vulnerable() else Color(1.0, 0.44, 0.47, 0.18)
     draw_circle(Vector2(x, y), 180.0, glow)
     if not is_instance_valid(native_boss):
         draw_texture_rect(CARLO, Rect2(x - 162, y - 180, 324, 352), false)
     draw_rect(Rect2(x - 140, y - 206, 280, 15), Color("#123349"))
     draw_rect(Rect2(x - 140, y - 206, 280.0 * float(boss_hp) / BOSS_MAX_HEALTH, 15), Color("#80ffc8") if _boss_vulnerable() else Color("#ffba8a"))
-    _draw_text(Vector2(x - 90, y - 220), "CARLO", 25, Color("#fff0d1"))
+    var label: String = "BOOST NOW" if _boss_vulnerable() else ["CLAW SWEEP", "PEARL VOLLEY", "CRAB DASH"][boss_pattern]
+    _draw_text(Vector2(x - 110, y - 220), label, 22, Color("#fff0d1"))
+    if boss_phase == "windup":
+        var origin := boss_position - Vector2(camera, 0)
+        if boss_pattern == 0:
+            draw_arc(origin, 280, -PI, 0, 40, Color(1, 0.64, 0.38, 0.75), 4)
+        else:
+            draw_line(origin, boss_target - Vector2(camera, 0), Color(1, 0.72, 0.44, 0.8), 3)
 
 func _draw_hero(pos: Vector2) -> void:
     var opacity := 1.0 if invulnerable <= 0.0 else 0.58 + 0.42 * absf(sin(time * 13.0))
@@ -1069,3 +1313,26 @@ func _draw_overlay(s: Vector2) -> void:
         var rect := _touch_rect("restart", s)
         draw_rect(rect, Color("#268d93"))
         _draw_text(rect.position + Vector2(48, 43), "RESTART", 23, Color.WHITE)
+
+func _draw_enemy_cue(enemy: Dictionary, pos: Vector2) -> void:
+    var mode := String(enemy.get("mode", "patrol"))
+    if mode == "windup":
+        var aim := Vector2(enemy.get("aim", Vector2.LEFT))
+        draw_arc(pos, 88, -PI, PI, 32, Color(1, 0.76, 0.38, 0.85), 3)
+        draw_line(pos, pos + aim * 170.0, Color(1, 0.79, 0.50, 0.72), 3)
+    elif mode == "recover":
+        draw_arc(pos, 73, -2.7, -0.4, 16, Color(0.58, 1, 0.78, 0.65), 2)
+
+func _action_held(action: String) -> bool:
+    if action in touches.values():
+        return true
+    var device := _controller_id()
+    if action == "boost":
+        return Input.is_key_pressed(KEY_SPACE) or (device >= 0 and Input.is_joy_button_pressed(device, JOY_BUTTON_B))
+    return Input.is_key_pressed(KEY_B) or Input.is_key_pressed(KEY_Z) or (device >= 0 and Input.is_joy_button_pressed(device, JOY_BUTTON_X))
+
+func _fade_music(volume: float, duration: float) -> void:
+    if music_tween and music_tween.is_running():
+        music_tween.kill()
+    music_tween = create_tween().bind_node(music_player)
+    music_tween.tween_property(music_player, "volume_db", volume, duration)

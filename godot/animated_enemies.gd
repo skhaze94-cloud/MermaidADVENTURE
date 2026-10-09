@@ -76,11 +76,11 @@ func animate_visible(camera_x: float, elapsed: float, reduced_motion: bool, dt: 
     # Cap skeleton/atlas updates at 30Hz on 60/120Hz monitors.
     # Fast panning invalidates the LOD throttle to prevent noticeable lag.
     var visual_rate := VISUAL_HZ if high_quality else 20.0
-    if frame_accumulator < 1.0 / visual_rate and absf(camera_x - last_camera) < 7.0:
-        return
-    frame_accumulator = 0.0
+    var animate_frame := frame_accumulator >= 1.0 / visual_rate
+    if animate_frame:
+        frame_accumulator = 0.0
+        animation_ticks += 1
     last_camera = camera_x
-    animation_ticks += 1
     active_count = 0
     for i in range(sprites.size()):
         var sprite: Sprite2D = sprites[i]
@@ -99,7 +99,7 @@ func animate_visible(camera_x: float, elapsed: float, reduced_motion: bool, dt: 
         var sprite_frame := 0
         if kind != "jelly" and not reduced_motion:
             sprite_frame = int(floor(elapsed * (7.0 if kind == "crab" else 6.0) + phase)) % 4
-        if sprite_frame != last_frames[i]:
+        if animate_frame and sprite_frame != last_frames[i]:
             var texture: Texture2D = CRAB if kind == "crab" else (EEL if kind == "eel" else JELLY)
             var cell_width := float(texture.get_width()) / 4.0
             if kind != "jelly":
@@ -110,6 +110,6 @@ func animate_visible(camera_x: float, elapsed: float, reduced_motion: bool, dt: 
             sprite.rotation = 0.0 if reduced_motion else sin(elapsed * 5.2 + phase) * 0.028
         elif kind == "eel":
             sprite.rotation = 0.0 if reduced_motion else sin(elapsed * 2.7 + phase) * 0.075
-            sprite.flip_h = sin(elapsed * (1.0 + phase * 0.025) + phase) < 0.0
+            sprite.flip_h = int(source.get("dir", -1)) < 0
         else:
             sprite.rotation = 0.0 if reduced_motion else sin(elapsed * 1.9 + phase) * 0.045

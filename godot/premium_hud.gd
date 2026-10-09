@@ -1,4 +1,5 @@
 extends CanvasLayer
+const Controls = preload("res://godot/control_layout.gd")
 ## Godot v0.4: native, scale-aware illustrated HUD. Gameplay never paints over UI.
 ## Draws from one immutable snapshot every rendered frame; no gameplay state stored here.
 var canvas: Control
@@ -62,6 +63,9 @@ func update_hud(next_info: Dictionary) -> void:
         changed = changed or bool(next_info.get("bubble", false)) != bool(info.get("bubble", false))
         changed = changed or bool(next_info.get("paused", false)) != bool(info.get("paused", false))
         changed = changed or bool(next_info.get("victory", false)) != bool(info.get("victory", false))
+    changed = changed or next_info.get("pressed", []) != info.get("pressed", [])
+    changed = changed or next_info.get("pad", Vector2.ZERO) != info.get("pad", Vector2.ZERO)
+    changed = changed or next_info.get("boss_phase", "") != info.get("boss_phase", "")
     info = next_info
     if changed:
         redraw_count += 1
@@ -167,23 +171,24 @@ func _draw_hud() -> void:
         _draw_modal(w, h, bool(info.get("victory", false)))
 
 func _draw_touch_ui(w: float, h: float) -> void:
-    var base := h - 172.0
-    var positions := {
-        "left": Rect2(16, base + 55, 82, 76),
-        "right": Rect2(190, base + 55, 82, 76),
-        "up": Rect2(103, base - 12, 82, 76),
-        "down": Rect2(103, base + 94, 82, 66),
-        "boost": Rect2(w - 225, base + 57, 102, 91),
-        "jump": Rect2(w - 110, base - 20, 94, 91),
-        "bubble": Rect2(w - 335, base - 20, 94, 91),
-        "pause": Rect2(w - 84, 12, 70, 52)}
+    var size := Vector2(w, h)
+    var pad := Controls.pad_rect(size)
+    _backed(pad, chip_style)
+    var center := pad.get_center()
+    canvas.draw_circle(center, 57, Color(0.32, 0.85, 0.82, 0.16))
+    var direction := Vector2(info.get("pad", Vector2.ZERO))
+    canvas.draw_circle(center + direction * 42, 25, TEAL if direction != Vector2.ZERO else PALE)
+    _text(pad.position + Vector2(10, 20), "SWIM", 12, PALE)
+    var positions := {}
+    for action in ["boost", "jump", "bubble", "pause"]:
+        positions[action] = Controls.rect(action, size)
     var labels := {"left": "LEFT", "right": "RIGHT", "up": "UP", "down": "DOWN",
         "boost": "BOOST", "jump": "JUMP", "bubble": "BUBBLE", "pause": "II"}
     for action in positions:
         if action == "bubble" and not bool(info.get("bubble", false)):
             continue
         var rect: Rect2 = positions[action]
-        _backed(rect, chip_style)
+        _backed(rect, warning_style if action in info.get("pressed", []) else chip_style)
         _text(rect.position + Vector2(rect.size.x * 0.5, rect.size.y * 0.56), labels[action],
             14 if action == "bubble" else 17, INK, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x)
 
@@ -197,10 +202,10 @@ func _draw_modal(w: float, h: float, victory: bool) -> void:
     _text(rect.position + Vector2(23, 66), title, 31 if width > 420 else 21, GOLD)
     _text(rect.position + Vector2(25, 116), "SCORE   " + str(info.get("score", 0))
         + "       PEARLS   " + str(info.get("pearls", 0)), 21, INK)
-    _text(rect.position + Vector2(25, 168),
-        "Press ENTER to replay" if victory else "Press P to return to the sea", 18, PALE)
-    if bool(info.get("touch", false)):
-        var touch := Rect2(w * 0.5 - 110.0, h * 0.5 + 95.0, 220.0, 65.0)
-        _backed(touch, chip_style)
-        _text(touch.position + Vector2(110, 40), "RESTART", 21, INK,
-            HORIZONTAL_ALIGNMENT_CENTER, 220)
+    _text(rect.position + Vector2(25, 172),
+        "ENTER: replay" if victory else "P / ESC / START: resume", 18, PALE)
+    for action in (["restart"] if victory else ["resume", "restart"]):
+        var button := Controls.rect(action, Vector2(w, h))
+        _backed(button, chip_style)
+        _text(button.position + Vector2(0, 36), "REPLAY" if victory else action.to_upper(), 20, INK,
+            HORIZONTAL_ALIGNMENT_CENTER, button.size.x)

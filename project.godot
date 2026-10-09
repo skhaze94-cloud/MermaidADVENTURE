@@ -23,3 +23,9 @@ common/physics_ticks_per_second=60
 
 [audio]
 buses/default_bus_layout="res://godot/default_bus_layout.tres"
+
+[shader_globals]
+gameplay_time={
+"type": "float",
+"value": 0.0
+}

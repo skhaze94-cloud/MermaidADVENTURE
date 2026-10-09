@@ -1,4 +1,5 @@
 shader_type canvas_item;
+global uniform float gameplay_time;
 render_mode unshaded, blend_add;
 
 // Godot GPU shader. Screen-space refracted light, rendered once per frame.
@@ -15,7 +16,7 @@ void fragment() {
     float wet = smoothstep(water_surface - 0.008, water_surface + 0.06, uv.y);
     float depth = clamp((uv.y - water_surface) / max(0.01, 1.0 - water_surface), 0.0, 1.0);
     vec2 flow = uv * vec2(22.0, 12.0);
-    float t = TIME * speed;
+    float t = gameplay_time * speed;
     float stripe1 = sin(flow.x * 1.35 + sin(flow.y * 1.6 + t) * 1.8 + t * 1.8);
     float stripe2 = cos(flow.x * 0.82 - flow.y * 1.62 + sin(flow.x * 1.45 - t) + t * 1.10);
     float cell = max(0.0, stripe1 * stripe2);

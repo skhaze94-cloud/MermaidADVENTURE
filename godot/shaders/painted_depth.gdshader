@@ -1,4 +1,5 @@
 shader_type canvas_item;
+global uniform float gameplay_time;
 render_mode unshaded;
 
 // Painted Highlands remain the single opaque foundation. The shader provides
@@ -15,7 +16,7 @@ void fragment() {
     float wet = smoothstep(surface_y - 0.015, surface_y + 0.06, uv.y);
     float depth = clamp((uv.y - surface_y) / max(0.01, 1.0 - surface_y), 0.0, 1.0);
     // Two low-frequency flow fields; less than a pixel over most of the frame.
-    float phase = TIME * 0.49 * motion_enabled;
+    float phase = gameplay_time * 0.49 * motion_enabled;
     vec2 ripple = vec2(
         sin(uv.y * 23.0 + phase + camera_progress * 5.0) * 0.00048,
         cos(uv.x * 20.0 - phase * 0.67) * 0.00022

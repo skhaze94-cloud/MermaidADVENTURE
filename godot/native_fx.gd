@@ -14,6 +14,7 @@ var cinematic_material: ShaderMaterial
 var caustics_material: ShaderMaterial
 var high_quality := true
 var water_overlay: ColorRect
+var flash_tween: Tween
 var impact_overlay: ColorRect
 var trail: CPUParticles2D
 var bubble_texture: Texture2D
@@ -158,8 +159,10 @@ func flash(tint: Color = Color("#ffb3c0"), intensity: float = 0.22, duration: fl
         return
     impact_overlay.color = tint
     impact_overlay.modulate.a = intensity
-    var tween := create_tween()
-    tween.tween_property(impact_overlay, "modulate:a", 0.0, duration).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+    if flash_tween and flash_tween.is_running():
+        flash_tween.kill()
+    flash_tween = create_tween()
+    flash_tween.tween_property(impact_overlay, "modulate:a", 0.0, duration).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 func set_depth_profile(is_grotto: bool) -> void:
     if depth_profile_initialized and last_grotto == is_grotto:
@@ -189,3 +192,13 @@ func set_reduced_motion(enabled: bool) -> void:
     refract_material.set_shader_parameter("motion_enabled", 0.0 if enabled else 1.0)
     mist_material.set_shader_parameter("motion_enabled", 0.0 if enabled else 1.0)
     trail.emitting = not enabled and trail.emitting
+
+func reset_transients() -> void:
+    if flash_tween and flash_tween.is_running():
+        flash_tween.kill()
+    impact_overlay.modulate.a = 0.0
+    trail.emitting = false
+    for burst in burst_pool:
+        burst.emitting = false
+        burst.restart()
+        burst.emitting = false

@@ -1,4 +1,5 @@
 shader_type canvas_item;
+global uniform float gameplay_time;
 render_mode unshaded;
 
 // True screen-texture refraction. Runs after terrain/enemies, before Sarah.
@@ -12,7 +13,7 @@ uniform float motion_enabled : hint_range(0.0, 1.0) = 1.0;
 void fragment() {
     float wet = smoothstep(surface_y, surface_y + 0.07, UV.y);
     float depth = clamp((UV.y - surface_y) / max(0.01, 1.0 - surface_y), 0.0, 1.0);
-    float tick = TIME * motion_enabled;
+    float tick = gameplay_time * motion_enabled;
     float wave_a = sin(SCREEN_UV.y * 105.0 + tick * 1.08);
     float wave_b = cos(SCREEN_UV.x * 73.0 - SCREEN_UV.y * 58.0 - tick * 0.83);
     vec2 pixel_shift = vec2(wave_a + wave_b * 0.38, wave_b * 0.48);

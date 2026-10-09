@@ -9,6 +9,7 @@ var active := false
 var vulnerable := false
 var life := 5
 var defeating := false
+var defeat_tween: Tween
 var hit_tween: Tween
 var boss_scale := Vector2.ONE
 var reduced_motion := false
@@ -69,15 +70,19 @@ func defeat() -> void:
     defeating = true
     if hit_tween and hit_tween.is_running():
         hit_tween.kill()
-    var tween := create_tween()
-    tween.tween_property(sprite, "modulate:a", 0.0, 0.7).set_trans(Tween.TRANS_CUBIC)
-    tween.parallel().tween_property(sprite, "rotation", 0.7, 0.7)
-    tween.tween_callback(func() -> void:
+    defeat_tween = create_tween()
+    defeat_tween.tween_property(sprite, "modulate:a", 0.0, 0.7).set_trans(Tween.TRANS_CUBIC)
+    defeat_tween.parallel().tween_property(sprite, "rotation", 0.7, 0.7)
+    defeat_tween.tween_callback(func() -> void:
         visible = false
         defeating = false
     )
 
 func reset_boss() -> void:
+    if defeat_tween and defeat_tween.is_running():
+        defeat_tween.kill()
+    if hit_tween and hit_tween.is_running():
+        hit_tween.kill()
     defeating = false
     sprite.modulate = Color.WHITE
     sprite.self_modulate = Color.WHITE
