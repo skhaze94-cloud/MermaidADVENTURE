@@ -68,6 +68,7 @@ var native_rig: Node2D
 var native_fx: Node2D
 var native_boss: Node2D
 var animated_enemies: Node2D
+var performance_overlay: CanvasLayer
 var premium_hud: CanvasLayer
 var water_surface: Node2D
 var world_depth: Node2D
@@ -98,12 +99,13 @@ func _ready() -> void:
     native_boss = get_node("CarloNativeBoss")
     animated_enemies = get_node("AnimatedEnemySprites")
     animated_enemies.bind_enemies(enemies)
+    performance_overlay = get_node("PerformanceOverlay")
     premium_hud = get_node("PremiumHud")
     water_surface = get_node("PaintedWaterSurface")
     world_depth = get_node("PaintedWorldDepth")
     foreground_depth = get_node("SparseForegroundDepth")
     relief_obstacles = get_node("ReliefReefObstacles")
-    native_fx.set_quality(high_depth_quality)
+    _apply_visual_quality()
     _sync_native_visuals()
     queue_redraw()
 
@@ -143,8 +145,10 @@ func _input(event: InputEvent) -> void:
                 _say("Visual effects " + ("reduced" if reduced_fx else "enabled"), 1.5)
             KEY_F4:
                 high_depth_quality = not high_depth_quality
-                native_fx.set_quality(high_depth_quality)
+                _apply_visual_quality()
                 _say("3D depth effects " + ("high" if high_depth_quality else "economy"), 1.7)
+            KEY_F6:
+                performance_overlay.set_monitor_visible(not performance_overlay.enabled)
             KEY_ENTER:
                 if state == "victory":
                     _restart()
@@ -353,6 +357,12 @@ func _hero_screen_position() -> Vector2:
         return (player - Vector2(camera, 0.0)).lerp(pos, clampf(waterfall_time / Highland.FALL_ENTRY, 0.0, 1.0))
     return pos
 
+func _apply_visual_quality() -> void:
+    native_fx.set_quality(high_depth_quality)
+    # Lights are the costliest effects on lower-powered/mobile GPUs.
+    native_rig.hero_light.enabled = high_depth_quality
+    native_boss.light.enabled = high_depth_quality
+
 func _hud_snapshot() -> Dictionary:
     return {
         "health": health,
@@ -387,7 +397,7 @@ func _sync_native_visuals() -> void:
     native_fx.set_motion(pos, velocity, jump_time <= 0.0)
     if is_instance_valid(animated_enemies):
         animated_enemies.animate_visible(camera, time, reduced_fx,
-            get_process_delta_time(), not waterfall_active)
+            get_process_delta_time(), not waterfall_active, high_depth_quality)
     if is_instance_valid(world_depth):
         world_depth.visible = not waterfall_active
         world_depth.set_camera(camera, fallen, reduced_fx)
