@@ -849,7 +849,7 @@ func _update_waterfall(dt: float) -> void:
             _say("Secret Grotto! Keep swimming right.", 4.0)
             native_fx.flash(Color("#e0ffff"), 0.18, 0.45)
             if not music_muted:
-                create_tween().tween_property(music_player, "volume_db", -17.0, 1.0)
+                _fade_music(-17.0, 1.0)
         return
     waterfall_boost = maxf(0.0, waterfall_boost - dt)
     waterfall_boost_cooldown = maxf(0.0, waterfall_boost_cooldown - dt)
