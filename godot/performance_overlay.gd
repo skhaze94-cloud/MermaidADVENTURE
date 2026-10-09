@@ -3,7 +3,7 @@ extends CanvasLayer
 ## Numbers are measured in the running Godot window, not predicted benchmarks.
 var panel: ColorRect
 var label: Label
-var level: Node2D
+var level
 var enabled := false
 var refresh_clock := 0.0
 var displayed_fps := 0
