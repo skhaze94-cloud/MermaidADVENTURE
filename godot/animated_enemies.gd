@@ -1,22 +1,19 @@
 extends Node2D
-## v0.5: pooled native sprites for the already-existing enemy data.
-## Atlas regions and nodes are allocated exactly once, not on each draw call.
-## Visuals are screen-space only; all combat and collision stay in HighlandGold.
-const CRAB: Texture2D = preload("res://dist/assets/crab-poses-v731.webp")
-const EEL: Texture2D = preload("res://dist/assets/eel-poses-v731.webp")
-const JELLY: Texture2D = preload("res://dist/assets/jelly-v731.webp")
+## Pooled, combat-driven creature portraits shared by lake and waterfall.
+const Art = preload("res://godot/creature_art.gd")
 const VISUAL_HZ := 30.0
-const VIEW_MARGIN := 230.0
+const VIEW_MARGIN := 250.0
 var sprites: Array[Sprite2D] = []
 var atlases: Array[AtlasTexture] = []
+var materials: Array[ShaderMaterial] = []
 var kinds: Array[String] = []
 var indices: Array[int] = []
 var last_frames: Array[int] = []
+var death_times: Array[float] = []
 var source_enemies: Array[Dictionary] = []
 var active_count := 0
 var animation_ticks := 0
 var frame_accumulator := 1.0
-var last_camera := -999999.0
 var viewport_width := 1400.0
 
 func _ready() -> void:
@@ -31,85 +28,92 @@ func _resized() -> void:
 func bind_enemies(data: Array[Dictionary]) -> void:
     source_enemies = data
     for sprite in sprites:
+        remove_child(sprite)
         sprite.queue_free()
     sprites.clear()
     atlases.clear()
+    materials.clear()
     kinds.clear()
     indices.clear()
     last_frames.clear()
+    death_times.clear()
     for i in range(data.size()):
-        var enemy: Dictionary = data[i]
-        var kind: String = String(enemy["kind"])
-        if kind != "crab" and kind != "eel" and kind != "jelly":
+        var kind := String(data[i]["kind"])
+        if not Art.TEXTURES.has(kind) or kind == "carlo":
             continue
         var sprite := Sprite2D.new()
         sprite.name = "Creature_%02d_%s" % [i, kind]
         sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-        var tex: Texture2D = CRAB if kind == "crab" else (EEL if kind == "eel" else JELLY)
-        var src := AtlasTexture.new()
-        src.atlas = tex
-        var rect := Rect2(0, 0, float(tex.get_width()) / 4.0, float(tex.get_height()))
-        if kind == "jelly":
-            rect = Rect2(Vector2.ZERO, tex.get_size())
-        src.region = rect
-        sprite.texture = src
-        var target := Vector2(155.0, 124.0) if kind == "crab" else (
-            Vector2(185.0, 110.0) if kind == "eel" else Vector2(96.0, 144.0))
-        sprite.scale = target / rect.size
+        var atlas := Art.atlas(kind)
+        var surface := Art.material(kind)
+        sprite.texture = atlas
+        sprite.material = surface
+        sprite.scale = Art.base_scale(kind)
         sprite.visible = false
         add_child(sprite)
         sprites.append(sprite)
-        atlases.append(src)
+        atlases.append(atlas)
+        materials.append(surface)
         kinds.append(kind)
         indices.append(i)
         last_frames.append(-1)
+        death_times.append(-1.0)
     frame_accumulator = 1.0
 
 func animate_visible(camera_x: float, elapsed: float, reduced_motion: bool, dt: float,
         enabled: bool = true, high_quality: bool = true) -> void:
+    visible = enabled
+    active_count = 0
     if not enabled:
-        visible = false
-        active_count = 0
         return
-    visible = true
     frame_accumulator += minf(dt, 0.05)
-    # Cap skeleton/atlas updates at 30Hz on 60/120Hz monitors.
-    # Fast panning invalidates the LOD throttle to prevent noticeable lag.
-    var visual_rate := VISUAL_HZ if high_quality else 20.0
-    var animate_frame := frame_accumulator >= 1.0 / visual_rate
+    var animate_frame := frame_accumulator >= 1.0 / (VISUAL_HZ if high_quality else 20.0)
     if animate_frame:
         frame_accumulator = 0.0
         animation_ticks += 1
-    last_camera = camera_x
-    active_count = 0
     for i in range(sprites.size()):
-        var sprite: Sprite2D = sprites[i]
         var source: Dictionary = source_enemies[indices[i]]
-        var sx := float(source["x"]) - camera_x
+        var sprite: Sprite2D = sprites[i]
+        var kind := kinds[i]
         var alive := int(source["hp"]) > 0
-        var onscreen := alive and sx > -VIEW_MARGIN and sx < viewport_width + VIEW_MARGIN
-        sprite.visible = onscreen
-        if not onscreen:
+        if alive:
+            death_times[i] = -1.0
+        elif death_times[i] < 0.0:
+            death_times[i] = 0.0
+        else:
+            death_times[i] += dt
+        var sx := float(source["x"]) - camera_x
+        var sy := float(source["y"])
+        sprite.visible = (alive or (death_times[i] < 0.24 and not reduced_motion)) and sx > -VIEW_MARGIN and sx < viewport_width + VIEW_MARGIN and sy > -VIEW_MARGIN and sy < get_viewport_rect().size.y + VIEW_MARGIN
+        if not sprite.visible:
             continue
         active_count += 1
-        var kind := kinds[i]
-        var phase := float(source["phase"])
-        var bob := 0.0 if reduced_motion else sin(elapsed * 2.8 + phase) * (4.0 if kind == "jelly" else 2.5)
-        sprite.position = Vector2(sx, float(source["y"]) + bob)
-        var sprite_frame := 0
-        if kind != "jelly" and not reduced_motion:
-            sprite_frame = int(floor(elapsed * (7.0 if kind == "crab" else 6.0) + phase)) % 4
-        if animate_frame and sprite_frame != last_frames[i]:
-            var texture: Texture2D = CRAB if kind == "crab" else (EEL if kind == "eel" else JELLY)
-            var cell_width := float(texture.get_width()) / 4.0
-            if kind != "jelly":
-                atlases[i].region = Rect2(sprite_frame * cell_width, 0, cell_width, float(texture.get_height()))
-            last_frames[i] = sprite_frame
-        if kind == "crab":
-            sprite.flip_h = int(source["dir"]) < 0
-            sprite.rotation = 0.0 if reduced_motion else sin(elapsed * 5.2 + phase) * 0.028
-        elif kind == "eel":
-            sprite.rotation = 0.0 if reduced_motion else sin(elapsed * 2.7 + phase) * 0.075
-            sprite.flip_h = int(source.get("dir", -1)) < 0
-        else:
-            sprite.rotation = 0.0 if reduced_motion else sin(elapsed * 1.9 + phase) * 0.045
+        var frame := Art.pose(String(source.get("mode", "patrol")))
+        # Combat cues update immediately, even between capped decorative updates.
+        if frame != last_frames[i]:
+            atlases[i].region = Art.region(kind, frame)
+            Art.set_region(materials[i], kind, frame)
+            materials[i].set_shader_parameter("combat_pose", frame)
+            last_frames[i] = frame
+        var phase := float(source.get("phase", 0.0))
+        var bob := 0.0 if reduced_motion else sin(elapsed * 2.8 + phase) * (3.0 if kind == "jelly" else 1.5)
+        sprite.position = Vector2(sx, sy + bob)
+        sprite.flip_h = int(source.get("dir", 1)) < 0
+        sprite.rotation = 0.0 if reduced_motion else sin(elapsed * 2.1 + phase) * (0.015 if kind == "crab" else 0.028)
+        if frame == 2 and kind != "crab" and kind != "jelly" and not reduced_motion:
+            var aim: Vector2 = source.get("aim", Vector2.RIGHT)
+            sprite.rotation += clampf(aim.y * signf(aim.x), -0.22, 0.22)
+        sprite.scale = Art.base_scale(kind)
+        sprite.modulate = Color.WHITE
+        if kind == "jelly" and not reduced_motion:
+            var pulse := sin(elapsed * 2.4 + phase) * 0.025
+            sprite.scale *= Vector2(1.0 + pulse, 1.0 - pulse)
+        if not alive:
+            var progress := clampf(death_times[i] / 0.24, 0.0, 1.0)
+            sprite.modulate.a = 1.0 - progress
+            sprite.position.y -= progress * 18.0
+            sprite.scale *= 1.0 + sin(progress * PI) * 0.12
+        materials[i].set_shader_parameter("animate_detail", not reduced_motion)
+        materials[i].set_shader_parameter("high_quality", high_quality)
+        if animate_frame:
+            materials[i].set_shader_parameter("visual_clock", 0.0 if reduced_motion else elapsed + phase)

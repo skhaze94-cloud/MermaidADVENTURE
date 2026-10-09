@@ -10,9 +10,6 @@ const HERO = preload("res://dist/assets/sarah-mermaid.webp")
 const FALL_BOULDER = preload("res://godot/assets/waterfall-boulder-v07.webp")
 const REEF = preload("res://dist/assets/barrier-reef.webp")
 const FLORA = preload("res://dist/assets/flora-layer.webp")
-const CRAB = preload("res://dist/assets/crab-poses-v731.webp")
-const EEL = preload("res://dist/assets/eel-poses-v731.webp")
-const JELLY = preload("res://dist/assets/jelly-v731.webp")
 const CARLO = preload("res://dist/assets/carlo.webp")
 const MUSIC = preload("res://dist/assets/bubble-bell-adventure.mp3")
 
@@ -75,6 +72,8 @@ var animated_enemies: Node2D
 var performance_overlay: CanvasLayer
 var premium_hud: CanvasLayer
 var water_surface: Node2D
+var waterfall_models: Array[Dictionary] = []
+var waterfall_enemies: Node2D
 var waterfall_world: Node2D
 var world_depth: Node2D
 var foreground_depth: Node2D
@@ -121,6 +120,12 @@ func _ready() -> void:
     native_boss = get_node("CarloNativeBoss")
     animated_enemies = get_node("AnimatedEnemySprites")
     animated_enemies.bind_enemies(enemies)
+    waterfall_enemies = get_node("WaterfallEnemySprites")
+    for hazard in Highland.waterfall_hazards():
+        waterfall_models.append({"kind": hazard["kind"], "x": 0.0, "y": -1000.0,
+            "hp": 1, "phase": float(waterfall_models.size()), "mode": "patrol",
+            "dir": -1 if float(hazard["x"]) > 0.0 else 1})
+    waterfall_enemies.bind_enemies(waterfall_models)
     performance_overlay = get_node("PerformanceOverlay")
     premium_hud = get_node("PremiumHud")
     water_surface = get_node("PaintedWaterSurface")
@@ -517,6 +522,15 @@ func _sync_native_visuals() -> void:
     if is_instance_valid(animated_enemies):
         animated_enemies.animate_visible(camera, time, reduced_fx,
             get_process_delta_time(), not waterfall_active, high_depth_quality)
+    if waterfall_phase == "descent":
+        var half := minf(get_viewport_rect().size.x * 0.4, 520.0)
+        for i in range(waterfall_hazards.size()):
+            var hazard: Dictionary = waterfall_hazards[i]
+            waterfall_models[i]["x"] = get_viewport_rect().size.x * 0.5 + float(hazard["x"]) * half
+            waterfall_models[i]["y"] = 384.0 + (float(hazard["at"]) - waterfall_time) * 350.0
+            waterfall_models[i]["hp"] = 0 if hazard["passed"] else 1
+    waterfall_enemies.animate_visible(0.0, time, reduced_fx, get_process_delta_time(),
+        waterfall_phase == "descent", high_depth_quality)
     if is_instance_valid(world_depth):
         world_depth.visible = waterfall_phase != "descent"
         world_depth.set_camera(camera, fallen or waterfall_phase == "outflow", reduced_fx)
@@ -532,7 +546,7 @@ func _sync_native_visuals() -> void:
     if is_instance_valid(native_boss):
         var boss_x := boss_position.x - camera
         var boss_y := boss_position.y
-        native_boss.set_boss_state(boss_hp, _boss_vulnerable(), boss_clock, boss_x, boss_y, get_viewport_rect().size.x)
+        native_boss.set_boss_state(boss_hp, _boss_vulnerable(), boss_clock, boss_x, boss_y, get_viewport_rect().size.x, boss_phase, boss_pattern)
 
 func _update_swimming(dt: float) -> void:
     var input_dir := _input_vector()
@@ -1024,9 +1038,6 @@ func _draw_world(s: Vector2) -> void:
         if x < -200 or x > s.x + 200:
             continue
         _draw_enemy_cue(enemy, Vector2(x, float(enemy["y"])))
-        if not is_instance_valid(animated_enemies) or (String(enemy["kind"]) != "crab"
-                and String(enemy["kind"]) != "eel" and String(enemy["kind"]) != "jelly"):
-            _draw_enemy(enemy, Vector2(x, float(enemy["y"])))
     if player.x > Highland.BOSS_X - s.x - 200 or camera > Highland.BOSS_X - s.x - 200:
         _draw_boss()
     for shot in hostile_shots:
@@ -1089,83 +1100,6 @@ func _draw_collectible(pos: Vector2, kind: String) -> void:
         draw_line(sp + Vector2(-6, 0), sp + Vector2(6, 0), Color(1, 1, 1, 0.69), 2)
         draw_line(sp + Vector2(0, -6), sp + Vector2(0, 6), Color(1, 1, 1, 0.69), 2)
 
-func _draw_enemy(enemy: Dictionary, pos: Vector2) -> void:
-    var kind: String = enemy["kind"]
-    var ph := time * 3.0 + float(enemy["phase"])
-    if kind == "crab" or kind == "eel":
-        var texture: Texture2D = CRAB if kind == "crab" else EEL
-        var frame := int(time * (6.0 if kind == "crab" else 4.0) + float(enemy["phase"])) % 4
-        var cell_width := float(texture.get_width()) / 4.0
-        var source := Rect2(float(frame) * cell_width, 0, cell_width, texture.get_height())
-        var w := 155.0 if kind == "crab" else 185.0
-        var h := 124.0 if kind == "crab" else 110.0
-        draw_circle(pos, 81.0 if kind == "crab" else 94.0,
-            Color(0.96, 0.51, 0.33, 0.075) if kind == "crab" else Color(0.25, 0.95, 1.0, 0.08))
-        draw_texture_rect_region(texture,
-            Rect2(pos.x - w * 0.5, pos.y - h * 0.5 + sin(ph) * 2.0, w, h), source)
-        if kind == "eel":
-            draw_arc(pos, 95.0, -0.62, 0.75, 22, Color(0.48, 1.0, 1.0, 0.23), 2.0)
-    elif kind == "jelly":
-        var halo := 0.08 + 0.034 * sin(ph)
-        draw_circle(pos + Vector2(0, -9), 68.0, Color(0.71, 0.64, 1.0, halo))
-        draw_texture_rect(JELLY, Rect2(pos.x - 48, pos.y - 72, 96, 144), false)
-        draw_arc(pos + Vector2(0, -16), 42.0, -PI * 0.8, -PI * 0.1, 20,
-            Color(0.82, 0.95, 1.0, 0.32), 2.0)
-    elif kind == "puffer":
-        var inflation := 1.25 if String(enemy.get("mode", "")) == "windup" else 1.0
-        draw_set_transform(pos, 0, Vector2.ONE * inflation)
-        _draw_puffer(Vector2.ZERO, ph)
-        draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
-    elif kind == "swordfish":
-        _draw_swordfish(pos, ph)
-    else:
-        _draw_puffer(pos, ph)
-
-func _draw_puffer(pos: Vector2, phase: float) -> void:
-    var wobble := sin(phase) * 0.07
-    draw_set_transform(pos, wobble, Vector2.ONE)
-    draw_circle(Vector2.ZERO, 62.0, Color(0.23, 0.86, 0.84, 0.11))
-    # Finlets and soft coral quills, all sharing the same anatomical silhouette.
-    for i in range(10):
-        var theta := TAU * float(i) / 10.0 + 0.12
-        var a := Vector2(cos(theta), sin(theta))
-        var b := Vector2(-a.y, a.x)
-        var base := a * 36.0
-        draw_colored_polygon(PackedVector2Array([
-            base + b * 8.0, base + a * 15.0, base - b * 8.0]), Color("#b0d99b"))
-    draw_circle(Vector2(0, 3), 43.0, Color("#399f9d"))
-    draw_circle(Vector2(-4, -2), 36.0, Color("#a6e2bd"))
-    draw_circle(Vector2(9, 14), 23.0, Color("#e7d9a5"))
-    draw_circle(Vector2(20, -15), 9.0, Color("#f5fff0"))
-    draw_circle(Vector2(23, -15), 4.4, Color("#1b4657"))
-    draw_circle(Vector2(24, -16), 1.5, Color.WHITE)
-    draw_circle(Vector2(35, 7), 4.1, Color("#6a5362"))
-    draw_circle(Vector2(-22, 8), 8.0, Color("#58bdb6"))
-    draw_arc(Vector2(-6, -14), 18.0, PI * 1.13, PI * 1.65, 14,
-        Color(1, 1, 1, 0.39), 3.0)
-    draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
-
-func _draw_swordfish(pos: Vector2, phase: float) -> void:
-    var bank := sin(phase * 0.8) * 0.07
-    draw_set_transform(pos, bank, Vector2.ONE)
-    draw_circle(Vector2(-3, 0), 78.0, Color(0.28, 0.71, 1.0, 0.07))
-    draw_colored_polygon(PackedVector2Array([
-        Vector2(-60, -15), Vector2(-92, -36), Vector2(-77, 0),
-        Vector2(-96, 32), Vector2(-54, 18)]), Color("#3c99b7"))
-    draw_colored_polygon(PackedVector2Array([
-        Vector2(-27, -23), Vector2(-9, -50), Vector2(14, -20)]), Color("#367eaa"))
-    draw_colored_polygon(PackedVector2Array([
-        Vector2(-61, -21), Vector2(12, -32), Vector2(54, -10),
-        Vector2(62, 6), Vector2(12, 29), Vector2(-55, 18)]), Color("#2788a9"))
-    draw_colored_polygon(PackedVector2Array([
-        Vector2(-53, 4), Vector2(26, 5), Vector2(58, 1),
-        Vector2(10, 24), Vector2(-51, 16)]), Color("#b3e1c8"))
-    draw_colored_polygon(PackedVector2Array([
-        Vector2(45, -9), Vector2(115, -15), Vector2(46, 1)]), Color("#8cd5e9"))
-    draw_circle(Vector2(39, -9), 6.5, Color("#e6ffff"))
-    draw_circle(Vector2(42, -9), 3.5, Color("#163a51"))
-    draw_line(Vector2(-38, -19), Vector2(21, -23), Color(0.93, 1.0, 0.95, 0.33), 2.0)
-    draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
 
 func _draw_boss() -> void:
     if boss_hp <= 0:
@@ -1237,15 +1171,8 @@ func _draw_waterfall(s: Vector2) -> void:
             continue
         var xx := cx + float(hazard["x"]) * half
         var kind: String = hazard["kind"]
-        if kind == "eel":
-            var src := Rect2(0, 0, float(EEL.get_width()) * 0.25, EEL.get_height())
-            draw_texture_rect_region(EEL, Rect2(xx - 105, yy - 60, 210, 120), src)
-        elif kind == "jelly":
-            draw_texture_rect(JELLY, Rect2(xx - 51, yy - 70, 102, 140), false)
-        elif kind == "reef":
+        if kind == "reef":
             draw_texture_rect(FALL_BOULDER, Rect2(xx - 115, yy - 90, 230, 180), false)
-        else:
-            _draw_puffer(Vector2(xx, yy), time * 2.5)
     for pearl in waterfall_gold:
         if pearl["taken"] or waterfall_phase != "descent":
             continue

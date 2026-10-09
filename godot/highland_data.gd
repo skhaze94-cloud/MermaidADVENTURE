@@ -45,9 +45,9 @@ static func enemies() -> Array[Dictionary]:
         [5930, "jelly", 440], [6470, "puffer", 610],
         [7480, "eel", 460], [8160, "swordfish", 660],
         [8840, "jelly", 430], [9520, "puffer", 650],
-        [10220, "eel", 470], [10900, "swordfish", 650],
+        [10220, "eel", 470], [10900, "shark", 650],
         [11600, "jelly", 430], [12320, "puffer", 650],
-        [13040, "eel", 470], [13620, "swordfish", 620]
+        [13040, "eel", 470], [13620, "shark", 620]
     ]
     for i in range(swimmers.size()):
         var s: Array = swimmers[i]

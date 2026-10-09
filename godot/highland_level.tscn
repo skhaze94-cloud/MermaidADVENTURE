@@ -32,6 +32,9 @@ script = ExtResource("2_effects")
 [node name="AnimatedEnemySprites" type="Node2D" parent="."]
 script = ExtResource("10_enemies")
 
+[node name="WaterfallEnemySprites" type="Node2D" parent="."]
+script = ExtResource("10_enemies")
+
 [node name="SarahAtlasRig" type="Node2D" parent="."]
 script = ExtResource("3_sarah")
 

@@ -48,7 +48,7 @@ static func step(enemy: Dictionary, target: Vector2, clock: float, dt: float,
             if kind in ["puffer", "jelly"]:
                 event = "fire"
     elif mode == "attack":
-        var speed := 540.0 if kind == "swordfish" else (430.0 if kind == "eel" else 230.0)
+        var speed := 540.0 if kind in ["swordfish", "shark"] else (430.0 if kind == "eel" else 230.0)
         if kind not in ["puffer", "jelly"]:
             pos += Vector2(enemy["aim"]) * speed * dt
         if float(enemy["mode_time"]) >= 0.48:

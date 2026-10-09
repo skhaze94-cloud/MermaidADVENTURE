@@ -98,7 +98,7 @@ func _run() -> void:
     check(not paused and level.state == "playing", "touch resume fails")
     check(level._touch_target(level._touch_rect("restart", size).get_center()) != "restart", "invisible restart active during gameplay")
     # Species lock aim before attack; player movement cannot instantly retarget it.
-    for kind in ["eel", "swordfish", "crab", "puffer", "jelly"]:
+    for kind in ["eel", "swordfish", "shark", "crab", "puffer", "jelly"]:
         var enemy := {"kind": kind, "x": 1000.0, "y": 600.0, "bx": 1000.0, "by": 600.0, "phase": 0.0, "hp": 1, "dir": 1}
         Combat.step(enemy, Vector2(1100, 600), 0, 0.01, [])
         enemy["cooldown"] = 0

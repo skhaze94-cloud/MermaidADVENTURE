@@ -1,4 +1,4 @@
-# Sarah Maria — Mermaid Adventure, Godot 4 (storybook opening v0.8)
+# Sarah Maria — Mermaid Adventure, Godot 4 (creature refresh v0.9)
 
 This project is the **Godot-native vertical slice** of Mermaid Sarah's first story chapter, built from the existing HTML 9.1 repository. It is a real Godot scene and scripts rather than a webpage embedded in a Godot window. The browser version in `dist/` remains available and unchanged. Godot loads the existing artwork and MP3 directly from `res://dist/assets/`.
 
@@ -9,6 +9,17 @@ This project is the **Godot-native vertical slice** of Mermaid Sarah's first sto
 3. Import **`project.godot` at the repository root**, not the `godot/` directory.
 4. Allow asset import, then press **F5**. The storybook opening leads to the main menu; select **Begin adventure** to enter Highland Gold.
 5. The menu supports portrait and landscape. Play the adventure in landscape. The project window is 1400 × 960 with stretch scaling.
+
+## v0.9: expressive Level 1 creatures
+
+- Every regular enemy now has a native painted portrait: coral-claw crabs, golden-fin eels, lantern jellyfish, pearl puffers and sapphire swordfish. Two existing fish patrols use the supplied gentleman-shark artwork and retain the same lunge behaviour and encounter count.
+- Four combat-driven poses distinguish patrol, warning, attack and recovery. Carlo has a new broad silhouette, purple-ribbon top hat, monocle, enormous claws and visible exhaustion during his vulnerable window. Uniform scale preserves anatomy.
+- Lake and waterfall share creature atlases. Subtle eel-tail motion, jelly tentacle sway and bell breathing add life; a brief defeat fade follows the existing damage rules. Combat poses remain immediate in Gentle motion. Economy disables decorative shader detail; pooled sprites and capped 30/20 Hz detail updates keep allocations bounded.
+- Existing menu, opening, controls, collisions, rewards, boss patterns and checkpoint behaviour remain. This is 2D sprite artwork, not 3D modelling.
+
+[Actual Godot roster render](../docs/enemy-refresh-v09.jpg) · [Art provenance and prompts](assets/enemy-art-v09.md)
+
+`enemy_visuals_test.gd` checks complete species coverage, immediate combat poses, atlas bounds, uniform scale, defeat/offscreen visibility, resource reuse, quality preferences, shared waterfall artwork and Carlo reset. `capture_enemy_previews.gd` renders the roster and all four poses. Five logic suites and actual Level 1/device renders passed on Godot 4.4.1. Device views are simulated; physical-device performance has not been measured.
 
 ## v0.8: storybook menu and opening credits
 
