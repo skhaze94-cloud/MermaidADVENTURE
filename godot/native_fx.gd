@@ -19,6 +19,12 @@ var trail: CPUParticles2D
 var bubble_texture: Texture2D
 var reduced_motion := false
 var viewport_size := Vector2.ZERO
+const BURST_POOL_SIZE := 10
+var burst_pool: Array[CPUParticles2D] = []
+var burst_cursor := 0
+var burst_events := 0
+var last_grotto := false
+var depth_profile_initialized := false
 
 func _ready() -> void:
     bubble_texture = _make_bubble_texture()
@@ -80,6 +86,25 @@ func _ready() -> void:
     trail.color = Color(0.73, 1.0, 0.96, 0.45)
     trail.emitting = false
     add_child(trail)
+    # Reuse a fixed pool: neither bursts nor one-shot timers allocate during play.
+    for i in range(BURST_POOL_SIZE):
+        var burst := CPUParticles2D.new()
+        burst.name = "PooledImpact_%02d" % i
+        burst.texture = bubble_texture
+        burst.one_shot = true
+        burst.amount = 20
+        burst.lifetime = 0.65
+        burst.explosiveness = 1.0
+        burst.direction = Vector2.UP
+        burst.spread = 180.0
+        burst.initial_velocity_min = 45.0
+        burst.initial_velocity_max = 160.0
+        burst.gravity = Vector2(0.0, -28.0)
+        burst.scale_amount_min = 0.45
+        burst.scale_amount_max = 1.25
+        burst.emitting = false
+        add_child(burst)
+        burst_pool.append(burst)
     get_viewport().size_changed.connect(_fit_viewport)
     _fit_viewport()
 
@@ -117,27 +142,16 @@ func set_motion(screen_position: Vector2, velocity: Vector2, in_water: bool) -> 
 func splash(screen_position: Vector2, tint: Color = Color("#b8ffef"), count: int = 20) -> void:
     if reduced_motion:
         return
-    var burst := CPUParticles2D.new()
-    burst.texture = bubble_texture
-    burst.one_shot = true
-    burst.amount = count
-    burst.lifetime = 0.65
-    burst.explosiveness = 1.0
-    burst.direction = Vector2(0.0, -1.0)
-    burst.spread = 180.0
-    burst.initial_velocity_min = 45.0
-    burst.initial_velocity_max = 160.0
-    burst.gravity = Vector2(0.0, -28.0)
-    burst.scale_amount_min = 0.45
-    burst.scale_amount_max = 1.25
-    burst.color = tint
+    # Round-robin particle pool is bounded even during heavy collision chains.
+    var burst: CPUParticles2D = burst_pool[burst_cursor]
+    burst_cursor = (burst_cursor + 1) % BURST_POOL_SIZE
+    burst.amount = mini(maxi(count, 1), 48)
     burst.position = screen_position
-    add_child(burst)
+    burst.color = tint
+    burst.emitting = false
+    burst.restart()
     burst.emitting = true
-    get_tree().create_timer(1.35).timeout.connect(func() -> void:
-        if is_instance_valid(burst):
-            burst.queue_free()
-    )
+    burst_events += 1
 
 func flash(tint: Color = Color("#ffb3c0"), intensity: float = 0.22, duration: float = 0.28) -> void:
     if reduced_motion:
@@ -148,6 +162,10 @@ func flash(tint: Color = Color("#ffb3c0"), intensity: float = 0.22, duration: fl
     tween.tween_property(impact_overlay, "modulate:a", 0.0, duration).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 func set_depth_profile(is_grotto: bool) -> void:
+    if depth_profile_initialized and last_grotto == is_grotto:
+        return
+    last_grotto = is_grotto
+    depth_profile_initialized = true
     mist_material.set_shader_parameter("grotto_mix", 1.0 if is_grotto else 0.0)
     cinematic_material.set_shader_parameter("cavern_mix", 1.0 if is_grotto else 0.0)
     mist_material.set_shader_parameter("mist_amount", 0.095 if is_grotto else 0.065)
