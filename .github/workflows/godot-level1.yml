@@ -72,7 +72,16 @@ jobs:
         with:
           name: godot-v07-device-layout-report
           path: godot/device-qa/*.json
-      - name: Launch first level headless
+      - name: Exercise opening, menu navigation and scene transitions
+        shell: bash
+        run: |
+          set -o pipefail
+          timeout -k 3s 45s godot --headless --path . --script res://godot/title_flow_test.gd 2>&1 | tee /tmp/godot-title.log
+          grep -q 'GODOT TITLE FLOW TEST PASSED' /tmp/godot-title.log
+          if grep -E 'SCRIPT ERROR|Parse Error|Compile Error|^ERROR:' /tmp/godot-title.log; then
+            exit 1
+          fi
+      - name: Launch the storybook opening headless
         shell: bash
         run: |
           set -o pipefail

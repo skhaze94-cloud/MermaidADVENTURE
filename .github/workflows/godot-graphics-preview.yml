@@ -44,6 +44,16 @@ jobs:
           if grep -E 'SCRIPT ERROR|Parse Error|Compile Error|^ERROR:' /tmp/device-renders.log; then
             exit 1
           fi
+      - name: Render storybook opening and responsive menus
+        shell: bash
+        run: |
+          set -o pipefail
+          GODOT_CAPTURE_PREVIEW=1 LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a -s "-screen 0 1920x1080x24" \
+            godot --audio-driver Dummy --path . --script res://godot/capture_title_previews.gd 2>&1 | tee /tmp/title-renders.log
+          grep -q 'GODOT TITLE RENDER TEST PASSED' /tmp/title-renders.log
+          if grep -E 'SCRIPT ERROR|Parse Error|Compile Error|^ERROR:' /tmp/title-renders.log; then
+            exit 1
+          fi
       - name: Publish compact real-render preview thumbnails in logs
         run: |
           python3 - <<'PY'
@@ -67,9 +77,10 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: godot-v07-waterfall-and-device-previews
+          name: godot-v08-opening-waterfall-and-device-previews
           path: |
             godot/visual-previews/*.png
             godot/device-qa/*.png
             godot/device-qa/*.json
+            godot/title-previews/*.png
           if-no-files-found: warn

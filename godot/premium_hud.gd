@@ -1,4 +1,5 @@
 extends CanvasLayer
+signal menu_requested
 const Controls = preload("res://godot/control_layout.gd")
 ## Godot v0.4: native, scale-aware illustrated HUD. Gameplay never paints over UI.
 ## Draws from one immutable snapshot every rendered frame; no gameplay state stored here.
@@ -10,6 +11,7 @@ var game_size := Vector2(1400, 960)
 var ui_scale := 1.0
 var safe_frame := Rect2(0, 0, 1400, 960)
 var portrait := false
+var menu_button: Button
 const DISPLAY_FONT: FontFile = preload("res://dist/fonts/treasure-display.ttf")
 var panel_style: StyleBoxFlat
 var chip_style: StyleBoxFlat
@@ -26,10 +28,23 @@ func _ready() -> void:
     canvas.name = "CrispGameplayHUD"
     canvas.mouse_filter = Control.MOUSE_FILTER_IGNORE
     add_child(canvas)
+    menu_button = Button.new()
+    menu_button.text = "Back to the lagoon"
+    menu_button.add_theme_font_override("font", DISPLAY_FONT)
+    menu_button.add_theme_font_size_override("font_size", 19)
+    menu_button.add_theme_color_override("font_color", GOLD)
+    menu_button.pressed.connect(func(): menu_requested.emit())
+    canvas.add_child(menu_button)
+    menu_button.visible = false
     canvas.draw.connect(_draw_hud)
     panel_style = _panel(Color(0.014, 0.095, 0.15, 0.83), Color(0.38, 0.82, 0.82, 0.25), 16)
     chip_style = _panel(Color(0.024, 0.16, 0.21, 0.79), Color(0.47, 0.88, 0.84, 0.25), 14)
     warning_style = _panel(Color(0.11, 0.11, 0.19, 0.88), Color(1.0, 0.69, 0.48, 0.65), 14)
+    menu_button.add_theme_stylebox_override("normal", chip_style)
+    menu_button.add_theme_stylebox_override("hover", warning_style)
+    var focus_style := _panel(Color(0,0,0,0), TEAL, 14)
+    focus_style.set_border_width_all(2)
+    menu_button.add_theme_stylebox_override("focus", focus_style)
     get_viewport().size_changed.connect(_resize)
     _resize()
 
@@ -59,6 +74,9 @@ func configure_layout(viewport_size: Vector2, window_size: Vector2, safe_pixels 
     canvas.position = safe_frame.position
     canvas.scale = Vector2.ONE * ui_scale
     canvas.size = game_size
+    menu_button.position = Vector2(game_size.x * 0.5 - 135, game_size.y * 0.5 + 139)
+    menu_button.size = Vector2(270, 64)
+    menu_button.visible = not portrait and (bool(info.get("paused", false)) or bool(info.get("victory", false)))
     canvas.queue_redraw()
 
 func to_ui(point: Vector2) -> Vector2:
@@ -68,6 +86,7 @@ func to_game(rect: Rect2) -> Rect2:
     return Rect2(safe_frame.position + rect.position * ui_scale, rect.size * ui_scale)
 
 func update_hud(next_info: Dictionary) -> void:
+    menu_button.visible = not portrait and (bool(next_info.get("paused", false)) or bool(next_info.get("victory", false)))
     # The gameplay publishes a snapshot every frame, but we only redraw
     # when an actual visible HUD value changes. Energy/progress use a 1%
     # threshold to avoid wasting vector drawing on 120Hz displays.
@@ -228,7 +247,7 @@ func _draw_touch_ui(w: float, h: float) -> void:
 func _draw_modal(w: float, h: float, victory: bool) -> void:
     canvas.draw_rect(Rect2(0, 0, w, h), Color(0.005, 0.03, 0.07, 0.79))
     var width := minf(570.0, w - 34.0)
-    var height := 274.0
+    var height := 410.0
     var rect := Rect2((w - width) / 2.0, (h - height) / 2.0, width, height)
     _backed(rect, panel_style)
     var title := "HIGHLAND COMPLETE!" if victory else "ADVENTURE PAUSED"

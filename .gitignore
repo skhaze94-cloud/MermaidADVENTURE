@@ -9,3 +9,5 @@
 # Generated QA captures and reports.
 godot/visual-previews/
 godot/device-qa/
+godot/title-previews/
+*.import

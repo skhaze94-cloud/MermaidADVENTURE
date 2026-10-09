@@ -1,4 +1,4 @@
-# Sarah Maria — Highland Gold, Godot 4 (waterfall art & device QA v0.7)
+# Sarah Maria — Mermaid Adventure, Godot 4 (storybook opening v0.8)
 
 This project is the **Godot-native vertical slice** of Mermaid Sarah's first story chapter, built from the existing HTML 9.1 repository. It is a real Godot scene and scripts rather than a webpage embedded in a Godot window. The browser version in `dist/` remains available and unchanged. Godot loads the existing artwork and MP3 directly from `res://dist/assets/`.
 
@@ -7,8 +7,28 @@ This project is the **Godot-native vertical slice** of Mermaid Sarah's first sto
 1. Download/clone the full `godot/highland-gold-level-1-prototype` branch, including `dist/assets`.
 2. Open **Godot 4.4+** (standard edition, not .NET required).
 3. Import **`project.godot` at the repository root**, not the `godot/` directory.
-4. Allow asset import, then press **F5**. You can inspect `godot/highland_level.tscn` and its native child nodes in the scene editor.
-5. Play in landscape orientation. Current project window is 1400 × 960 with stretch scaling.
+4. Allow asset import, then press **F5**. The storybook opening leads to the main menu; select **Begin adventure** to enter Highland Gold.
+5. The menu supports portrait and landscape. Play the adventure in landscape. The project window is 1400 × 960 with stretch scaling.
+
+## v0.8: storybook menu and opening credits
+
+![Actual Godot title-screen render](../docs/title-menu-v08.jpg)
+
+- **New Sarah key art:** a dedicated transparent full-body painting preserves Sarah's curls, pearl clips, lavender top and iridescent tail. She floats independently of the Highland painting, with gentle movement, restrained water shimmer, shafts of light and drifting bubbles.
+- **Skippable opening:** three short illustrated credit/story cards introduce the adventure. The first launch plays the opening; later visits go directly to the menu. Credits includes Replay the opening. Enter, Escape, controller A/B/Start or the visible Skip button can skip it.
+- **Native menus:** Begin adventure, Options, How to play and Credits use real Godot controls with keyboard focus, hover, pressed and focus feedback. Arrow keys/Tab and Enter navigate; controller D-pad/left stick and A operate the menus, with B/Escape returning. Any controller ID can navigate.
+- **Comfort settings:** saved music volume, Gentle motion and Economy graphics apply to the opening and level. The shared Music bus carries the volume setting across scene changes. Gentle motion disables opening animation and fades as well as reducing gameplay effects. Economy reduces lighting/effects.
+- **Responsive layout:** artwork and UI scale independently, safe areas are respected on Android/iOS, small screens scroll the longer pages, and a fixed Back button stays reachable. The smallest phone profile has 48-pixel action buttons. Portrait keeps the menu usable; the established gameplay landscape guard remains.
+- **Smooth scene handoff:** Play fades the scene and music before loading the level, blocks duplicate activation, and clears scene-tree pause. Pause and completion panels include Back to the lagoon. This returns to the menu; Begin adventure starts a new Level 1 run. There is no persistent gameplay save in this prototype.
+
+`title_flow_test.gd` covers the first-run intro, timed cards, skip/replay, native controller navigation and activation, mouse activation, five viewport sizes, shared preferences, duplicate Play presses, scene loading and return from a paused level. `capture_title_previews.gd` produces eight actual software-OpenGL renders of the opening, menus, phone, tablet and portrait layouts. Existing gameplay, combat and device suites remain required. These checks simulate devices; physical-device export and latency/performance checks remain pending.
+
+```sh
+godot --headless --editor --path . --quit
+godot --headless --path . --script res://godot/title_flow_test.gd
+```
+
+New artwork, its reference and complete generation prompt are recorded in [title art notes](assets/title-art-v08.md).
 
 ## v0.7: dedicated waterfall art and simulated device QA
 

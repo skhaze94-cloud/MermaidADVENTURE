@@ -106,6 +106,7 @@ func _ready() -> void:
     treasures = Highland.treasure()
     music_player = AudioStreamPlayer.new()
     music_player.stream = MUSIC
+    music_player.bus = "Music"
     music_player.volume_db = -17.0
     if music_player.stream is AudioStreamMP3:
         music_player.stream.loop = true
@@ -134,6 +135,14 @@ func _ready() -> void:
     performance_overlay.process_mode = Node.PROCESS_MODE_ALWAYS
     get_viewport().size_changed.connect(_on_viewport_resized)
     _save_checkpoint()
+    var preferences := get_node_or_null("/root/AppPreferences")
+    if preferences:
+        reduced_fx = preferences.reduced_motion
+        high_depth_quality = not preferences.economy
+        native_fx.set_reduced_motion(reduced_fx)
+        native_rig.reduced_motion = reduced_fx
+        native_boss.reduced_motion = reduced_fx
+    premium_hud.menu_requested.connect(_return_to_menu)
     _apply_visual_quality()
     _sync_native_visuals()
     queue_redraw()
@@ -143,6 +152,13 @@ func _exit_tree() -> void:
     if is_instance_valid(music_player):
         music_player.stop()
         music_player.stream = null
+
+func _return_to_menu() -> void:
+    # Returning from a paused scene must release the shared scene-tree pause.
+    get_tree().paused = false
+    touches.clear()
+    touch_vectors.clear()
+    get_tree().change_scene_to_file.call_deferred("res://godot/title_screen.tscn")
 
 func _input(event: InputEvent) -> void:
     if event is InputEventKey and event.pressed and not event.echo:
