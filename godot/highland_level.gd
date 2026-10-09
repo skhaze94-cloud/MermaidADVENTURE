@@ -67,6 +67,7 @@ var music_player: AudioStreamPlayer
 var native_rig: Node2D
 var native_fx: Node2D
 var native_boss: Node2D
+var animated_enemies: Node2D
 var premium_hud: CanvasLayer
 var water_surface: Node2D
 var world_depth: Node2D
@@ -95,6 +96,8 @@ func _ready() -> void:
     native_fx = get_node("NativeUnderwaterFX")
     native_rig = get_node("SarahAtlasRig")
     native_boss = get_node("CarloNativeBoss")
+    animated_enemies = get_node("AnimatedEnemySprites")
+    animated_enemies.bind_enemies(enemies)
     premium_hud = get_node("PremiumHud")
     water_surface = get_node("PaintedWaterSurface")
     world_depth = get_node("PaintedWorldDepth")
@@ -157,6 +160,8 @@ func _input(event: InputEvent) -> void:
         if touches.get(event.index, "") != action:
             touches[event.index] = action
             _touch_action(action)
+    if is_instance_valid(premium_hud):
+        premium_hud.update_hud(_hud_snapshot())
     queue_redraw()
 
 func _touch_action(action: String) -> void:
@@ -309,9 +314,7 @@ func _process(delta: float) -> void:
     if state != "playing":
         if is_instance_valid(native_rig):
             native_rig.set_process(false)
-        if is_instance_valid(premium_hud):
-            premium_hud.update_hud(_hud_snapshot())
-        queue_redraw()
+        # Paused gameplay is static: no redraw or full-HUD rebuild per frame.
         return
     if is_instance_valid(native_rig):
         native_rig.set_process(true)
@@ -382,6 +385,9 @@ func _sync_native_visuals() -> void:
     # During the waterfall, render the refractive field in front of the shaft.
     native_fx.z_index = 1 if waterfall_active else -1
     native_fx.set_motion(pos, velocity, jump_time <= 0.0)
+    if is_instance_valid(animated_enemies):
+        animated_enemies.animate_visible(camera, time, reduced_fx,
+            get_process_delta_time(), not waterfall_active)
     if is_instance_valid(world_depth):
         world_depth.visible = not waterfall_active
         world_depth.set_camera(camera, fallen, reduced_fx)
@@ -515,6 +521,7 @@ func _damage(from_pos: Vector2) -> void:
     _say("Ouch! Careful, Sarah.", 1.6)
     native_fx.flash(Color("#ff9bad"), 0.27, 0.33)
     native_fx.splash(_hero_screen_position(), Color("#ffc1cb"), 14)
+    native_rig.play_impact()
     _vibrate(0.65, 0.42, 0.20)
     if health <= 0:
         _respawn()
@@ -688,6 +695,7 @@ func _restart() -> void:
     touches.clear()
     obstacles = Highland.obstacles()
     enemies = Highland.enemies()
+    animated_enemies.bind_enemies(enemies)
     treasures = Highland.treasure()
     state = "playing"
     _say("Highland Gold — your adventure begins!", 3.0)
@@ -748,7 +756,9 @@ func _draw_world(s: Vector2) -> void:
         var x := float(enemy["x"]) - camera
         if x < -200 or x > s.x + 200:
             continue
-        _draw_enemy(enemy, Vector2(x, float(enemy["y"])))
+        if not is_instance_valid(animated_enemies) or (String(enemy["kind"]) != "crab"
+                and String(enemy["kind"]) != "eel" and String(enemy["kind"]) != "jelly"):
+            _draw_enemy(enemy, Vector2(x, float(enemy["y"])))
     if player.x > Highland.BOSS_X - s.x - 200 or camera > Highland.BOSS_X - s.x - 200:
         _draw_boss()
     for shot in bubble_shots:
