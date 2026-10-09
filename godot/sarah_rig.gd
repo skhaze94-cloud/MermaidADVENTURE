@@ -45,6 +45,15 @@ var leaping := false
 var alpha_value := 1.0
 var clock := 0.0
 var reduced_motion := false
+# Blend weights are state, not extra textures or allocations per frame.
+var swim_blend := 0.0
+var boost_blend := 0.0
+var leap_blend := 0.0
+var turn_kick := 0.0
+var hit_kick := 0.0
+var smoothed_speed := 0.0
+var animation_mode := "idle"
+var last_facing := 1.0
 
 func _joint(name: String, parent: Node2D, where: Vector2) -> Node2D:
     var node := Node2D.new()
@@ -131,39 +140,61 @@ func _radial_texture() -> Texture2D:
 
 func set_motion(velocity: Vector2, direction: float, is_boosting: bool, is_leaping: bool, opacity: float) -> void:
     velocity_value = velocity
-    facing_value = direction
+    facing_value = -1.0 if direction < 0.0 else 1.0
+    if facing_value != last_facing:
+        # Quick turn recoil without mirroring through an ugly zero-width pose.
+        turn_kick = -0.22 * facing_value
+        last_facing = facing_value
     boosting = is_boosting
     leaping = is_leaping
     alpha_value = opacity
 
+func play_impact() -> void:
+    hit_kick = 1.0
+
 func _process(delta: float) -> void:
-    clock += delta
-    var intensity := clampf(velocity_value.length() / 420.0, 0.2, 2.0)
-    var amplitude := 0.0 if reduced_motion else (0.09 + 0.13 * intensity)
-    if boosting:
-        amplitude *= 0.28
-    if leaping:
-        amplitude *= 0.36
-    var follow := 1.0 - exp(-delta * 12.0)
-    var swim_phase := clock * (4.4 + intensity * 1.3)
-    # Do not continuously squash the painted face through zero on turns.
-    # An immediate horizontal flip maintains Sarah's recognizable identity.
+    var dt := minf(delta, 0.05)
+    clock += dt
+    var ease := 1.0 - exp(-dt * 9.0)
+    var fast_ease := 1.0 - exp(-dt * 16.0)
+    var speed := velocity_value.length()
+    smoothed_speed = lerpf(smoothed_speed, speed, ease)
+    var swim_target := clampf(smoothed_speed / 310.0, 0.0, 1.0)
+    swim_blend = lerpf(swim_blend, swim_target, ease)
+    boost_blend = lerpf(boost_blend, 1.0 if boosting else 0.0, fast_ease)
+    leap_blend = lerpf(leap_blend, 1.0 if leaping else 0.0, ease)
+    turn_kick = lerpf(turn_kick, 0.0, fast_ease)
+    hit_kick = lerpf(hit_kick, 0.0, 1.0 - exp(-dt * 12.0))
+    animation_mode = "boost" if boost_blend > 0.6 else ("leap" if leap_blend > 0.6 else ("swim" if swim_blend > 0.22 else "idle"))
+    var swim_phase := clock * (2.9 + 3.0 * swim_blend + 2.0 * boost_blend)
+    var slow_phase := clock * 1.6
+    var amount := (0.045 + 0.15 * swim_blend) * (1.0 - boost_blend * 0.65) * (1.0 - leap_blend * 0.62)
+    if reduced_motion:
+        amount = 0.0
+    # All motion is local to joints; collision location and face stay stable.
     scale.x = facing_value
-    # Rigid face: head and hair only rotate via parent joints.
-    tail_base.rotation = lerpf(tail_base.rotation, sin(swim_phase) * amplitude, follow)
-    tail_tip.rotation = lerpf(tail_tip.rotation, sin(swim_phase - 0.8) * amplitude * 1.55, follow)
-    fin_upper.rotation = sin(swim_phase * 1.45 - 1.0) * amplitude * 1.5
-    fin_lower.rotation = sin(swim_phase * 1.40 + 1.0) * amplitude * 1.65
-    side_fin.rotation = sin(swim_phase * 1.2) * amplitude * 1.2
-    back_hair.rotation = sin(swim_phase * 0.6) * amplitude * 0.7
-    hair_strand.rotation = sin(swim_phase * 0.74) * amplitude * 1.1
-    front_hair.rotation = sin(swim_phase * 0.68) * amplitude * 0.75
-    torso.rotation = lerpf(torso.rotation, -velocity_value.y / 1400.0 * 0.12, follow)
-    head_joint.rotation = sin(swim_phase * 0.5) * amplitude * 0.25
-    near_arm.rotation = sin(swim_phase * 0.77 + 0.7) * amplitude * 1.2 + (-0.21 if boosting else 0.0)
-    far_arm.rotation = sin(swim_phase * 0.77 - 1.2) * amplitude * 1.2 + (0.2 if boosting else 0.0)
+    var tail_angle := sin(swim_phase) * amount + turn_kick * 0.8
+    var tail_tip_angle := sin(swim_phase - 0.91) * amount * 1.55 + turn_kick * 0.9
+    tail_base.rotation = lerpf(tail_base.rotation, tail_angle, ease)
+    tail_tip.rotation = lerpf(tail_tip.rotation, tail_tip_angle, ease)
+    fin_upper.rotation = lerpf(fin_upper.rotation, sin(swim_phase * 1.23 - 0.95) * amount * 1.60, fast_ease)
+    fin_lower.rotation = lerpf(fin_lower.rotation, sin(swim_phase * 1.32 + 1.16) * amount * 1.75, fast_ease)
+    side_fin.rotation = lerpf(side_fin.rotation, sin(swim_phase * 0.91) * amount + turn_kick * 0.27, ease)
+    var current := 0.0 if reduced_motion else sin(slow_phase) * 0.035
+    back_hair.rotation = lerpf(back_hair.rotation, current + turn_kick * 0.5 + swim_blend * 0.018, ease)
+    hair_strand.rotation = lerpf(hair_strand.rotation, -current * 1.6 + turn_kick * 0.85, ease)
+    front_hair.rotation = lerpf(front_hair.rotation, -current * 0.6 - turn_kick * 0.25, ease)
+    var rise := 0.0 if reduced_motion else sin(slow_phase * 1.2) * 1.6
+    torso.position = Vector2(12.0, 24.0 + rise * (1.0 - boost_blend))
+    torso.rotation = lerpf(torso.rotation, -velocity_value.y / 1400.0 * 0.12 + turn_kick * 0.18, ease)
+    head_joint.rotation = lerpf(head_joint.rotation, -torso.rotation * 0.3, ease)
+    var arm_sweep := 0.0 if reduced_motion else sin(swim_phase * 0.74 + 0.65) * amount
+    near_arm.rotation = lerpf(near_arm.rotation,
+        arm_sweep * 1.2 - 0.26 * boost_blend - 0.13 * leap_blend + hit_kick * 0.14, fast_ease)
+    far_arm.rotation = lerpf(far_arm.rotation,
+        -arm_sweep + 0.21 * boost_blend + 0.12 * leap_blend - hit_kick * 0.12, fast_ease)
     self_modulate.a = alpha_value
     if is_instance_valid(hero_light):
-        hero_light.energy = lerpf(hero_light.energy,
-            0.0 if reduced_motion else (0.48 if boosting else 0.24), follow)
-        hero_light.color = Color("#b6f8ff") if boosting else Color("#8ef8dc")
+        var target_energy := 0.0 if reduced_motion else (0.24 + 0.24 * boost_blend)
+        hero_light.energy = lerpf(hero_light.energy, target_energy, ease)
+        hero_light.color = Color("#b6f8ff") if boost_blend > 0.4 else Color("#8ef8dc")
