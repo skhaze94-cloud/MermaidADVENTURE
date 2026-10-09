@@ -1,4 +1,4 @@
-# Sarah Maria — Mermaid Adventure, Godot 4 (v0.13 Living Reef Update)
+# Sarah Maria — Mermaid Adventure, Godot 4 (v0.14 Pearl & Crown UI Update)
 
 This project is the **Godot-native vertical slice** of Mermaid Sarah's first story chapter, built from the existing HTML 9.1 repository. It is a real Godot scene and scripts rather than a webpage embedded in a Godot window. The browser version in `dist/` remains available and unchanged. Godot loads the Sarah rig and music from `res://dist/assets/`, alongside new native artwork in `res://godot/assets/`.
 
@@ -9,6 +9,18 @@ This project is the **Godot-native vertical slice** of Mermaid Sarah's first sto
 3. Import **`project.godot` at the repository root**, not the `godot/` directory.
 4. Allow asset import, then press **F5**. The storybook opening leads to the main menu; select **Begin adventure** to enter Highland Gold.
 5. The menu supports portrait and landscape. Play the adventure in landscape. The project window is 1400 × 960 with stretch scaling.
+
+## v0.14 — Pearl & Crown Scoring, Icons and UI Overhaul
+
+Original transparent underwater icons unify the native HUD, menus, controls and results. Text and meters remain live Godot controls; reusable PearlCard scenes and a shared theme supply scalable rounded panels. Frequent reward labels and sparkle icons are pooled (12 labels, one brief celebration) and respect Reduced Motion. All effects use Compatibility rendering.
+
+Original base awards remain unchanged. Consecutive pearl, treasure or enemy rewards within **3 seconds** reach **×2 on the third, ×3 on the sixth, ×5 on the tenth**. Each reward renews the timer; extra points appear separately in results. Jump and boss bonuses do not multiply. Award IDs prevent duplicate rewards; checkpoint rollback restores the ledger and resets the combo. Pause freezes the clock. Stage clear grants **Perfect +250** for an attempt with no damage and **Pearl Bonus +100** for 20 collected pearls. Stars: one for clearing, two for 3,000 points, three for 6,000. Personal bests and control settings persist between launches.
+
+The pearl joystick has a radial dead zone, bounded travel and one owning finger. Independent fingers operate action buttons; sliding away cancels a held action. Touch cancellation, focus loss, pause, resize and scene changes release inputs. Bubble is visibly locked before its existing unlock; action cooldown arcs and low energy states reflect gameplay. Options adjusts touch size (85–120%) and opacity (35–100%); keyboard and controller mappings remain intact.
+
+QA: ten native headless suites, saved-record round trip, duplicate/expiry/bonus/result checks, simulated viewport/safe-area and multitouch checks, plus actual software OpenGL renders at phone/tablet/desktop dimensions. Fresh ZIP extraction and editor/main-scene startup are validated separately. These are simulated device checks; physical phones/tablets, controller hardware, touch latency and mobile GPU performance remain untested. Preview GIFs are repository documentation and omitted from the runtime ZIP.
+
+Artwork provenance and generation brief: [assets/ui-v014/ARTWORK.md](assets/ui-v014/ARTWORK.md).
 
 ## v0.13 — Living Reef Update
 

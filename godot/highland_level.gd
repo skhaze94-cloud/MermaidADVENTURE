@@ -29,6 +29,8 @@ var camera := 0.0
 var time := 0.0
 var health := MAX_HEALTH
 var energy := 1.0
+const ScoreBook = preload("res://godot/score_book.gd")
+var score_book = ScoreBook.new()
 var score := 0
 var picked_count := 0
 var checkpoint := 220.0
@@ -217,8 +219,9 @@ func _input(event: InputEvent) -> void:
         if state != "playing":
             _touch_action(_touch_target(event.position))
     elif event is InputEventScreenTouch:
-        if event.pressed:
+        if event.pressed and not event.canceled:
             var action := _touch_target(event.position)
+            if action == "pad" and "pad" in touches.values(): action = ""
             touches[event.index] = action
             _set_touch(event.index, event.position, action)
             _touch_action(action)
@@ -228,7 +231,11 @@ func _input(event: InputEvent) -> void:
     elif event is InputEventScreenDrag:
         if touches.get(event.index, "") == "pad":
             _set_touch(event.index, event.position, "pad")
-        # Actions retain finger ownership: sliding does not fire another button.
+        elif touches.get(event.index, "") in ["boost","jump","bubble"]:
+            if not _touch_rect(touches[event.index],get_viewport_rect().size).grow(10).has_point(event.position):
+                touches.erase(event.index)
+                touch_vectors.erase(event.index)
+        # A sliding action finger releases rather than taking another button.
     if is_instance_valid(premium_hud):
         premium_hud.update_hud(_hud_snapshot())
     queue_redraw()
@@ -247,6 +254,8 @@ func _touch_action(action: String) -> void:
         _set_paused(false)
     elif action == "restart":
         _restart()
+    elif action == "menu":
+        _return_to_menu()
 
 func _touch_target(point: Vector2) -> String:
     if premium_hud.portrait:
@@ -254,28 +263,28 @@ func _touch_target(point: Vector2) -> String:
     point = premium_hud.to_ui(point)
     var size: Vector2 = premium_hud.game_size
     if state != "playing":
-        for action in ["resume", "restart"]:
+        for action in ["resume", "restart", "menu"]:
             if action == "resume" and state == "victory":
                 continue
-            if Controls.rect(action, size).has_point(point):
+            if premium_hud.action_rect(action).has_point(point):
                 return action
         return ""
-    if Controls.pad_rect(size).has_point(point):
+    if premium_hud.pad_rect().has_point(point):
         return "pad"
     for action in ["boost", "jump", "bubble", "pause"]:
         if action == "bubble" and not bubble_unlocked:
             continue
-        if Controls.rect(action, size).has_point(point):
+        if premium_hud.action_rect(action).has_point(point):
             return action
     return ""
 
 func _touch_rect(action: String, size: Vector2) -> Rect2:
-    return premium_hud.to_game(Controls.rect(action, premium_hud.game_size))
+    return premium_hud.to_game(premium_hud.action_rect(action))
 
 func _set_touch(index: int, point: Vector2, action: String) -> void:
     touches[index] = action
     if action == "pad":
-        touch_vectors[index] = Controls.pad_vector(premium_hud.to_ui(point), premium_hud.game_size)
+        touch_vectors[index] = premium_hud.pad_vector(premium_hud.to_ui(point))
 
 func _set_paused(paused: bool) -> void:
     if state == "victory" or (not paused and premium_hud.portrait):
@@ -399,7 +408,7 @@ func _begin_leap(chained: bool) -> void:
         splash_chain = 0
     else:
         splash_chain += 1
-        score += 100 * splash_chain
+        _award("jump:%s:%s" % [time,splash_chain],"Acrobatics",100*splash_chain,player,false)
         _say("Splash chain! +" + str(100 * splash_chain), 1.0)
     leap_phase = "ascent"
     leap_air_time = 0.0
@@ -423,6 +432,20 @@ func _fire_bubble() -> void:
     bubble_shots.append({"pos": player + Vector2(facing * 70, 0), "direction": facing, "life": 1.8})
     native_fx.splash(_hero_screen_position() + Vector2(facing * 56, 0), Color("#b4dbff"), 7)
 
+func _award(id: String, category: String, amount: int, at: Vector2, chain: bool) -> void:
+    var reward: Dictionary = score_book.award(id,category,amount,chain)
+    if reward.is_empty(): return
+    score += int(reward["points"])
+    if is_instance_valid(premium_hud):
+        premium_hud.show_reward(reward,at-Vector2(camera,0))
+
+func _complete_score() -> void:
+    var prefs = get_node("/root/AppPreferences")
+    var result: Dictionary = score_book.complete(score,picked_count,prefs.best_score)
+    score = int(result["total"])
+    prefs.best_score = int(result["best"])
+    prefs.save()
+
 func _say(text: String, duration: float = 3.0) -> void:
     message = text
     message_time = duration
@@ -442,6 +465,7 @@ func _physics_process(dt: float) -> void:
         _boost()
     if _action_held("bubble"):
         _fire_bubble()
+    score_book.tick(dt)
     time += dt
     invulnerable = maxf(0.0, invulnerable - dt)
     boost_time = maxf(0.0, boost_time - dt)
@@ -499,6 +523,11 @@ func _hud_snapshot() -> Dictionary:
         "health": health,
         "energy": energy,
         "score": score,
+        "combo":score_book.multiplier,
+        "combo_left":score_book.combo_left,
+        "results":score_book.result,
+        "reduced":reduced_fx,
+        "cooldowns":{"boost":waterfall_boost_cooldown if waterfall_phase == "descent" else boost_cooldown,"jump":leap_cooldown,"bubble":fire_cooldown},
         "pearls": picked_count,
         "progress": clampf(player.x / Highland.LEVEL_LENGTH, 0.0, 1.0),
         "message": message,
@@ -626,6 +655,7 @@ func _update_swimming(dt: float) -> void:
         _start_waterfall()
         return
     if player.x >= Highland.PORTAL_X and boss_hp <= 0:
+        _complete_score()
         state = "victory"
         native_rig.set_motion(Vector2.ZERO,facing,false,false,1.0)
         native_rig.set_jump_state("",0.0,0,facing)
@@ -672,7 +702,7 @@ func _update_enemies(dt: float) -> void:
         if player.distance_to(pos) < radius and player.y > WATER_SURFACE:
             if boost_time > 0.0:
                 enemy["hp"] = 0
-                score += 50
+                _award("enemy:%s" % enemies.find(enemy),"Enemies",50,pos,true)
                 native_fx.splash(pos - Vector2(camera, 0), Color("#e5ffce"), 17)
                 _vibrate(0.22, 0.08, 0.12)
             else:
@@ -697,7 +727,7 @@ func _update_collectibles() -> void:
                 energy = 1.0
                 _say("Boost crystal!", 1.3)
             else:
-                score += 100 if kind == "chest" else 10
+                _award("pickup:%s" % treasures.find(treasure),"Treasure" if kind == "chest" else "Pearls",100 if kind == "chest" else 10,pos,true)
                 picked_count += 1
                 if kind == "chest":
                     _say("Treasure chest! +100", 1.4)
@@ -708,6 +738,7 @@ func _update_collectibles() -> void:
 func _damage(from_pos: Vector2) -> void:
     if invulnerable > 0.0 or state != "playing" or player.y < WATER_SURFACE:
         return
+    score_book.damage_taken += 1
     health -= 1
     invulnerable = 1.5
     player_velocity = (player - from_pos).normalized() * 240.0
@@ -721,13 +752,15 @@ func _damage(from_pos: Vector2) -> void:
 
 func _save_checkpoint() -> void:
     checkpoint_snapshot = {
-        "score": score, "picked": picked_count, "treasures": treasures.duplicate(true),
+        "ledger":score_book.checkpoint(), "score": score, "picked": picked_count, "treasures": treasures.duplicate(true),
         "enemies": enemies.duplicate(true), "boss_hp": boss_hp, "bubble": bubble_unlocked
     }
 
 func _respawn() -> void:
     retry_serial += 1
     if not checkpoint_snapshot.is_empty():
+        score_book.rollback(checkpoint_snapshot.get("ledger",{}))
+        premium_hud.clear_feedback()
         score = int(checkpoint_snapshot["score"])
         picked_count = int(checkpoint_snapshot["picked"])
         treasures.assign(checkpoint_snapshot["treasures"].duplicate(true))
@@ -824,12 +857,12 @@ func _update_boss(dt: float) -> void:
             boss_hp -= 1
             boss_hit_cooldown = 2.2
             invulnerable = 0.65
-            score += 200
+            _award("boss-hit:%s" % boss_hp,"Boss",200,boss_position,false)
             native_boss.play_hit()
             native_fx.splash(boss_position - Vector2(camera, 0), Color("#fff1a4"), 32)
             _vibrate(0.32, 0.40, 0.22)
             if boss_hp == 0:
-                score += 1000
+                _award("boss-defeat","Boss",1000,boss_position,false)
                 bubble_unlocked = true
                 hostile_shots.clear()
                 _say("Carlo defeated! Mermaid Bubble unlocked. Find the portal!", 5.0)
@@ -886,7 +919,7 @@ func _update_bubbles(dt: float) -> void:
             if Vector2(shot["pos"]).distance_to(Vector2(float(enemy["x"]), float(enemy["y"]))) < 70.0:
                 enemy["hp"] = 0
                 shot["life"] = 0.0
-                score += 50
+                _award("enemy:%s" % enemies.find(enemy),"Enemies",50,Vector2(enemy["x"],enemy["y"]),true)
                 break
     bubble_shots = bubble_shots.filter(func(shot): return float(shot["life"]) > 0.0)
 
@@ -966,7 +999,7 @@ func _update_waterfall(dt: float) -> void:
         if absf(hero_x - h_x) < radius and absf(hero_y - h_y) < 85.0:
             if waterfall_boost > 0 and hazard["kind"] != "reef":
                 hazard["passed"] = true
-                score += 50
+                _award("fall-enemy:%s" % hazard["at"],"Enemies",50,Vector2(hero_x,hero_y)+Vector2(camera,0),true)
             elif invulnerable <= 0.0:
                 _damage(Vector2(player.x + h_x - hero_x, player.y + h_y - hero_y))
                 if waterfall_phase != "descent":
@@ -980,7 +1013,7 @@ func _update_waterfall(dt: float) -> void:
             pearl["taken"] = true
             waterfall_gold_count += 1
             picked_count += 1
-            score += 20
+            _award("fall-pearl:%s" % pearl["at"],"Pearls",20,Vector2(p_x,p_y)+Vector2(camera,0),true)
     if waterfall_time + 0.000001 >= Highland.FALL_DURATION:
         waterfall_phase = "outflow"
         waterfall_time = maxf(0.0, waterfall_time - Highland.FALL_DURATION)
@@ -997,6 +1030,8 @@ func _restart() -> void:
     time = 0.0
     health = MAX_HEALTH
     energy = 1.0
+    score_book = ScoreBook.new()
+    premium_hud.clear_feedback()
     score = 0
     picked_count = 0
     checkpoint = 220.0
@@ -1256,4 +1291,4 @@ func _on_viewport_resized() -> void:
             _set_paused(true)
 
 func _pad_rect() -> Rect2:
-    return premium_hud.to_game(Controls.pad_rect(premium_hud.game_size))
+    return premium_hud.to_game(premium_hud.pad_rect())

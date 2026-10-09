@@ -69,7 +69,7 @@ func _run() -> void:
         drag.index = 9
         drag.position = level._touch_rect("jump", view).get_center()
         level._input(drag)
-        check(level.touches.get(9) == "boost" and level.leap_phase == "", name + " action drag triggers jump")
+        check(not level.touches.has(9) and level.leap_phase == "", name + " action drag triggers jump")
         touch(level, 9, Vector2.ZERO, false)
         touch(level, 10, level._touch_rect("pause", view).get_center())
         check(paused, name + " touch pause fails")

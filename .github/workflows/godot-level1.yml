@@ -119,6 +119,8 @@ jobs:
           fi
       - name: Verify enemy approach, locked attacks and waterfall engagement
         run: godot --headless --path . --script res://godot/enemy_engagement_test.gd
+      - name: Verify scoring, combos, records and canceled touch inputs
+        run: timeout -k 3s 45s godot --headless --path . --script res://godot/scoring_ui_test.gd
       - name: Validate ready ZIP extraction and fresh editor import
         run: python3 godot/package_validation.py --godot godot
       - name: Launch the storybook opening headless

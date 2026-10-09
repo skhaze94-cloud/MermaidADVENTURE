@@ -15,3 +15,6 @@ godot/enemy-previews/
 godot/jump-previews/
 
 godot/sarah-previews/
+
+godot/ui-previews/
+*.uid

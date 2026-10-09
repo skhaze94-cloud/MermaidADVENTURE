@@ -1,263 +1,499 @@
 extends CanvasLayer
 signal menu_requested
 const Controls = preload("res://godot/control_layout.gd")
-## Godot v0.4: native, scale-aware illustrated HUD. Gameplay never paints over UI.
-## Draws from one immutable snapshot every rendered frame; no gameplay state stored here.
+const Kit = preload("res://godot/ui_kit.gd")
+const Card = preload("res://godot/ui_card.tscn")
 var canvas: Control
 var info: Dictionary = {}
+var game_size := Vector2(1400,960)
+var ui_scale := 1.0
+var safe_frame := Rect2(0,0,1400,960)
+var portrait := false
 var redraw_count := 0
 var skipped_redraws := 0
-var game_size := Vector2(1400, 960)
-var ui_scale := 1.0
-var safe_frame := Rect2(0, 0, 1400, 960)
-var portrait := false
+var score_card: PanelContainer
+var score_label: Label
+var pearl_label: Label
+var combo_label: Label
+var combo_meter: ProgressBar
+var health_card: PanelContainer
+var hearts: Array[TextureRect] = []
+var energy_meter: ProgressBar
+var route: ProgressBar
+var chapter: Label
+var message_label: Label
+var boss_card: PanelContainer
+var boss_label: Label
+var boss_meter: ProgressBar
+var touch_layer: Control
+var modal: Control
+var modal_card: PanelContainer
+var modal_content: VBoxContainer
+var header_crest: TextureRect
+var result_scroll: ScrollContainer
+var result_title: Label
+var breakdown: VBoxContainer
+var result_total: Label
+var record_label: Label
+var rating_label: Label
+var reward_label: Label
+var stars: Array[TextureRect] = []
+var modal_buttons: Dictionary = {}
 var menu_button: Button
-const DISPLAY_FONT: FontFile = preload("res://dist/fonts/treasure-display.ttf")
-var panel_style: StyleBoxFlat
-var chip_style: StyleBoxFlat
-var warning_style: StyleBoxFlat
-const INK := Color("#e9fff8")
-const PALE := Color("#acdcd9")
-const GOLD := Color("#fce2a0")
-const TEAL := Color("#67eddf")
-const CORAL := Color("#ff94ae")
+var rotate_label: Label
+var floating: Array[Label] = []
+var float_ages: Array[float] = []
+var float_origins: Array[Vector2] = []
+var banner: Control
+var banner_label: Label
+var banner_age := 99.0
+var banner_sparkles: Array[TextureRect] = []
+var shown_score := 0.0
+var score_pulse := 0.0
+var results_elapsed := 0.0
+var result_rows: Array[Label] = []
+var result_values: Array[int] = []
+var result_seen := false
+var control_size := 1.0
+var control_opacity := 0.85
+var touch_normal: StyleBoxFlat
+var touch_pressed: StyleBoxFlat
 
 func _ready() -> void:
     layer = 6
     canvas = Control.new()
-    canvas.name = "CrispGameplayHUD"
+    canvas.name = "PearlAndCrownHUD"
     canvas.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    canvas.theme = Kit.theme()
+    touch_normal = Kit.panel(Color(0.015,0.10,0.17,0.80),Color("#59bfc4"),28)
+    touch_pressed = Kit.panel(Color("#145565"),Color("#ffb7e5"),28)
     add_child(canvas)
-    menu_button = Button.new()
-    menu_button.text = "Back to the lagoon"
-    menu_button.add_theme_font_override("font", DISPLAY_FONT)
-    menu_button.add_theme_font_size_override("font_size", 19)
-    menu_button.add_theme_color_override("font_color", GOLD)
-    menu_button.pressed.connect(func(): menu_requested.emit())
-    canvas.add_child(menu_button)
-    menu_button.visible = false
-    canvas.draw.connect(_draw_hud)
-    panel_style = _panel(Color(0.014, 0.095, 0.15, 0.83), Color(0.38, 0.82, 0.82, 0.25), 16)
-    chip_style = _panel(Color(0.024, 0.16, 0.21, 0.79), Color(0.47, 0.88, 0.84, 0.25), 14)
-    warning_style = _panel(Color(0.11, 0.11, 0.19, 0.88), Color(1.0, 0.69, 0.48, 0.65), 14)
-    menu_button.add_theme_stylebox_override("normal", chip_style)
-    menu_button.add_theme_stylebox_override("hover", warning_style)
-    var focus_style := _panel(Color(0,0,0,0), TEAL, 14)
-    focus_style.set_border_width_all(2)
-    menu_button.add_theme_stylebox_override("focus", focus_style)
+    score_card = Card.instantiate()
+    canvas.add_child(score_card)
+    var score_box := VBoxContainer.new()
+    score_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    score_card.add_child(score_box)
+    var row := HBoxContainer.new()
+    row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    score_box.add_child(row)
+    row.add_child(Kit.icon("shell",Vector2(52,52)))
+    var figures := VBoxContainer.new()
+    row.add_child(figures)
+    figures.add_child(Kit.label("HIGHLAND SCORE",11,Color("#acdcd9")))
+    score_label = Kit.label("0",26,Color("#ffe3a1"))
+    figures.add_child(score_label)
+    pearl_label = Kit.label("0 pearls",14)
+    score_box.add_child(pearl_label)
+    combo_label = Kit.label("",14,Color("#ffb7ec"))
+    canvas.add_child(combo_label)
+    combo_meter = _meter(canvas)
+    health_card = Card.instantiate()
+    canvas.add_child(health_card)
+    var health_box := VBoxContainer.new()
+    health_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    health_card.add_child(health_box)
+    var health_row := HBoxContainer.new()
+    health_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    health_row.add_theme_constant_override("separation",4)
+    health_box.add_child(health_row)
+    for i in range(5):
+        var heart := Kit.icon("heart",Vector2(26,26))
+        health_row.add_child(heart)
+        hearts.append(heart)
+    health_box.add_child(Kit.label("MERMAID ENERGY",10,Color("#acdcd9")))
+    energy_meter = _meter(health_box)
+    energy_meter.custom_minimum_size.y = 12
+    chapter = Kit.label("HIGHLAND GOLD",12,Color("#c6f2e6"))
+    canvas.add_child(chapter)
+    route = _meter(canvas)
+    message_label = Kit.label("",15)
+    message_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    message_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+    canvas.add_child(message_label)
+    boss_card = Card.instantiate()
+    canvas.add_child(boss_card)
+    var boss_box := VBoxContainer.new()
+    boss_card.add_child(boss_box)
+    boss_label = Kit.label("CARLO THE CRAB",14,Color("#ffe3a1"))
+    boss_box.add_child(boss_label)
+    boss_meter = _meter(boss_box)
+    boss_meter.custom_minimum_size.y = 12
+    touch_layer = Control.new()
+    touch_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    canvas.add_child(touch_layer)
+    touch_layer.draw.connect(_draw_touch)
+    modal = Control.new()
+    modal.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    canvas.add_child(modal)
+    var scrim := ColorRect.new()
+    scrim.name = "ModalScrim"
+    scrim.color = Color(0.01,0.035,0.08,0.88)
+    scrim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    modal.add_child(scrim)
+    modal_card = Card.instantiate()
+    modal.add_child(modal_card)
+    modal_content = VBoxContainer.new()
+    modal_content.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    modal_content.add_theme_constant_override("separation",4)
+    modal_card.add_child(modal_content)
+    result_title = Kit.label("",26,Color("#ffe3a1"))
+    result_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    var heading := HBoxContainer.new()
+    heading.alignment = BoxContainer.ALIGNMENT_CENTER
+    heading.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    header_crest = Kit.icon("crest",Vector2(56,56))
+    heading.add_child(header_crest)
+    heading.add_child(result_title)
+    modal_content.add_child(heading)
+    var star_row := HBoxContainer.new()
+    star_row.alignment = BoxContainer.ALIGNMENT_CENTER
+    modal_content.add_child(star_row)
+    for i in range(3):
+        var star := Kit.icon("star",Vector2(40,40))
+        star_row.add_child(star)
+        stars.append(star)
+    rating_label = Kit.label("",12,Color("#a9dfdd"))
+    rating_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    rating_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    modal_content.add_child(rating_label)
+    var scroll := ScrollContainer.new()
+    result_scroll = scroll
+    scroll.name = "ScoreBreakdownScroll"
+    scroll.custom_minimum_size.y = 108
+    scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+    modal_content.add_child(scroll)
+    breakdown = VBoxContainer.new()
+    breakdown.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    breakdown.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    scroll.add_child(breakdown)
+    result_total = Kit.label("",24,Color("#ffe3a1"))
+    result_total.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    modal_content.add_child(result_total)
+    record_label = Kit.label("",14,Color("#ffb7ec"))
+    record_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    var record_row := HBoxContainer.new()
+    record_row.alignment = BoxContainer.ALIGNMENT_CENTER
+    record_row.add_child(Kit.icon("crown",Vector2(26,26)))
+    record_row.add_child(record_label)
+    modal_content.add_child(record_row)
+    reward_label = Kit.label("",13,Color("#a9f4de"))
+    reward_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    modal_content.add_child(reward_label)
+    for action in ["resume","restart","menu"]:
+        var button := Button.new()
+        button.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        button.text = {"resume":"Resume adventure","restart":"Play again","menu":"Back to the lagoon"}[action]
+        button.icon = Kit.ICONS["home" if action == "menu" else ("restart" if action == "restart" else "jump")]
+        button.expand_icon = true
+        button.add_theme_constant_override("icon_max_width",26)
+        button.pressed.connect(func(): _modal_action(action))
+        modal.add_child(button)
+        modal_buttons[action] = button
+    menu_button = modal_buttons["menu"]
+    rotate_label = Kit.label("ROTATE TO LANDSCAPE\nYour adventure is paused",24,Color("#ffe3a1"))
+    rotate_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    canvas.add_child(rotate_label)
+    for i in range(12):
+        var point_label := Kit.label("",20)
+        point_label.visible = false
+        canvas.add_child(point_label)
+        floating.append(point_label)
+        float_ages.append(99.0)
+        float_origins.append(Vector2.ZERO)
+    banner = Control.new()
+    banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    canvas.add_child(banner)
+    var ribbon := Kit.icon("ribbon")
+    ribbon.stretch_mode = TextureRect.STRETCH_SCALE
+    ribbon.position = Vector2.ZERO
+    ribbon.size = Vector2(240,80)
+    banner.add_child(ribbon)
+    banner_label = Kit.label("",20,Color("#fff2ba"))
+    banner_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    banner_label.position = Vector2(12,22)
+    banner_label.size = Vector2(216,42)
+    banner.add_child(banner_label)
+    for i in range(5):
+        var sparkle := Kit.icon("star",Vector2(12,12))
+        banner.add_child(sparkle)
+        banner_sparkles.append(sparkle)
+    banner.visible = false
+    _ignore_decoration(canvas)
     get_viewport().size_changed.connect(_resize)
     _resize()
 
-func _panel(fill: Color, outline: Color, radius: int) -> StyleBoxFlat:
-    var p := StyleBoxFlat.new()
-    p.bg_color = fill
-    p.border_color = outline
-    p.set_border_width_all(1)
-    p.set_corner_radius_all(radius)
-    p.anti_aliasing = true
-    return p
+func _ignore_decoration(node: Node) -> void:
+    if node is Control and not node is ScrollContainer and not node is ScrollBar:
+        node.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    for child in node.get_children(): _ignore_decoration(child)
 
+func _meter(parent: Node) -> ProgressBar:
+    var bar := ProgressBar.new()
+    bar.show_percentage = false
+    bar.max_value = 1.0
+    bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    parent.add_child(bar)
+    return bar
+func _modal_action(action: String) -> void:
+    if action == "menu": menu_requested.emit()
+    else: get_parent()._touch_action(action)
 func _resize() -> void:
-    var window_size := Vector2(get_viewport().get_window().size)
-    var safe_pixels := Rect2()
-    if OS.get_name() in ["Android", "iOS"]:
-        var screen_safe := Rect2(DisplayServer.get_display_safe_area())
-        screen_safe.position -= Vector2(DisplayServer.window_get_position())
-        safe_pixels = screen_safe
-    configure_layout(get_viewport().get_visible_rect().size, window_size, safe_pixels)
-
+    var pixels := Vector2(get_viewport().get_window().size)
+    var safe := Rect2()
+    if OS.get_name() in ["Android","iOS"]:
+        safe = Rect2(DisplayServer.get_display_safe_area())
+        safe.position -= Vector2(DisplayServer.window_get_position())
+    configure_layout(get_viewport().get_visible_rect().size,pixels,safe)
 func configure_layout(viewport_size: Vector2, window_size: Vector2, safe_pixels := Rect2()) -> void:
-    safe_frame = Controls.safe_frame(viewport_size, window_size, safe_pixels)
-    ui_scale = Controls.ui_scale(viewport_size, window_size)
-    game_size = safe_frame.size / ui_scale
-    portrait = window_size.y > window_size.x
+    safe_frame = Controls.safe_frame(viewport_size,window_size,safe_pixels)
+    ui_scale = Controls.ui_scale(viewport_size,window_size)
+    game_size = safe_frame.size/ui_scale
+    portrait = window_size.y>window_size.x
     canvas.position = safe_frame.position
-    canvas.scale = Vector2.ONE * ui_scale
+    canvas.scale = Vector2.ONE*ui_scale
     canvas.size = game_size
-    menu_button.position = Vector2(game_size.x * 0.5 - 135, game_size.y * 0.5 + 139)
-    menu_button.size = Vector2(270, 64)
-    menu_button.visible = not portrait and (bool(info.get("paused", false)) or bool(info.get("victory", false)))
-    canvas.queue_redraw()
-
-func to_ui(point: Vector2) -> Vector2:
-    return (point - safe_frame.position) / ui_scale
-
-func to_game(rect: Rect2) -> Rect2:
-    return Rect2(safe_frame.position + rect.position * ui_scale, rect.size * ui_scale)
-
-func update_hud(next_info: Dictionary) -> void:
-    menu_button.visible = not portrait and (bool(next_info.get("paused", false)) or bool(next_info.get("victory", false)))
-    # The gameplay publishes a snapshot every frame, but we only redraw
-    # when an actual visible HUD value changes. Energy/progress use a 1%
-    # threshold to avoid wasting vector drawing on 120Hz displays.
-    var changed := info.is_empty()
-    if not changed:
-        changed = int(next_info.get("health", 0)) != int(info.get("health", 0))
-        changed = changed or int(next_info.get("score", 0)) != int(info.get("score", 0))
-        changed = changed or int(next_info.get("pearls", 0)) != int(info.get("pearls", 0))
-        changed = changed or int(float(next_info.get("energy", 0.0)) * 100.0) != int(float(info.get("energy", 0.0)) * 100.0)
-        changed = changed or int(float(next_info.get("progress", 0.0)) * 400.0) != int(float(info.get("progress", 0.0)) * 400.0)
-        changed = changed or String(next_info.get("message", "")) != String(info.get("message", ""))
-        changed = changed or (float(next_info.get("message_time", 0.0)) > 0.0) != (float(info.get("message_time", 0.0)) > 0.0)
-        changed = changed or bool(next_info.get("boss_active", false)) != bool(info.get("boss_active", false))
-        changed = changed or int(float(next_info.get("boss_health", 0.0)) * 100.0) != int(float(info.get("boss_health", 0.0)) * 100.0)
-        changed = changed or bool(next_info.get("boss_vulnerable", false)) != bool(info.get("boss_vulnerable", false))
-        changed = changed or bool(next_info.get("bubble", false)) != bool(info.get("bubble", false))
-        changed = changed or bool(next_info.get("paused", false)) != bool(info.get("paused", false))
-        changed = changed or bool(next_info.get("victory", false)) != bool(info.get("victory", false))
-    changed = changed or next_info.get("pressed", []) != info.get("pressed", [])
-    changed = changed or next_info.get("pad", Vector2.ZERO) != info.get("pad", Vector2.ZERO)
-    changed = changed or next_info.get("boss_phase", "") != info.get("boss_phase", "")
-    changed = changed or next_info.get("waterfall", "") != info.get("waterfall", "")
-    changed = changed or int(float(next_info.get("fall_progress", 0.0)) * 100) != int(float(info.get("fall_progress", 0.0)) * 100)
-    info = next_info
-    if changed:
-        redraw_count += 1
-        if is_instance_valid(canvas):
-            canvas.queue_redraw()
-    else:
-        skipped_redraws += 1
-
-func _text(at: Vector2, label: String, size: int = 20, tint: Color = INK,
-        alignment: HorizontalAlignment = HORIZONTAL_ALIGNMENT_LEFT, width: float = -1.0) -> void:
-    var font: Font = DISPLAY_FONT if label in ["HIGHLAND GOLD", "HIGHLAND COMPLETE!", "THE WATERFALL"] else ThemeDB.fallback_font
-    canvas.draw_string(font, at, label, alignment, width, size, tint)
-
-func _backed(rect: Rect2, style: StyleBox) -> void:
-    canvas.draw_style_box(style, rect)
-
-func _heart(center: Vector2, radius: float, full: bool) -> void:
-    var c := CORAL if full else Color("#435a68")
-    var r := radius
-    canvas.draw_circle(center + Vector2(-r * 0.43, -r * 0.12), r * 0.51, c)
-    canvas.draw_circle(center + Vector2(r * 0.43, -r * 0.12), r * 0.51, c)
-    canvas.draw_colored_polygon(PackedVector2Array([
-        center + Vector2(-r * 0.91, 0), center + Vector2(r * 0.91, 0),
-        center + Vector2(0, r * 0.98)]), c)
-    if full:
-        canvas.draw_circle(center + Vector2(-r * 0.37, -r * 0.22), r * 0.18, Color(1.0, 1.0, 1.0, 0.64))
-
-func _bead(center: Vector2, radius: float = 9.0) -> void:
-    canvas.draw_circle(center, radius + 2.0, Color(0.22, 0.70, 0.79, 0.35))
-    canvas.draw_circle(center, radius, Color("#dbfbff"))
-    canvas.draw_circle(center + Vector2(-radius * 0.3, -radius * 0.32), radius * 0.29, Color.WHITE)
-
-func _bar(rect: Rect2, percentage: float, tint: Color) -> void:
-    _backed(rect, chip_style)
-    var inner := rect.grow(-4.0)
-    var v := clampf(percentage, 0.0, 1.0)
-    if v > 0.001:
-        # Avoid allocating a new StyleBox every frame for HUD fill.
-        canvas.draw_rect(Rect2(inner.position, Vector2(inner.size.x * v, inner.size.y)), tint)
-    canvas.draw_line(inner.position + Vector2(1, 1), inner.position + Vector2(inner.size.x * v - 1, 1),
-        Color(1, 1, 1, 0.15), 1.0)
-
-func _draw_hud() -> void:
+    var prefs = get_node_or_null("/root/AppPreferences")
+    if prefs:
+        control_size = prefs.touch_size
+        control_opacity = prefs.touch_opacity
     var w := game_size.x
     var h := game_size.y
-    if w < 320 or h < 240:
+    score_card.position = Vector2(14,14)
+    score_card.size = Vector2(minf(260,w*0.38),100)
+    health_card.position = Vector2(w-190-(82 if info.get("touch",false) else 0),14)
+    health_card.size = Vector2(176,92)
+    combo_label.position = Vector2(18,117)
+    combo_meter.position = Vector2(18,140)
+    combo_meter.size = Vector2(minf(240,w*0.34),8)
+    chapter.position = Vector2(18,155)
+    route.position = Vector2(16,h-12)
+    route.size = Vector2(w-32,6)
+    message_label.position = Vector2(20,174)
+    message_label.size = Vector2(w-40,25)
+    boss_card.position = Vector2((w-minf(w-40,340))/2,204)
+    boss_card.size = Vector2(minf(w-40,340),66)
+    touch_layer.size = game_size
+    modal.size = game_size
+    modal.get_node("ModalScrim").size = game_size
+    modal_card.position = Vector2((w-minf(w-36,540))/2,maxf(16,(h-550)/2))
+    header_crest.custom_minimum_size = Vector2.ONE*(40 if h<600 else 74)
+    for star in stars: star.custom_minimum_size = Vector2.ONE*(28 if h<600 else 40)
+    result_scroll.custom_minimum_size.y = 54 if h<600 else 108
+    result_title.add_theme_font_size_override("font_size",22 if h<600 else 26)
+    modal_card.size = Vector2(minf(w-36,540),minf(h-135,430))
+    for action in modal_buttons:
+        var rect := action_rect(action)
+        modal_buttons[action].position = rect.position
+        modal_buttons[action].size = rect.size
+    rotate_label.position = Vector2(0,h*0.43)
+    rotate_label.size = Vector2(w,90)
+    banner.position = Vector2(w-258,118)
+    _refresh()
+func to_ui(point: Vector2) -> Vector2: return (point-safe_frame.position)/ui_scale
+func to_game(rect: Rect2) -> Rect2: return Rect2(safe_frame.position+rect.position*ui_scale,rect.size*ui_scale)
+func pad_rect() -> Rect2:
+    var rect := Controls.pad_rect(game_size)
+    var factor := maxf(1.0,control_size)
+    rect.position.y = game_size.y-16-rect.size.y*factor
+    rect.size *= factor
+    return rect
+func pad_vector(point: Vector2) -> Vector2:
+    var offset := (point-pad_rect().get_center())/maxf(1.0,control_size)
+    if offset.length() <= 18: return Vector2.ZERO
+    return offset.normalized()*clampf((offset.length()-18)/24,0,1)
+func action_rect(action: String) -> Rect2:
+    if info.get("paused",false) and action in ["resume","restart","menu"]:
+        return Rect2(game_size.x*0.5-135,modal_card.position.y+modal_card.size.y+10+["resume","restart","menu"].find(action)*54,270,48)
+    if info.get("victory",false) and action in ["restart","menu"]:
+        return Rect2(game_size.x*0.5-120,modal_card.position.y+modal_card.size.y+(70 if action == "menu" else 10),240,40 if action == "menu" else 50)
+    if action == "menu": return Rect2(game_size.x*0.5-135,game_size.y*0.5+139,270,64)
+    var rect := Controls.rect(action,game_size)
+    if action in ["boost","jump","bubble"]:
+        var center := rect.get_center()
+        rect.size *= maxf(1.0,control_size)
+        rect.position = center-rect.size/2
+        rect.position.x = clampf(rect.position.x,12,game_size.x-12-rect.size.x)
+    return rect
+func update_hud(next_info: Dictionary) -> void:
+    if info == next_info: skipped_redraws += 1
+    else: redraw_count += 1
+    var was_paused: bool = info.get("paused",false)
+    var was_victory: bool = info.get("victory",false)
+    info = next_info
+    if bool(info.get("victory",false)) and not was_victory:
+        _build_results()
+        configure_layout(get_viewport().get_visible_rect().size,Vector2(get_viewport().get_window().size))
+    elif was_victory and not bool(info.get("victory",false)):
+        result_seen = false
+    _refresh()
+    if bool(info.get("victory",false)) and not was_victory: modal_buttons["restart"].grab_focus()
+    elif bool(info.get("paused",false)) and not was_paused: modal_buttons["resume"].grab_focus()
+func _refresh() -> void:
+    if not is_instance_valid(score_card): return
+    rotate_label.visible = portrait
+    score_card.visible = not portrait
+    health_card.visible = not portrait
+    health_card.position.x = game_size.x-190-(82 if info.get("touch",false) else 0)
+    for i in range(5): hearts[i].modulate = Color.WHITE if i<int(info.get("health",5)) else Color(0.28,0.38,0.46,0.5)
+    energy_meter.value = info.get("energy",1.0)
+    pearl_label.text = "%s pearls" % Kit.number(int(info.get("pearls",0)))
+    var combo := int(info.get("combo",1))
+    combo_label.text = "COMBO! ×%s" % combo if combo>1 else ""
+    combo_meter.visible = combo>1 and not portrait
+    combo_meter.value = float(info.get("combo_left",0))/3.0
+    combo_label.visible = not portrait
+    chapter.text = "THE WATERFALL" if info.get("waterfall","") != "" else "HIGHLAND GOLD · CHAPTER ONE"
+    chapter.visible = not portrait
+    route.value = info.get("fall_progress" if info.get("waterfall","") != "" else "progress",0)
+    route.visible = not portrait
+    message_label.text = info.get("message","") if info.get("message_time",0)>0 else ""
+    message_label.visible = not portrait and not info.get("boss_active",false)
+    boss_card.visible = info.get("boss_active",false) and not portrait
+    boss_meter.value = info.get("boss_health",1.0)
+    boss_label.text = "CARLO · OPEN TO BOOST!" if info.get("boss_vulnerable",false) else "CARLO THE CRAB"
+    touch_layer.visible = info.get("touch",false) and not portrait and not info.get("paused",false) and not info.get("victory",false)
+    touch_layer.modulate.a = control_opacity
+    touch_layer.queue_redraw()
+    modal.visible = info.get("paused",false) or info.get("victory",false) or portrait
+    modal_card.visible = not portrait
+    if modal.visible:
+        banner.visible = false
+        for label in floating: label.visible = false
+    for action in modal_buttons:
+        modal_buttons[action].visible = modal.visible and not portrait and (action != "resume" or not info.get("victory",false))
+        var rect := action_rect(action)
+        modal_buttons[action].position = rect.position
+        modal_buttons[action].size = rect.size
+    if not info.get("victory",false):
+        result_title.text = "ADVENTURE PAUSED"
+        rating_label.text = "Combo clock and score effects are paused."
+        result_total.text = "Score  "+Kit.number(int(info.get("score",0)))
+        record_label.text = "Rewards within 3 seconds:\n3 → ×2 · 6 → ×3 · 10 → ×5"
+        record_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+        reward_label.text = "Touch size and opacity: Options in the lagoon menu."
+        for star in stars: star.visible = false
+        for label in result_rows: label.visible = false
+func show_reward(reward: Dictionary, at: Vector2) -> void:
+    var slot := 0
+    for i in range(float_ages.size()):
+        if float_ages[i]>float_ages[slot]: slot=i
+    var category := String(reward["category"])
+    var major := int(reward["points"])>=100
+    floating[slot].text = "+%s" % Kit.number(int(reward["points"]))
+    floating[slot].add_theme_color_override("font_color",Color("#ffe19c") if major else (Color("#bdfded") if category == "Pearls" else Color("#ffc3ed")))
+    floating[slot].add_theme_font_size_override("font_size",24 if major else 19)
+    var ui := to_ui(at)+Vector2(-18,-65)
+    ui.x = clampf(ui.x,20,game_size.x-140)
+    ui.y = clampf(ui.y,210,game_size.y-190)
+    float_origins[slot] = ui
+    float_ages[slot] = 0
+    floating[slot].visible = true
+    score_pulse = 1.0
+    if (major or int(reward["extra"])>0) and banner_age>0.7:
+        banner_label.text = "Treasure Bonus!" if category == "Treasure" else ("Combo! ×%s" % reward["multiplier"] if reward["extra"]>0 else "Wonderful! +%s" % reward["points"])
+        banner_age = 0.0
+        banner.visible = true
+        # Keep the celebration on the opposite side from the action.
+        banner.position.x = 18 if to_ui(at).x>game_size.x*0.65 else game_size.x-258
+func clear_feedback() -> void:
+    for i in range(floating.size()):
+        floating[i].visible = false
+        float_ages[i] = 99
+    banner.visible = false
+    banner_age = 99
+    shown_score = 0.0
+    score_pulse = 0.0
+func _build_results() -> void:
+    for child in breakdown.get_children():
+        breakdown.remove_child(child)
+        child.queue_free()
+    result_rows.clear()
+    result_values.clear()
+    var results: Dictionary = info.get("results",{})
+    result_title.text = "STAGE CLEAR!"
+    var details: Dictionary = results.get("breakdown",{})
+    for category in details:
+        if int(details[category]) == 0: continue
+        var label := Kit.label("",15)
+        breakdown.add_child(label)
+        result_rows.append(label)
+        result_values.append(int(details[category]))
+        label.set_meta("category",category)
+    rating_label.text = results.get("rules","1 star: clear · 2: 3,000 · 3: 6,000")
+    record_label.text = ("New Record!  " if results.get("new_record",false) else "Personal best  ")+Kit.number(int(results.get("best",0)))
+    reward_label.text = results.get("reward","")+(" · Perfect! +250" if results.get("perfect",false) else "")+(" · Pearl Bonus! +100" if results.get("pearl_bonus",false) else "")
+    reward_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    for i in range(3):
+        stars[i].visible = true
+        stars[i].modulate = Color.WHITE if i<int(results.get("stars",1)) else Color(0.25,0.4,0.5,0.65)
+    results_elapsed = 0.0
+    result_seen = true
+func _process(dt: float) -> void:
+    if info.is_empty(): return
+    var reduced: bool = info.get("reduced",false)
+    var target := float(info.get("score",0))
+    if target < shown_score or reduced: shown_score = target
+    elif not info.get("paused",false): shown_score = move_toward(shown_score,target,maxf(1,(target-shown_score)*minf(dt*9,1)))
+    score_label.text = Kit.number(roundi(shown_score))
+    score_label.add_theme_font_size_override("font_size",26 if score_label.text.length()<10 else 20)
+    if not info.get("paused",false): score_pulse = maxf(0,score_pulse-dt*4)
+    score_label.scale = Vector2.ONE*(1.0+(0.0 if reduced else sin(score_pulse*PI)*0.055))
+    if modal.visible and not portrait:
+        result_scroll.visible = bool(info.get("victory",false))
+        modal_card.size = Vector2(minf(game_size.x-36,540),minf(game_size.y-(135 if info.get("victory",false) else 200),430 if info.get("victory",false) else 230))
+        for action in modal_buttons:
+            var rect := action_rect(action)
+            modal_buttons[action].position = rect.position
+            modal_buttons[action].size = rect.size
+    if info.get("victory",false):
+        banner.visible = false
+        for label in floating: label.visible = false
+        results_elapsed += dt
+        var factor := 1.0 if reduced else smoothstep(0,1,clampf(results_elapsed/1.4,0,1))
+        for i in range(result_rows.size()): result_rows[i].text = "%s    %s" % [result_rows[i].get_meta("category"),Kit.number(roundi(result_values[i]*factor))]
+        result_total.text = "TOTAL  "+Kit.number(roundi(target*factor))
         return
-    if portrait:
-        canvas.draw_rect(Rect2(0, 0, w, h), Color(0.01, 0.04, 0.08, 0.98))
-        _text(Vector2(0, h * 0.46), "ROTATE TO LANDSCAPE", 26, GOLD, HORIZONTAL_ALIGNMENT_CENTER, w)
-        _text(Vector2(0, h * 0.46 + 40), "Your adventure is paused", 18, PALE, HORIZONTAL_ALIGNMENT_CENTER, w)
-
+    if info.get("paused",false):
+        banner.visible = false
+        for label in floating: label.visible = false
         return
-    var compact := w < 1060
-    var left_width := 250.0 if compact else 320.0
-    var right_width := 215.0 if compact else 275.0
-    var margin := 15.0
-    _backed(Rect2(margin, margin, left_width, 86), panel_style)
-    canvas.draw_line(Vector2(margin + 17, margin + 19), Vector2(margin + 17, margin + 69),
-        Color("#81f4df"), 3)
-    var falling := not String(info.get("waterfall", "")).is_empty()
-    _text(Vector2(margin + 29, 49), "THE WATERFALL" if falling else "HIGHLAND GOLD", 23 if not compact else 19, GOLD)
-    _text(Vector2(margin + 29, 76), "SECRET GROTTO DESCENT" if falling else "CARLO'S COLD KINGDOM", 13 if not compact else 11, PALE)
-    var right_x := w - right_width - margin - (82.0 if bool(info.get("touch", false)) else 0.0)
-    _backed(Rect2(right_x, margin, right_width, 86), panel_style)
-    _bead(Vector2(right_x + 22, 38), 9)
-    _text(Vector2(right_x + 44, 45), "PEARLS  " + str(info.get("pearls", 0)), 18, INK)
-    _text(Vector2(right_x + 17, 80), "SCORE  " + str(info.get("score", 0)), 20, GOLD)
-    # Health and energy sit in a second, quieter ribbon: responsive, no giant hints.
-    var line_y := 113.0
-    var left_card := Rect2(margin, line_y, 180, 53)
-    _backed(left_card, chip_style)
-    for i in range(5):
-        _heart(Vector2(margin + 22 + float(i) * 30.0, line_y + 29), 10, i < int(info.get("health", 5)))
-    var boost_left := margin + 191.0
-    _backed(Rect2(boost_left, line_y, 168, 53), chip_style)
-    _text(Vector2(boost_left + 12, line_y + 18), "MERMAID BOOST", 12, PALE)
-    _bar(Rect2(boost_left + 9, line_y + 24, 149, 17), float(info.get("energy", 1.0)), TEAL)
-    if bool(info.get("bubble", false)) and w >= 800:
-        _backed(Rect2(boost_left + 179, line_y, 161, 53), chip_style)
-        canvas.draw_arc(Vector2(boost_left + 202, line_y + 27), 11, 0, TAU, 24, Color("#a4e8ff"), 3)
-        _text(Vector2(boost_left + 220, line_y + 33), "BUBBLE READY", 12, INK)
-    # Thin route ruler across the bottom, discreet but readable.
-    var bottom := h - 15.0
-    var route_width := maxf(70.0, w - 42.0)
-    _bar(Rect2(21, bottom - 12, route_width, 11), float(info.get("fall_progress" if falling else "progress", 0.0)), GOLD)
-    var checkpoint_fraction := 0.78
-    canvas.draw_circle(Vector2(25.0 + (route_width - 10.0) * checkpoint_fraction, bottom - 6.7), 4.0,
-        Color(1, 1, 1, 0.42))
-    var caption := String(info.get("message", ""))
-    if float(info.get("message_time", 0.0)) > 0.0 and not caption.is_empty() and not (bool(info.get("boss_active", false)) and h < 580):
-        var width := minf(w - 35.0, 750.0)
-        var top := 272.0 if bool(info.get("boss_active", false)) else (192.0 if h >= 580 else 170.0)
-        var rect := Rect2((w - width) * 0.5, top, width, 47)
-        _backed(rect, chip_style)
-        var clipped := caption
-        if clipped.length() > 72:
-            clipped = clipped.substr(0, 69) + "..."
-        _text(rect.position + Vector2(15, 31), clipped, 17, INK)
-    if bool(info.get("boss_active", false)):
-        var bw := minf(w - 40.0, 385.0)
-        var bx := (w - bw) / 2.0
-        var boss_top := 188.0
-        _backed(Rect2(bx, boss_top, bw, 67), warning_style)
-        _text(Vector2(bx + 16, boss_top + 25), "CARLO THE CRAB", 17, GOLD)
-        _bar(Rect2(bx + 16, boss_top + 34, bw - 32, 17), float(info.get("boss_health", 1.0)),
-            Color("#7ffec4") if bool(info.get("boss_vulnerable", false)) else Color("#ffac94"))
-    if bool(info.get("touch", false)) and not portrait:
-        _draw_touch_ui(w, h)
-    if bool(info.get("paused", false)) or bool(info.get("victory", false)):
-        _draw_modal(w, h, bool(info.get("victory", false)))
-
-func _draw_touch_ui(w: float, h: float) -> void:
-    var size := Vector2(w, h)
-    var pad := Controls.pad_rect(size)
-    _backed(pad, chip_style)
+    for i in range(floating.size()):
+        float_ages[i] += dt
+        var age := float_ages[i]
+        floating[i].visible = age<0.9 and not portrait
+        floating[i].position = float_origins[i]+Vector2(0,0 if reduced else -age*35)
+        floating[i].modulate.a = clampf((0.9-age)/0.3,0,1)
+    banner_age += dt
+    banner.visible = banner_age<1.5 and not portrait
+    banner.modulate.a = minf(clampf(banner_age/0.12,0,1),clampf((1.5-banner_age)/0.25,0,1))
+    banner.scale = Vector2.ONE*(1.0 if reduced else 0.94+0.06*smoothstep(0,1,clampf(banner_age/0.25,0,1)))
+    for i in range(banner_sparkles.size()):
+        var spark := banner_sparkles[i]
+        spark.visible = not reduced and banner_age>0.18
+        spark.position = Vector2(24+i*46,12-sin(banner_age*4+i)*8)
+        spark.modulate.a = maxf(0,sin(banner_age*4+i))
+func _draw_touch() -> void:
+    var pad := pad_rect()
     var center := pad.get_center()
-    canvas.draw_circle(center, 57, Color(0.32, 0.85, 0.82, 0.16))
-    var direction := Vector2(info.get("pad", Vector2.ZERO))
-    canvas.draw_circle(center + direction * 42, 25, TEAL if direction != Vector2.ZERO else PALE)
-    _text(pad.position + Vector2(10, 20), "SWIM", 12, PALE)
-    var positions := {}
-    for action in ["boost", "jump", "bubble", "pause"]:
-        positions[action] = Controls.rect(action, size)
-    var labels := {"left": "LEFT", "right": "RIGHT", "up": "UP", "down": "DOWN",
-        "boost": "BOOST", "jump": "JUMP", "bubble": "BUBBLE", "pause": "II"}
-    for action in positions:
-        if action == "bubble" and not bool(info.get("bubble", false)):
-            continue
-        var rect: Rect2 = positions[action]
-        _backed(rect, warning_style if action in info.get("pressed", []) else chip_style)
-        _text(rect.position + Vector2(0, rect.size.y * 0.56), labels[action],
-            19, INK, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x)
-
-func _draw_modal(w: float, h: float, victory: bool) -> void:
-    canvas.draw_rect(Rect2(0, 0, w, h), Color(0.005, 0.03, 0.07, 0.79))
-    var width := minf(570.0, w - 34.0)
-    var height := 410.0
-    var rect := Rect2((w - width) / 2.0, (h - height) / 2.0, width, height)
-    _backed(rect, panel_style)
-    var title := "HIGHLAND COMPLETE!" if victory else "ADVENTURE PAUSED"
-    _text(rect.position + Vector2(23, 66), title, 31 if width > 420 else 21, GOLD)
-    _text(rect.position + Vector2(25, 116), "SCORE   " + str(info.get("score", 0))
-        + "       PEARLS   " + str(info.get("pearls", 0)), 21, INK)
-    _text(rect.position + Vector2(25, 172),
-        "ENTER: replay" if victory else "P / ESC / START: resume", 18, PALE)
-    for action in (["restart"] if victory else ["resume", "restart"]):
-        var button := Controls.rect(action, Vector2(w, h))
-        _backed(button, chip_style)
-        _text(button.position + Vector2(0, 36), "REPLAY" if victory else action.to_upper(), 20, INK,
-            HORIZONTAL_ALIGNMENT_CENTER, button.size.x)
+    var factor := control_size
+    var direction: Vector2 = info.get("pad",Vector2.ZERO)
+    touch_layer.draw_texture_rect(Kit.ICONS["joystick"],Rect2(center-Vector2(78,66)*factor,Vector2(156,132)*factor),false)
+    if direction.length()>0.05:
+        touch_layer.draw_line(center,center+direction*42*maxf(1,factor),Color("#a5fff5"),4)
+    touch_layer.draw_texture_rect(Kit.ICONS["thumb"],Rect2(center+direction*42*maxf(1,factor)-Vector2(24,24)*factor,Vector2(48,48)*factor),false)
+    for action in ["jump","boost","bubble","pause"]:
+        var rect := action_rect(action)
+        var locked: bool = action == "bubble" and not info.get("bubble",false)
+        var available: bool = action not in ["jump","boost"] or float(info.get("energy",1.0))>=0.4
+        var pressed: bool = action in info.get("pressed",[])
+        var style := touch_pressed if pressed else touch_normal
+        touch_layer.draw_style_box(style,rect)
+        var icon_size := minf(rect.size.x,rect.size.y)*0.64*minf(1,factor)
+        var icon_at := rect.get_center()-Vector2.ONE*icon_size/2+Vector2(0,-5)
+        touch_layer.draw_texture_rect(Kit.ICONS[action],Rect2(icon_at,Vector2.ONE*icon_size),false,Color(0.4,0.5,0.6,0.55) if locked or not available else Color.WHITE)
+        var label: String = "LOCKED" if locked else ("LOW ENERGY" if not available else String(action).to_upper())
+        touch_layer.draw_string(ThemeDB.fallback_font,rect.position+Vector2(0,rect.size.y-10),label,HORIZONTAL_ALIGNMENT_CENTER,rect.size.x,11,Color("#defdf5"))
+        var cool := float(info.get("cooldowns",{}).get(action,0))
+        if cool>0:
+            touch_layer.draw_arc(rect.get_center(),minf(rect.size.x,rect.size.y)*0.43,-PI/2,-PI/2+TAU*clampf(cool/(0.20 if action == "bubble" else 0.9),0,1),32,Color("#ffe2ad"),3)

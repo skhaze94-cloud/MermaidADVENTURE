@@ -106,6 +106,8 @@ jobs:
               if path.exists():
                   print("PREVIEW_B64_"+prefix+"="+base64.b64encode(path.read_bytes()).decode())
           PY
+      - name: Render Pearl and Crown HUD, touch controls and results
+        run: GODOT_CAPTURE_PREVIEW=1 LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a -s "-screen 0 1920x1080x24" godot --audio-driver Dummy --path . --script res://godot/capture_ui_previews.gd
       - name: Publish actual device profile thumbnails in logs
         run: |
           python3 - <<'PYTHON'
@@ -128,4 +130,5 @@ jobs:
             godot/enemy-previews/*.png
             godot/jump-previews/
             godot/sarah-previews/*.png
+            godot/ui-previews/*.png
           if-no-files-found: warn

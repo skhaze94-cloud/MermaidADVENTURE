@@ -149,8 +149,23 @@ func _button(text_value: String, action: Callable, featured := false) -> Button:
     button.add_theme_stylebox_override("hover", _style(Color("fff0c9") if featured else Color("153c47"), GOLD))
     button.add_theme_stylebox_override("pressed", _style(Color("d0ba89") if featured else Color("102c37"), GOLD))
     button.add_theme_stylebox_override("focus", _style(Color(0,0,0,0), Color("a3fff1"), 3))
+    var Kit = preload("res://godot/ui_kit.gd")
+    button.icon = Kit.ICONS["settings" if "Options" in text_value else ("home" if "Back" in text_value else ("jump" if "Begin" in text_value else "shell"))]
+    button.expand_icon = true
+    button.add_theme_constant_override("icon_max_width",34)
     button.pressed.connect(action)
     return button
+
+func _comfort_slider(title: String, low: float, high: float, value: float, changed: Callable) -> void:
+    content.add_child(_label(title,20,PALE))
+    var slider := HSlider.new()
+    slider.min_value = low
+    slider.max_value = high
+    slider.step = 0.05
+    slider.value = value
+    slider.custom_minimum_size.y = 48
+    slider.value_changed.connect(changed)
+    content.add_child(slider)
 
 func _clear_content() -> void:
     if reveal_tween and reveal_tween.is_running():
@@ -193,6 +208,7 @@ func show_page(next_page: String) -> void:
             _add_button("Begin adventure  ›", start_adventure, true)
             _add_button("Options", func(): show_page("options"))
             _add_button("Credits & opening", func(): show_page("credits"))
+            content.add_child(_label("Personal best: "+preload("res://godot/ui_kit.gd").number(prefs.best_score),18,GOLD))
         "options":
             _heading("MAKE YOURSELF AT HOME", "Your adventure", "A little comfort for every explorer.")
             content.add_child(_label("Music volume", 22, GOLD, BOLD))
@@ -209,6 +225,8 @@ func show_page(next_page: String) -> void:
             content.add_child(_label("Less movement, fewer effects, the same magic.", 18, PALE))
             quality_toggle = _toggle("Economy graphics", prefs.economy, _quality_changed)
             content.add_child(_label("Lighter lighting and effects for smaller devices.", 18, PALE))
+            _comfort_slider("Touch control size",0.85,1.20,prefs.touch_size,func(value): prefs.touch_size=value; prefs.save())
+            _comfort_slider("Touch control opacity",0.35,1.0,prefs.touch_opacity,func(value): prefs.touch_opacity=value; prefs.save())
             _add_button("How to play", func(): show_page("controls"))
         "controls":
             _heading("A FEW LITTLE POINTERS", "Ready to explore?", "Swim, leap and find what lies beneath.")

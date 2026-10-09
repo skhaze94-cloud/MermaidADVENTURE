@@ -3,7 +3,7 @@
 config_version=5
 
 [application]
-config/name="Sarah Maria — Mermaid Adventure (Godot v0.13 — Living Reef)"
+config/name="Sarah Maria — Mermaid Adventure (Godot v0.14 — Pearl & Crown)"
 run/main_scene="res://godot/title_screen.tscn"
 config/description="Sarah Maria Mermaid Adventure — a magical storybook opening and Highland Gold adventure."
 
