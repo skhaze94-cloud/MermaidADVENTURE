@@ -18,16 +18,16 @@ for name in list(files):
             if not (root/resource).is_file():
                 raise RuntimeError('Missing runtime asset: '+resource)
             files.add(resource)
-notes = '''Sarah Maria — Mermaid Adventure | Godot v0.11
+notes = '''Sarah Maria — Mermaid Adventure | Godot v0.12 — Sarah Magnifique Update
 
 Godot 4.4.1 or newer: Project Manager > Import > select this ZIP > choose an empty folder.
 Alternatively extract this ZIP and import the project.godot file at its root.
 Press F6 on godot/highland_level.tscn to go directly to Level 1.
 The main project runs the illustrated opening and menu first.
 
-v0.11: new lake/grotto artwork, reef gardens and obstacles, treasures, victory portal,
-soft waterfall entrance, rooted plant sway, relief shaders and reliable ZIP directories.
-Includes all previous menu, enemy, control, waterfall and jump improvements.
+v0.12: connected, deformable Sarah arms, hair, tail and fins, expressive gestures,
+flowing swim cycles, more responsive steering/braking and proportional touch controls.
+Includes all previous menu, enemy, environment, waterfall, jump and reliable ZIP improvements.
 F3: Reduced Motion. F4: Economy/High depth. M: music.
 
 The old ZIP extraction alert also affected music and scripts. This archive fixes its

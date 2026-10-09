@@ -108,6 +108,15 @@ jobs:
           if grep -E 'SCRIPT ERROR|Parse Error|Compile Error|^ERROR:' /tmp/godot-environment.log; then
             exit 1
           fi
+      - name: Verify Sarah Magnifique meshes, gestures and responsive steering
+        shell: bash
+        run: |
+          set -o pipefail
+          timeout -k 3s 45s godot --headless --path . --script res://godot/sarah_magnifique_test.gd 2>&1 | tee /tmp/godot-sarah.log
+          grep -q 'GODOT SARAH MAGNIFIQUE TEST PASSED' /tmp/godot-sarah.log
+          if grep -E 'SCRIPT ERROR|Parse Error|Compile Error|^ERROR:' /tmp/godot-sarah.log; then
+            exit 1
+          fi
       - name: Validate ready ZIP extraction and fresh editor import
         run: python3 godot/package_validation.py --godot godot
       - name: Launch the storybook opening headless

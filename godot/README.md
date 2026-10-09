@@ -1,4 +1,4 @@
-# Sarah Maria — Mermaid Adventure, Godot 4 (environment refresh v0.11)
+# Sarah Maria — Mermaid Adventure, Godot 4 (v0.12 Sarah Magnifique Update)
 
 This project is the **Godot-native vertical slice** of Mermaid Sarah's first story chapter, built from the existing HTML 9.1 repository. It is a real Godot scene and scripts rather than a webpage embedded in a Godot window. The browser version in `dist/` remains available and unchanged. Godot loads the Sarah rig and music from `res://dist/assets/`, alongside new native artwork in `res://godot/assets/`.
 
@@ -9,6 +9,18 @@ This project is the **Godot-native vertical slice** of Mermaid Sarah's first sto
 3. Import **`project.godot` at the repository root**, not the `godot/` directory.
 4. Allow asset import, then press **F5**. The storybook opening leads to the main menu; select **Begin adventure** to enter Highland Gold.
 5. The menu supports portrait and landscape. Play the adventure in landscape. The project window is 1400 × 960 with stretch scaling.
+
+## v0.12 — Sarah Magnifique Update
+
+Sarah now uses eight small native textured Polygon2D meshes: two continuous arms with fixed shoulder sleeves and smoothly blended elbow/wrist bends, plus six flexible hair, tail and fin strips. The arm sockets are corrected to overlap the torso rather than float in front of it. Her face retains the original painted artwork. The swim phase is integrated over time, so changing speed does not jump to another point in the animation cycle. Tail strokes, independent fin flutter, damped hair drag, vertical banking and a bounded turning flourish give movement more follow-through.
+
+A separate editor-editable AnimationPlayer library adds greeting, bubble-casting, reward, impact and looping victory gestures. These poses blend with swimming and are reduced during jumps/boosts. Actions trigger on actual gameplay events; the pose never delays input or projectiles. Greeting is low priority; impact can interrupt casting. Pause freezes both players, and retry clears their state.
+
+Swimming retains the 345-unit top speed with more responsive acceleration (1650 units/s²), reversals (2300 units/s²) and braking (2100 units/s²). The touch pad now provides proportional steering between its existing dead zone and a comfortable full-speed radius; keyboard directions still reach full speed. An analogue horizontal threshold prevents facing chatter near a vertical stick position. Boost and jump trajectories remain separate from swim steering.
+
+High quality updates the eight bounded meshes at 45 Hz and adds restrained pearlescent fin highlights. Economy uses the same connected artwork with static mesh geometry and animated joints. Gentle motion resets mesh flutter and limits tilt immediately; gestures remain small. No extra character textures, duplicate face layers or per-frame nodes are allocated.
+
+Eight native suites and software-OpenGL captures validate control response, fixed shoulder/hip edges, unchanged UVs, gesture priorities, projectile timing, pause/retry, Gentle/Economy modes and phone/tablet layouts. Physical-device performance is unmeasured. Actual Godot captures: `sarah-magnifique-v012.jpg` and `sarah-magnifique-v012.gif`.
 
 ## v0.11: painted environments and reliable ZIP import
 

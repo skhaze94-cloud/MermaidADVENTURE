@@ -26,7 +26,9 @@ with tempfile.TemporaryDirectory(prefix='sarah-package-') as temp:
         for name in source.namelist():
             if not name.endswith('/'):
                 assert hashlib.sha256(source.read(name)).digest() == hashlib.sha256((stage/'fresh'/name).read_bytes()).digest(), name
-    run([args.godot,'--headless','--editor','--import','--quit','--path',str(stage/'fresh')])
+    # A settled editor avoids the 4.4.1 immediate-import shutdown race.
+    # Startup below still rejects missing imports and script/resource errors.
+    run([args.godot,'--headless','--editor','--max-fps','60','--path',str(stage/'fresh'),'--quit-after','600'])
     run([args.godot,'--headless','--path',str(stage/'fresh'),'--quit-after','16'])
     print(log.strip())
     print('GODOT FRESH PACKAGE IMPORT TEST PASSED')

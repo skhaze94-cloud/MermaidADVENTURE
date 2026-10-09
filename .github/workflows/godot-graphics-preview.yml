@@ -83,6 +83,16 @@ jobs:
           if grep -E 'SCRIPT ERROR|Parse Error|Compile Error|^ERROR:' /tmp/jump-renders.log; then
             exit 1
           fi
+      - name: Render Sarah Magnifique model and gestures
+        shell: bash
+        run: |
+          set -o pipefail
+          GODOT_CAPTURE_PREVIEW=1 LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a -s "-screen 0 1400x960x24" \
+            godot --audio-driver Dummy --path . --script res://godot/capture_sarah_previews.gd 2>&1 | tee /tmp/sarah-renders.log
+          grep -q 'GODOT SARAH MAGNIFIQUE RENDER TEST PASSED' /tmp/sarah-renders.log
+          if grep -E 'SCRIPT ERROR|Parse Error|Compile Error|^ERROR:' /tmp/sarah-renders.log; then
+            exit 1
+          fi
       - name: Publish compact real-render preview thumbnails in logs
         run: |
           python3 - <<'PY'
@@ -113,5 +123,6 @@ jobs:
             godot/device-qa/*.json
             godot/title-previews/*.png
             godot/enemy-previews/*.png
-            godot/jump-previews/*.png
+            godot/jump-previews/
+            godot/sarah-previews/*.png
           if-no-files-found: warn

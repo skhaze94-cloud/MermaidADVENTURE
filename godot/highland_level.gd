@@ -18,7 +18,8 @@ const BOTTOM := 902.0
 const HERO_RADIUS := 43.0
 const MAX_HEALTH := 5
 const BOSS_MAX_HEALTH := 5
-const SWIM_SPEED := 345.0
+const SarahMotion = preload("res://godot/sarah_motion.gd")
+const SWIM_SPEED := SarahMotion.SWIM_SPEED
 const BOOST_SPEED := 850.0
 
 var player := Vector2(220.0, 460.0)
@@ -417,6 +418,7 @@ func _fire_bubble() -> void:
         return
     if fire_cooldown > 0.0 or bubble_shots.size() >= 8:
         return
+    native_rig.play_gesture("cast")
     fire_cooldown = 0.20
     bubble_shots.append({"pos": player + Vector2(facing * 70, 0), "direction": facing, "life": 1.8})
     native_fx.splash(_hero_screen_position() + Vector2(facing * 56, 0), Color("#b4dbff"), 7)
@@ -488,6 +490,7 @@ func _apply_visual_quality() -> void:
     world_depth.set_quality(high_depth_quality)
     relief_obstacles.set_quality(high_depth_quality)
     # Lights are the costliest effects on lower-powered/mobile GPUs.
+    native_rig.set_quality(high_depth_quality)
     native_rig.hero_light.enabled = high_depth_quality
     native_boss.light.enabled = high_depth_quality
 
@@ -524,6 +527,7 @@ func _sync_native_visuals() -> void:
     var waterfall_active := waterfall_phase != ""
     var velocity := waterfall_velocity * Vector2(520.0, 1.0) if waterfall_active else player_velocity
     var faded := 1.0 if invulnerable <= 0.0 else 0.65 + 0.35 * absf(sin(time * 13.0))
+    native_rig.set_steering(_input_vector())
     native_rig.set_motion(velocity, facing, boost_time > 0.0 or waterfall_boost > 0.0, jump_time > 0.0, faded)
     native_rig.set_jump_state(leap_phase, leap_air_time, splash_chain, leap_spin_direction)
     native_rig.position.y += native_rig.airborne_clearance(pos.y)
@@ -567,7 +571,7 @@ func _sync_native_visuals() -> void:
 func _update_swimming(dt: float) -> void:
     var input_dir := _input_vector()
     var previous := player
-    if input_dir.x != 0.0:
+    if absf(input_dir.x) > 0.08:
         facing = signf(input_dir.x)
     if leap_phase == "ascent":
         player_velocity.x = move_toward(player_velocity.x, input_dir.x * 420.0, dt * 400.0)
@@ -597,7 +601,7 @@ func _update_swimming(dt: float) -> void:
     elif boost_time > 0.0:
         player += player_velocity * dt
     else:
-        player_velocity = player_velocity.move_toward(input_dir * SWIM_SPEED, dt * 1200.0)
+        player_velocity = SarahMotion.swim_velocity(player_velocity,input_dir,dt)
         player += player_velocity * dt
     player.x = clampf(player.x, 50.0 if not fallen else Highland.WATERFALL_EXIT, Highland.LEVEL_LENGTH - 40.0)
     if player.y < 80.0:
@@ -620,6 +624,9 @@ func _update_swimming(dt: float) -> void:
         return
     if player.x >= Highland.PORTAL_X and boss_hp <= 0:
         state = "victory"
+        native_rig.set_motion(Vector2.ZERO,facing,false,false,1.0)
+        native_rig.set_jump_state("",0.0,0,facing)
+        native_rig.play_gesture("celebrate")
         touches.clear()
         touch_vectors.clear()
         _say("Highland Gold complete! Mermaid Bubble unlocked.", 1000.0)
@@ -678,6 +685,8 @@ func _update_collectibles() -> void:
         if player.distance_to(pos) < 59.0:
             treasure["taken"] = true
             var kind: String = treasure["kind"]
+            if kind in ["heart","boost","chest"]:
+                native_rig.play_gesture("reward")
             if kind == "heart":
                 health = mini(MAX_HEALTH, health + 1)
                 _say("Heart restored!", 1.3)
@@ -745,6 +754,7 @@ func _reset_transients() -> void:
     splash_chain = 0
     leap_air_time = 0.0
     native_rig.reset_jump()
+    native_rig.reset_performance()
     jump_effects.reset_jump()
     leap_cooldown = 0.0
     boost_time = 0.0

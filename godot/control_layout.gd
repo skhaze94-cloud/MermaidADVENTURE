@@ -7,7 +7,7 @@ static func pad_vector(point: Vector2, size: Vector2) -> Vector2:
     var offset := point - pad_rect(size).get_center()
     if offset.length() < 18.0:
         return Vector2.ZERO
-    return offset.normalized()
+    return offset.normalized() * clampf((offset.length()-18.0)/24.0,0.0,1.0)
 
 static func radial_stick(stick: Vector2) -> Vector2:
     var magnitude := stick.length()

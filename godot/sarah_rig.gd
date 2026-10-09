@@ -1,6 +1,10 @@
 extends Node2D
 ## Native Sprite2D / AtlasTexture hierarchy derived from dist/sarah-dynamic-v81.js.
 ## Parent-child transforms preserve the face while animating hair, tail and fins.
+const ArmMesh = preload("res://godot/sarah_arm_mesh.gd")
+const Ribbon = preload("res://godot/sarah_ribbon_mesh.gd")
+const PERFORMANCE: AnimationLibrary = preload("res://godot/animations/sarah_magnifique.tres")
+const SCALES: Shader = preload("res://godot/shaders/sarah_scales.gdshader")
 const ATLAS: Texture2D = preload("res://dist/assets/sarah-parts-v81.webp")
 const JUMP_LIBRARY: AnimationLibrary = preload("res://godot/animations/sarah_jump.tres")
 const ARMS: Texture2D = preload("res://dist/assets/sarah-arms-refined-v81.webp")
@@ -72,6 +76,139 @@ var hair_drag_speed := 0.0
 var previous_vertical_speed := 0.0
 var body_pitch := 0.0
 
+# Magnifique: six UV-locked strips and additive, interruptible native gestures.
+var ribbons: Array[Polygon2D] = []
+var arm_meshes: Array[Polygon2D] = []
+var ribbon_materials: Array[ShaderMaterial] = []
+var gesture_player: AnimationPlayer
+var gesture_wave := 0.0
+var gesture_nod := 0.0
+var gesture_reach := 0.0
+var gesture_arch := 0.0
+var high_quality := true
+var swim_clock := 0.0
+var mesh_accumulator := 0.0
+var mesh_was_active := false
+var turn_elapsed := 1.0
+var brake_blend := 0.0
+var steering_value := Vector2.ZERO
+var previous_speed := 0.0
+var horizontal_drag := 0.0
+var horizontal_drag_speed := 0.0
+var idle_elapsed := 0.0
+var last_gesture := ""
+
+func set_steering(direction: Vector2) -> void:
+    steering_value = direction.limit_length(1.0)
+
+func set_quality(high: bool) -> void:
+    high_quality = high
+    for material in ribbon_materials:
+        material.set_shader_parameter("motion_enabled", high and not reduced_motion)
+
+func play_gesture(action: String) -> void:
+    if not gesture_player or not gesture_player.has_animation(action):
+        return
+    # Greeting/reward cannot interrupt a cast, impact or victory performance.
+    if action in ["greet","reward"] and gesture_player.is_playing():
+        return
+    _clear_gesture_values()
+    last_gesture = action
+    gesture_player.play(action)
+    gesture_player.advance(0.0)
+
+func _clear_gesture_values() -> void:
+    gesture_wave = 0.0
+    gesture_nod = 0.0
+    gesture_reach = 0.0
+    gesture_arch = 0.0
+
+func reset_performance() -> void:
+    if gesture_player:
+        gesture_player.stop()
+    _clear_gesture_values()
+    last_gesture = ""
+    idle_elapsed = 0.0
+    swim_clock = 0.0
+    turn_elapsed = 1.0
+    brake_blend = 0.0
+    steering_value = Vector2.ZERO
+    previous_speed = 0.0
+    horizontal_drag = 0.0
+    horizontal_drag_speed = 0.0
+    hit_kick = 0.0
+    turn_kick = 0.0
+    swim_blend = 0.0
+    boost_blend = 0.0
+    leap_blend = 0.0
+    smoothed_speed = 0.0
+    velocity_value = Vector2.ZERO
+    facing_value = 1.0
+    last_facing = 1.0
+    mesh_accumulator = 0.0
+    scale = Vector2.ONE
+    rotation = 0.0
+    for joint in [back_hair,hair_strand,tail_base,tail_tip,fin_upper,fin_lower,side_fin,torso,head_joint,front_hair,near_arm,far_arm]:
+        joint.rotation = 0.0
+    torso.position = Vector2(12,24)
+    for ribbon in ribbons + arm_meshes:
+        ribbon.reset_shape()
+
+func _arm(index: int, parent: Node2D, length: float, height: float) -> void:
+    var crop: Array = ARM_CROPS[index]
+    var size := Vector2(ARMS.get_width(),ARMS.get_height())
+    var region := Rect2(Vector2(crop[0],crop[1])*size,Vector2(crop[2],crop[3])*size)
+    var mesh := ArmMesh.new()
+    mesh.name = "ContinuousArmSkin_%d" % index
+    mesh.configure(ARMS,region,Rect2(-5.0,-height*0.28,length,height))
+    parent.add_child(mesh)
+    arm_meshes.append(mesh)
+
+func _ribbon(index: int, parent: Node2D, destination: Rect2, shining: bool) -> void:
+    var crop: Array = BODY_CROPS[index]
+    var region := Rect2(Vector2(crop[0],crop[1]) * Vector2(ATLAS.get_width(),ATLAS.get_height()), Vector2(crop[2],crop[3]) * Vector2(ATLAS.get_width(),ATLAS.get_height()))
+    var mesh := Ribbon.new()
+    mesh.name = "FlexiblePaintedPart_%d" % index
+    mesh.configure(ATLAS,region,destination)
+    if shining:
+        var material := ShaderMaterial.new()
+        material.shader = SCALES
+        material.set_shader_parameter("atlas_bounds", Vector4(crop[0],crop[1],crop[0]+crop[2],crop[1]+crop[3]))
+        mesh.material = material
+        ribbon_materials.append(material)
+    parent.add_child(mesh)
+    ribbons.append(mesh)
+
+func _update_ribbons(dt: float, phase: float, swim_amount: float) -> void:
+    var active := high_quality and not reduced_motion
+    if not active:
+        if mesh_was_active:
+            for ribbon in ribbons + arm_meshes:
+                ribbon.reset_shape()
+        mesh_was_active = false
+        return
+    mesh_was_active = true
+    mesh_accumulator += dt
+    if mesh_accumulator < 1.0/45.0:
+        return
+    mesh_accumulator = fmod(mesh_accumulator,1.0/45.0)
+    # Fixed attachment edges and bounded curvature protect the head/hip seams.
+    var strength := 0.35 + swim_amount * 3.0 + boost_blend * 0.5
+    ribbons[0].deform(phase*0.7,2.3+strength*0.45,hair_drag*6.0+horizontal_drag*4.0)
+    ribbons[1].deform(phase*0.8-0.7,1.5+strength*0.8,hair_drag*4.0+horizontal_drag*5.0)
+    ribbons[2].deform(phase-0.9,strength*1.1,turn_kick*3.0)
+    ribbons[3].deform(phase-1.4,strength*1.2,0.0)
+    ribbons[4].deform(phase-0.2,strength*1.3,0.0)
+    # Keep the hip seam stable; more of the travelling wave lives at the fin.
+    ribbons[5].deform(phase,strength*0.40,0.0)
+    var expression := 0.25 if leaping or boosting else 1.0
+    arm_meshes[1].skin(0.12+sin(phase-0.8)*swim_amount*0.15-boost_blend*0.08+gesture_wave*expression*0.12, sin(phase-1.4)*0.025+gesture_wave*expression*0.14-gesture_reach*expression*0.08)
+    arm_meshes[0].skin(0.10+sin(phase+1.6)*swim_amount*0.12-boost_blend*0.06, -sin(phase+0.8)*0.025-gesture_wave*expression*0.10)
+    for material in ribbon_materials:
+        material.set_shader_parameter("motion_clock", clock)
+        material.set_shader_parameter("charge_mix", boost_blend)
+        material.set_shader_parameter("motion_enabled", not reduced_motion)
+
 func start_jump(chain: int, direction: float) -> void:
     jump_chain = chain
     jump_direction = direction
@@ -133,6 +270,7 @@ func _part(index: int, parent: Node2D, x: float, y: float, w: float, h: float, a
     var atlas := AtlasTexture.new()
     atlas.atlas = texture
     atlas.region = region
+    atlas.filter_clip = true
     var sprite := Sprite2D.new()
     sprite.texture = atlas
     sprite.centered = false
@@ -152,28 +290,33 @@ func _ready() -> void:
     spin_curve.add_point(Vector2(0.22,0.06),0.65,0.65)
     spin_curve.add_point(Vector2(0.62,0.85),1.3,1.3)
     spin_curve.add_point(Vector2(1.0,1.0),0.0,0.0)
+    gesture_player = AnimationPlayer.new()
+    gesture_player.name = "MagnifiquePerformancePlayer"
+    add_child(gesture_player)
+    gesture_player.add_animation_library("", PERFORMANCE)
+    gesture_player.animation_finished.connect(func(_action: StringName): _clear_gesture_values())
     # Draw order is intentionally far to near, matching the HTML 8.1 rig.
     back_hair = _joint("BackHair", self, Vector2(49, -23))
-    _part(2, back_hair, -105, -46, 116, 77)
+    _ribbon(2, back_hair, Rect2(-105,-46,116,77),false)
     hair_strand = _joint("BackHairStrand", back_hair, Vector2.ZERO)
-    _part(15, hair_strand, -109, -18, 109, 28)
+    _ribbon(15, hair_strand, Rect2(-109,-18,109,28),false)
 
     tail_base = _joint("TailBase", self, Vector2(13, 30))
     tail_tip = _joint("TailTip", tail_base, Vector2(-62, -1))
-    _part(11, tail_tip, -42, -13, 50, 29)
+    _ribbon(11, tail_tip, Rect2(-42,-13,50,29),true)
     var fins := _joint("FinSockets", tail_tip, Vector2(-34, -2))
     fin_lower = _joint("LowerFin", fins, Vector2.ZERO)
-    _part(13, fin_lower, -37, -7, 46, 38)
+    _ribbon(13, fin_lower, Rect2(-37,-7,46,38),true)
     fin_upper = _joint("UpperFin", fins, Vector2.ZERO)
-    _part(12, fin_upper, -40, -49, 49, 57)
-    _part(10, tail_base, -70, -24, 78, 51)
+    _ribbon(12, fin_upper, Rect2(-40,-49,49,57),true)
+    _ribbon(10, tail_base, Rect2(-70,-24,78,51),true)
 
     side_fin = _joint("SideFin", self, Vector2(5, 45))
     _part(14, side_fin, -36, -6, 43, 20)
 
     torso = _joint("Torso", self, Vector2(12, 24))
     far_arm = _joint("FarArm", torso, Vector2(49, -26))
-    _part(1, far_arm, 28, -12, 66, 43, true)
+    _arm(1, far_arm, 66, 43)
     _part(0, torso, -7, -42, 75, 69)
 
     head_joint = _joint("HeadNeck", torso, Vector2(44, -29))
@@ -182,7 +325,7 @@ func _ready() -> void:
     _part(3, front_hair, -27, -4, 33, 49)
 
     near_arm = _joint("NearArm", torso, Vector2(10, -31))
-    _part(0, near_arm, 30, -13, 70, 45, true)
+    _arm(0, near_arm, 70, 45)
 
     # A real Godot 2D light subtly lifts Sarah away from deep blue scenery.
     # This is an independent light, not a blurry duplicate of her painted face.
@@ -194,6 +337,7 @@ func _ready() -> void:
     hero_light.energy = 0.24
     hero_light.position = Vector2(21.0, -12.0)
     add_child(hero_light)
+    play_gesture("greet")
 
 func _radial_texture() -> Texture2D:
     var image := Image.create(96, 96, false, Image.FORMAT_RGBA8)
@@ -214,6 +358,7 @@ func set_motion(velocity: Vector2, direction: float, is_boosting: bool, is_leapi
     if facing_value != last_facing:
         # Quick turn recoil without mirroring through an ugly zero-width pose.
         turn_kick = -0.22 * facing_value
+        turn_elapsed = 0.0
         last_facing = facing_value
     boosting = is_boosting
     leaping = is_leaping
@@ -221,6 +366,7 @@ func set_motion(velocity: Vector2, direction: float, is_boosting: bool, is_leapi
 
 func play_impact() -> void:
     hit_kick = 1.0
+    play_gesture("impact")
 
 func _process(delta: float) -> void:
     var dt := minf(delta, 0.05)
@@ -236,7 +382,23 @@ func _process(delta: float) -> void:
     turn_kick = lerpf(turn_kick, 0.0, fast_ease)
     hit_kick = lerpf(hit_kick, 0.0, 1.0 - exp(-dt * 12.0))
     animation_mode = "boost" if boost_blend > 0.6 else ("leap" if leap_blend > 0.6 else ("swim" if swim_blend > 0.22 else "idle"))
-    var swim_phase := clock * (2.9 + 3.0 * swim_blend + 2.0 * boost_blend)
+    # Integrate frequency instead of multiplying all elapsed time by changing speed.
+    swim_clock += dt * (2.9 + 3.0 * swim_blend + 2.0 * boost_blend)
+    var swim_phase := swim_clock
+    turn_elapsed = minf(1.0,turn_elapsed + dt)
+    var turn_pose := sin(clampf(turn_elapsed/0.30,0.0,1.0)*PI) if not reduced_motion else 0.0
+    var braking := steering_value.length_squared() < 0.02 and speed > 30.0 and previous_speed > speed
+    brake_blend = lerpf(brake_blend,1.0 if braking else 0.0,fast_ease)
+    previous_speed = speed
+    var gesture_amount := (0.20 if reduced_motion else 1.0) * (0.25 if leaping or boosting else 1.0)
+    var wave := gesture_wave * gesture_amount
+    var reach := gesture_reach * gesture_amount
+    var arch := gesture_arch * gesture_amount
+    var nod := gesture_nod * gesture_amount
+    idle_elapsed = idle_elapsed + dt if speed < 20.0 and not leaping and not boosting else 0.0
+    if idle_elapsed > 8.0 and not gesture_player.is_playing():
+        play_gesture("greet")
+        idle_elapsed = 0.0
     var slow_phase := clock * 1.6
     var amount := (0.045 + 0.15 * swim_blend) * (1.0 - boost_blend * 0.65) * (1.0 - leap_blend * 0.62)
     if reduced_motion:
@@ -255,7 +417,17 @@ func _process(delta: float) -> void:
     var drag_target := clampf(velocity_value.y / 3600.0 - vertical_acceleration / 20000.0,-0.24,0.24)
     hair_drag_speed += ((drag_target - hair_drag) * 95.0 - hair_drag_speed * 17.0) * dt
     hair_drag += hair_drag_speed * dt
-    body_pitch = lerp_angle(body_pitch,clampf(velocity_value.y / 1150.0,-0.26,0.26),ease)
+    var drag_x_target := clampf((velocity_value.x*facing_value-smoothed_speed)/1800.0,-0.22,0.22)
+    horizontal_drag_speed += ((drag_x_target-horizontal_drag)*75.0-horizontal_drag_speed*15.0)*dt
+    horizontal_drag += horizontal_drag_speed*dt
+    if reduced_motion:
+        horizontal_drag = 0.0
+        horizontal_drag_speed = 0.0
+    var pitch_limit := 0.22 if reduced_motion else 0.36
+    var pitch_target := clampf(atan2(velocity_value.y,absf(velocity_value.x)+180.0)*0.38,-pitch_limit,pitch_limit)
+    body_pitch = lerp_angle(body_pitch,pitch_target,ease)
+    if reduced_motion:
+        body_pitch = clampf(body_pitch,-0.22,0.22)
     rotation = body_pitch * facing_value
     if jump_phase == "airborne" and not reduced_motion:
         rotation += spin_curve.sample_baked(air_progress) * TAU * jump_direction
@@ -267,27 +439,28 @@ func _process(delta: float) -> void:
         lift *= 0.3
         dive *= 0.3
     # All motion is local to joints; collision location and face stay stable.
-    scale = Vector2(facing_value * (1.0 + stretch), 1.0 - stretch * 0.65)
-    var tail_angle := sin(swim_phase) * amount + turn_kick * 0.8 - curl - lift * 0.10 + landing_compress * 0.08
-    var tail_tip_angle := sin(swim_phase - 0.91) * amount * 1.55 + turn_kick * 0.9 - curl * 0.85 + dive * 0.12
+    scale = Vector2(facing_value * (1.0 + stretch) * (1.0 - turn_pose*0.12), 1.0 - stretch * 0.65)
+    var tail_angle := sin(swim_phase) * amount + turn_kick * 0.8 - curl - lift * 0.10 + landing_compress * 0.08 + brake_blend*0.18 - arch*0.12
+    var tail_tip_angle := sin(swim_phase - 0.91) * amount * 1.55 + turn_kick * 0.9 - curl * 0.85 + dive * 0.12 + brake_blend*0.24
     tail_base.rotation = lerpf(tail_base.rotation, tail_angle, ease)
     tail_tip.rotation = lerpf(tail_tip.rotation, tail_tip_angle, ease)
     fin_upper.rotation = lerpf(fin_upper.rotation, sin(swim_phase * 1.23 - 0.95) * amount * 1.60 + tuck * 0.18 - dive * 0.12, fast_ease)
     fin_lower.rotation = lerpf(fin_lower.rotation, sin(swim_phase * 1.32 + 1.16) * amount * 1.75 - tuck * 0.14 + dive * 0.10, fast_ease)
     side_fin.rotation = lerpf(side_fin.rotation, sin(swim_phase * 0.91) * amount + turn_kick * 0.27, ease)
     var current := 0.0 if reduced_motion else sin(slow_phase) * 0.035
-    back_hair.rotation = lerpf(back_hair.rotation, current + turn_kick * 0.5 + swim_blend * 0.018 + hair_drag, ease)
+    back_hair.rotation = lerpf(back_hair.rotation, current + turn_kick * 0.5 + swim_blend * 0.018 + hair_drag + horizontal_drag, ease)
     hair_strand.rotation = lerpf(hair_strand.rotation, -current * 1.6 + turn_kick * 0.85 + hair_drag * 0.75, ease)
     front_hair.rotation = lerpf(front_hair.rotation, -current * 0.6 - turn_kick * 0.25 + hair_drag * 0.32, ease)
     var rise := 0.0 if reduced_motion else sin(slow_phase * 1.2) * 1.6
-    torso.position = Vector2(12.0, 24.0 + rise * (1.0 - boost_blend) + landing_compress * 2.0)
+    torso.position = Vector2(12.0, 24.0 + rise * (1.0 - boost_blend) + landing_compress * 2.0 - arch*2.0)
     torso.rotation = lerpf(torso.rotation, -velocity_value.y / 1400.0 * 0.12 + turn_kick * 0.18, ease)
-    head_joint.rotation = lerpf(head_joint.rotation, -torso.rotation * 0.3, ease)
+    head_joint.rotation = lerpf(head_joint.rotation, -torso.rotation * 0.3 + nod * 0.10, ease)
     var arm_sweep := 0.0 if reduced_motion else sin(swim_phase * 0.74 + 0.65) * amount
     near_arm.rotation = lerpf(near_arm.rotation,
-        arm_sweep * 1.2 - 0.26 * boost_blend - 0.13 * leap_blend - lift * 0.34 + tuck * 0.20 - dive * 0.18 + hit_kick * 0.14, fast_ease)
+        arm_sweep * 1.2 - 0.26 * boost_blend - 0.13 * leap_blend - lift * 0.34 + tuck * 0.20 - dive * 0.18 + hit_kick * 0.14 + wave*0.32 - reach*0.22 - brake_blend*0.18, fast_ease)
     far_arm.rotation = lerpf(far_arm.rotation,
-        -arm_sweep + 0.21 * boost_blend + 0.12 * leap_blend - lift * 0.24 - tuck * 0.19 - dive * 0.12 - hit_kick * 0.12, fast_ease)
+        -arm_sweep + 0.21 * boost_blend + 0.12 * leap_blend - lift * 0.24 - tuck * 0.19 - dive * 0.12 - hit_kick * 0.12 - wave*0.34 - reach*0.18 + brake_blend*0.14, fast_ease)
+    _update_ribbons(dt,swim_phase,swim_blend)
     self_modulate.a = alpha_value
     if is_instance_valid(hero_light):
         var target_energy := 0.0 if reduced_motion else (0.24 + 0.24 * boost_blend)

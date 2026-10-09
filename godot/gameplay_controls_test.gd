@@ -76,7 +76,7 @@ func _run() -> void:
     # Input and drawing share geometry; diagonals are one finger, actions separate.
     var size := Vector2(1400, 960)
     var center: Vector2 = level._pad_rect().get_center()
-    level._set_touch(8, center + Vector2(45, -45), "pad")
+    level._set_touch(8, center + Vector2(45, -45) * level.premium_hud.ui_scale, "pad")
     level._set_touch(12, level._touch_rect("boost", size).get_center(), "boost")
     var steering: Vector2 = level._input_vector()
     check(steering.x > 0.6 and steering.y < -0.6, "single-finger diagonal steering missing")
