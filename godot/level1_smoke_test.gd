@@ -109,6 +109,8 @@ func _run_checks() -> void:
     level.native_rig._process(0.12)
     _check(level.native_rig.boost_blend > 0.2,
         "Boost animation blend missing")
+    # The rig intentionally clamps large deltas to 50ms; test real frame progression.
+    level.native_rig._process(0.05)
     _check(level.native_rig.animation_mode == "boost",
         "Animation mode must reflect boosting")
     _check(level.native_rig.scale.x < 0.0,
