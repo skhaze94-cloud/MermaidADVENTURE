@@ -1,4 +1,4 @@
-# Sarah Maria — Highland Gold, Godot 4 (graphics overhaul v0.4)
+# Sarah Maria — Highland Gold, Godot 4 (animation & performance v0.5)
 
 This project is the **Godot-native vertical slice** of Mermaid Sarah's first story chapter, built from the existing HTML 9.1 repository. It is a real Godot scene and scripts rather than a webpage embedded in a Godot window. The browser version in `dist/` remains available and unchanged. Godot loads the existing artwork and MP3 directly from `res://dist/assets/`.
 
@@ -9,6 +9,31 @@ This project is the **Godot-native vertical slice** of Mermaid Sarah's first sto
 3. Import **`project.godot` at the repository root**, not the `godot/` directory.
 4. Allow asset import, then press **F5**. You can inspect `godot/highland_level.tscn` and its native child nodes in the scene editor.
 5. Play in landscape orientation. Current project window is 1400 × 960 with stretch scaling.
+
+## v0.5: native animation and performance update
+
+**Focus:** make Sarah and nearby sea creatures move more expressively while reducing avoidable rendering work. Level 1 routes, collisions, waterfall timing, pickups, Carlo and the source HTML remain unchanged.
+
+### Animation
+- **State-blended Sarah rig:** independent idle/swim/boost/leap/turn/hit animation blends use time-based exponential smoothing. Tail and fin undulation respond to movement speed; arms move into a boost posture, hair settles after turns, and the head counter-rotates lightly to preserve facial clarity. Instant horizontal facing flips avoid zero-width sprite distortion.
+- **Native enemy sprites:** crabs, eels and jellyfish are now preconstructed `Sprite2D` instances with per-enemy `AtlasTexture` regions. Atlas animation, flip, float and tilt are updated only for enemies within the camera view. Puffer and swordfish illustrations retain their existing hand-drawn motion.
+- **Underwater garden motion:** far/mid reefs and sparse foreground plants sway only while on-screen at a capped 24 Hz; the waterline glints redraw at up to 30 Hz unless camera motion requires earlier refresh.
+
+### Performance and diagnostics
+- **Pooled particle bursts:** ten `CPUParticles2D` emitters are created at level load and recycled for boosts, hits and pickups. No transient particle node or one-shot timer is allocated per burst.
+- **Enemy visual LOD:** expensive sprite changes are capped at approximately **30 Hz in High** and **20 Hz in Economy**. Gameplay collision checks and enemy motion retain their original update rules. Sprite renderers are hidden during the waterfall.
+- **Shader and scene caching:** grotto shader parameters are sent only when the depth profile changes; 2.5D scenery position updates skip subpixel camera travel; off-screen garden sprites are hidden.
+- **HUD invalidation:** the native `CanvasLayer` retains a status snapshot and redraws only on material display changes. Boost/progress bars are quantised for legibility and to avoid costly repaints on 120 Hz displays. Pause screens do not continuously rebuild the gameplay painter.
+- **Economy light culling:** `F4` disables the dedicated Sarah/Carlo `PointLight2D` effects as well as the higher-cost postprocessing passes.
+- **Real-time performance monitor:** press **F6** in the running game to see actual Godot FPS, visible/total native enemies, particle pool size, and the quality preset. Hidden by default; the widget refreshes twice per second.
+- **Regression tests:** Godot's headless suite checks sprite visibility and throttling, particle pool boundedness, Sarah's blends, HUD redraw suppression, F6 toggling, economy lights, and the established waterfall/pickup/portal logic.
+
+**Important:** 24/30/20 Hz refer to the *visual animation work cadence*, **not a limit on the game's frame rate**. This update does not claim a measured FPS increase on Windows, Android or Web until hardware profiling has been performed. The on-screen F6 FPS monitor provides a way to quantify performance on each target.
+
+### Key new files
+`godot/animated_enemies.gd` (native enemy atlas pool) and
+`godot/performance_overlay.gd` (opt-in live performance counters).
+`godot/sarah_rig.gd`, `godot/native_fx.gd`, `godot/world_depth.gd`, `godot/foreground_depth.gd`, `godot/water_surface.gd`, `godot/premium_hud.gd`, `godot/highland_level.gd`, and `godot/level1_smoke_test.gd` were also updated.
 
 ## v0.4: comprehensive graphics overhaul
 
@@ -94,7 +119,8 @@ The current playable Level 1 retains the full 20,748-unit Highland Gold route, t
 | R | Restart |
 | M | Mute / unmute music |
 | F3 | Reduce / restore animated effects |
-| F4 | Toggle High / Economy depth shading |
+| F4 | Toggle High / Economy depth shading and native actor lights |
+| F6 | Toggle live FPS / active-sprite performance monitor |
 | Controller left stick / D-pad | Analogue movement |
 | Controller A | Jump |
 | Controller B | Boost |
@@ -109,8 +135,10 @@ project.godot                       # Import the repository root
 godot/highland_level.tscn           # Editable 2.5D scene, depth planes, texture lighting and actors
 godot/highland_level.gd             # Level progression, combat and gameplay state
 godot/highland_data.gd              # Geometry and source-driven enemy/treasure timings
-godot/sarah_rig.gd                  # Sprite2D/AtlasTexture procedural skeletal rig
-godot/native_fx.gd                  # Shader layer, CPUParticles2D, Tween feedback
+godot/sarah_rig.gd                  # State-blended native skeletal swimming animation
+godot/animated_enemies.gd           # Pooled native enemy Sprite2D atlas animation
+godot/native_fx.gd                  # Shader passes, fixed CPUParticles2D pool, Tweens
+godot/performance_overlay.gd        # Toggleable in-game FPS/LOD monitor
 godot/carlo_boss.gd                 # Boss sprite, native 2D light, hit/defeat animation
 godot/world_depth.gd                # Opaque background, 0.58× and 0.83× reef parallax
 godot/foreground_depth.gd           # Low-opacity close vegetation 1.13× camera speed
