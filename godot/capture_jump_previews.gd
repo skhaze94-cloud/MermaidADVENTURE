@@ -30,7 +30,7 @@ func _capture() -> void:
         level.native_rig._process(1.0/60.0)
         level.jump_effects._process(1.0/60.0)
         level.queue_redraw()
-        if tick in indices:
+        if tick % 2 == 0 or tick in indices:
             await process_frame
             await RenderingServer.frame_post_draw
             var image := root.get_texture().get_image()
@@ -38,6 +38,12 @@ func _capture() -> void:
                 push_error("Jump preview empty")
                 quit(1)
                 return
+            if tick % 2 == 0:
+                var motion_image := image.duplicate()
+                motion_image.resize(700,480,Image.INTERPOLATE_LANCZOS)
+                motion_image.save_png(ProjectSettings.globalize_path(output+"/motion-%02d.png" % (tick/2)))
+            if tick not in indices:
+                continue
             image.save_png(ProjectSettings.globalize_path(output+"/jump-%02d.png" % shot))
             print("JUMP PREVIEW %02d phase=%s air=%.2f" % [shot,level.leap_phase,level.leap_air_time])
             shot += 1

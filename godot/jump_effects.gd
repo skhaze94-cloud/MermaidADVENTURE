@@ -20,11 +20,11 @@ var surface_events := 0
 var last_surface := Vector2.ZERO
 
 func _ready() -> void:
-    ribbon = _line("AirborneFinRibbon",5.0,Color("#91fff2"))
-    accent = _line("AirbornePearlAccent",2.0,Color("#efc6ff"))
+    ribbon = _line("AirborneFinRibbon",5.0,Color("#b4fff5"))
+    accent = _line("AirbornePearlAccent",2.0,Color("#ffbde9"))
     var gradient := Gradient.new()
     gradient.set_color(0,Color(0.6,1.0,0.95,0.0))
-    gradient.set_color(1,Color(0.6,1.0,0.95,0.34))
+    gradient.set_color(1,Color(0.6,1.0,0.95,0.48))
     ribbon.gradient = gradient
     var width := Curve.new()
     width.add_point(Vector2(0,0))
@@ -119,15 +119,31 @@ func update_jump(world_position: Vector2, camera: float, phase: String, clock: f
         last_sample = clock
     var points := PackedVector2Array()
     var accents := PackedVector2Array()
-    for i in range(world_points.size()):
-        var point := world_points[i] - Vector2(camera_x,0)
-        points.append(point)
-        accents.append(point+Vector2(0,sin(float(i)*0.6-clock*5)*3.0))
+    # Four Catmull-Rom samples per segment soften the old angular trail.
+    # Source history remains capped; Economy retains the simpler polyline.
+    var samples := 4 if quality else 1
+    for i in range(maxi(0,world_points.size()-1)):
+        var a := world_points[maxi(0,i-1)]
+        var b := world_points[i]
+        var c := world_points[i+1]
+        var d := world_points[mini(world_points.size()-1,i+2)]
+        var normal := (c-b).normalized().orthogonal()
+        for j in range(samples):
+            var u := float(j)/samples
+            var point := 0.5*((2.0*b)+(-a+c)*u+(2.0*a-5.0*b+4.0*c-d)*u*u+(-a+3.0*b-3.0*c+d)*u*u*u)
+            point -= Vector2(camera_x,0)
+            points.append(point)
+            var along := (float(i)+u)/maxf(1.0,world_points.size()-1)
+            var twist := sin(along*TAU*1.5-clock*3.0)*sin(along*PI)*7.0
+            accents.append(point+normal*twist)
+    if world_points.size() > 0:
+        points.append(world_points[-1]-Vector2(camera_x,0))
+        accents.append(points[-1])
     ribbon.points = points
     accent.points = accents
     var fade := 1.0 if phase == "airborne" else clampf(1.0-(clock-last_air_clock)/0.22,0.0,1.0)
     ribbon.modulate.a = fade
-    accent.modulate.a = fade*0.45
+    accent.modulate.a = fade*0.60
     ribbon.visible = not reduced and points.size()>1 and fade > 0.0
     accent.visible = ribbon.visible and quality
     visible = not reduced

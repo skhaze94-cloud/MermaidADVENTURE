@@ -4,6 +4,7 @@ extends Node2D
 const ArmMesh = preload("res://godot/sarah_arm_mesh.gd")
 const Ribbon = preload("res://godot/sarah_ribbon_mesh.gd")
 const PERFORMANCE: AnimationLibrary = preload("res://godot/animations/sarah_magnifique.tres")
+const VOLUME: Shader = preload("res://godot/shaders/sarah_volume.gdshader")
 const SCALES: Shader = preload("res://godot/shaders/sarah_scales.gdshader")
 const ATLAS: Texture2D = preload("res://dist/assets/sarah-parts-v81.webp")
 const JUMP_LIBRARY: AnimationLibrary = preload("res://godot/animations/sarah_jump.tres")
@@ -97,6 +98,9 @@ var horizontal_drag := 0.0
 var horizontal_drag_speed := 0.0
 var idle_elapsed := 0.0
 var last_gesture := ""
+var depth_turn := 0.0
+var volume_materials: Array[ShaderMaterial] = []
+var painted_parts: Array[Node2D] = []
 
 func set_steering(direction: Vector2) -> void:
     steering_value = direction.limit_length(1.0)
@@ -105,6 +109,8 @@ func set_quality(high: bool) -> void:
     high_quality = high
     for material in ribbon_materials:
         material.set_shader_parameter("motion_enabled", high and not reduced_motion)
+    for material in volume_materials:
+        material.set_shader_parameter("volume_enabled", high)
 
 func play_gesture(action: String) -> void:
     if not gesture_player or not gesture_player.has_animation(action):
@@ -150,6 +156,7 @@ func reset_performance() -> void:
     rotation = 0.0
     for joint in [back_hair,hair_strand,tail_base,tail_tip,fin_upper,fin_lower,side_fin,torso,head_joint,front_hair,near_arm,far_arm]:
         joint.rotation = 0.0
+    _reset_depth_pose()
     torso.position = Vector2(12,24)
     for ribbon in ribbons + arm_meshes:
         ribbon.reset_shape()
@@ -161,8 +168,32 @@ func _arm(index: int, parent: Node2D, length: float, height: float) -> void:
     var mesh := ArmMesh.new()
     mesh.name = "ContinuousArmSkin_%d" % index
     mesh.configure(ARMS,region,Rect2(-5.0,-height*0.28,length,height))
+    mesh.material = _volume_material(crop)
     parent.add_child(mesh)
     arm_meshes.append(mesh)
+    painted_parts.append(mesh)
+
+func _volume_material(crop: Array) -> ShaderMaterial:
+    var material := ShaderMaterial.new()
+    material.shader = VOLUME
+    material.set_shader_parameter("atlas_bounds",Vector4(crop[0],crop[1],crop[0]+crop[2],crop[1]+crop[3]))
+    volume_materials.append(material)
+    return material
+
+func _reset_depth_pose() -> void:
+    depth_turn = 0.0
+    torso.scale = Vector2.ONE
+    near_arm.scale = Vector2.ONE
+    far_arm.scale = Vector2.ONE
+    near_arm.z_index = 1
+    far_arm.z_index = -1
+    near_arm.modulate = Color.WHITE
+    far_arm.modulate = Color(0.84,0.88,0.94,1.0)
+    fin_upper.scale = Vector2(1.04,1.06)
+    fin_lower.scale = Vector2(1.04,1.06)
+    tail_base.position = Vector2(13,30)
+    for material in volume_materials + ribbon_materials:
+        material.set_shader_parameter("depth_turn",0.0)
 
 func _ribbon(index: int, parent: Node2D, destination: Rect2, shining: bool) -> void:
     var crop: Array = BODY_CROPS[index]
@@ -178,6 +209,7 @@ func _ribbon(index: int, parent: Node2D, destination: Rect2, shining: bool) -> v
         ribbon_materials.append(material)
     parent.add_child(mesh)
     ribbons.append(mesh)
+    painted_parts.append(mesh)
 
 func _update_ribbons(dt: float, phase: float, swim_amount: float) -> void:
     var active := high_quality and not reduced_motion
@@ -234,12 +266,24 @@ func airborne_clearance(screen_y: float) -> float:
     var angle := body_pitch * facing_value + spin_curve.sample_baked(clampf(jump_air_time/0.88,0.0,1.0)) * TAU * jump_direction
     var top := 0.0
     # Conservative painted-rig bounds protect fins/hair throughout the turn.
-    for corner in [Vector2(-162,-110),Vector2(135,-110),Vector2(-162,77),Vector2(135,77)]:
+    for corner in [Vector2(-185,-125),Vector2(150,-125),Vector2(-185,95),Vector2(150,95)]:
         top = minf(top,Vector2(corner.x*facing_value,corner.y).rotated(angle).y)
-    return maxf(0.0,14.0-screen_y-top)
+    # Articulated fins can leave the root rectangle during a tight curl.
+    # Include current painted geometry, without moving the physics body.
+    for part in painted_parts:
+        var transform: Transform2D = part.get_global_transform()
+        if part is Polygon2D:
+            for point in part.polygon:
+                top = minf(top,(transform * point).y-global_position.y)
+        elif part is Sprite2D:
+            var rect: Rect2 = part.get_rect()
+            for point in [rect.position,rect.position+Vector2(rect.size.x,0),rect.end,rect.position+Vector2(0,rect.size.y)]:
+                top = minf(top,(transform * point).y-global_position.y)
+    return maxf(0.0,40.0-screen_y-top)
 
 func reset_jump() -> void:
     jump_player.stop()
+    _reset_depth_pose()
     launch_curl = 0.0
     launch_stretch = 0.0
     landing_compress = 0.0
@@ -278,6 +322,7 @@ func _part(index: int, parent: Node2D, x: float, y: float, w: float, h: float, a
     sprite.scale = Vector2(w / region.size.x, h / region.size.y)
     sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
     parent.add_child(sprite)
+    painted_parts.append(sprite)
     return sprite
 
 func _ready() -> void:
@@ -287,8 +332,10 @@ func _ready() -> void:
     jump_player.add_animation_library("", JUMP_LIBRARY)
     spin_curve = Curve.new()
     spin_curve.add_point(Vector2(0.0,0.0),0.0,0.0)
-    spin_curve.add_point(Vector2(0.22,0.06),0.65,0.65)
-    spin_curve.add_point(Vector2(0.62,0.85),1.3,1.3)
+    spin_curve.add_point(Vector2(0.18,0.02),0.3,0.3)
+    spin_curve.add_point(Vector2(0.46,0.48),0.25,0.25)
+    spin_curve.add_point(Vector2(0.65,0.55),0.35,0.35)
+    spin_curve.add_point(Vector2(0.92,0.99),0.25,0.25)
     spin_curve.add_point(Vector2(1.0,1.0),0.0,0.0)
     gesture_player = AnimationPlayer.new()
     gesture_player.name = "MagnifiquePerformancePlayer"
@@ -322,7 +369,8 @@ func _ready() -> void:
     torso = _joint("Torso", self, Vector2(12, 24))
     far_arm = _joint("FarArm", torso, Vector2(46, -26))
     _arm(1, far_arm, 61, 38)
-    _part(0, torso, -7, -42, 70, 67)
+    var bodice := _part(0, torso, -7, -42, 70, 67)
+    bodice.material = _volume_material(BODY_CROPS[0])
 
     head_joint = _joint("HeadNeck", torso, Vector2(41, -29))
     head_joint.scale = Vector2(0.91,0.91)
@@ -333,6 +381,8 @@ func _ready() -> void:
 
     near_arm = _joint("NearArm", torso, Vector2(10, -31))
     _arm(0, near_arm, 64, 40)
+
+    _reset_depth_pose()
 
     # A real Godot 2D light subtly lifts Sarah away from deep blue scenery.
     # This is an independent light, not a blurry duplicate of her painted face.
@@ -451,8 +501,8 @@ func _process(delta: float) -> void:
     var tail_tip_angle := sin(swim_phase - 0.91) * amount * 1.55 + turn_kick * 0.9 - curl * 0.85 + dive * 0.12 + brake_blend*0.24
     tail_base.rotation = lerpf(tail_base.rotation, tail_angle, ease)
     tail_tip.rotation = lerpf(tail_tip.rotation, tail_tip_angle, ease)
-    fin_upper.rotation = lerpf(fin_upper.rotation, sin(swim_phase - 1.25) * amount * 1.60 + tuck * 0.18 - dive * 0.12, fast_ease)
-    fin_lower.rotation = lerpf(fin_lower.rotation, sin(swim_phase - 0.70) * amount * 1.75 - tuck * 0.14 + dive * 0.10, fast_ease)
+    fin_upper.rotation = lerpf(fin_upper.rotation, sin(swim_phase - 1.25) * amount * 1.60 + tuck * 0.34 - dive * 0.12, fast_ease)
+    fin_lower.rotation = lerpf(fin_lower.rotation, sin(swim_phase - 0.70) * amount * 1.75 - tuck * 0.30 + dive * 0.10, fast_ease)
     side_fin.rotation = lerpf(side_fin.rotation, sin(swim_phase * 0.91) * amount + turn_kick * 0.27, ease)
     var current := 0.0 if reduced_motion else sin(slow_phase) * 0.035
     back_hair.rotation = lerpf(back_hair.rotation, current + turn_kick * 0.5 + swim_blend * 0.018 + hair_drag + horizontal_drag, ease)
@@ -460,13 +510,31 @@ func _process(delta: float) -> void:
     front_hair.rotation = lerpf(front_hair.rotation, -current * 0.6 - turn_kick * 0.25 + hair_drag * 0.32, ease)
     var rise := 0.0 if reduced_motion else sin(slow_phase * 1.2) * 1.6
     torso.position = Vector2(12.0, 24.0 + rise * (1.0 - boost_blend) + landing_compress * 2.0 - arch*2.0)
+    tail_base.position.y = 30.0 + rise * (1.0 - boost_blend) + landing_compress * 2.0 - arch*2.0
     torso.rotation = lerpf(torso.rotation, -velocity_value.y / 1400.0 * 0.12 + turn_kick * 0.18, ease)
     head_joint.rotation = lerpf(head_joint.rotation, -torso.rotation * 0.3 + nod * 0.10, ease)
     var arm_sweep := 0.0 if reduced_motion else sin(swim_phase * 0.74 + 0.65) * amount
     near_arm.rotation = lerpf(near_arm.rotation,
-        arm_sweep * 1.2 - 0.26 * boost_blend - 0.13 * leap_blend - lift * 0.34 + tuck * 0.20 - dive * 0.18 + hit_kick * 0.14 + wave*0.32 - reach*0.22 - brake_blend*0.18, fast_ease)
+        arm_sweep * 1.2 - 0.26 * boost_blend - 0.13 * leap_blend - lift * 0.34 + tuck * 0.08 - dive * 0.10 + hit_kick * 0.14 + wave*0.32 - reach*0.22 - brake_blend*0.18, fast_ease)
     far_arm.rotation = lerpf(far_arm.rotation,
-        -arm_sweep + 0.21 * boost_blend + 0.12 * leap_blend - lift * 0.24 - tuck * 0.19 - dive * 0.12 - hit_kick * 0.12 - wave*0.34 - reach*0.18 + brake_blend*0.14, fast_ease)
+        -arm_sweep + 0.21 * boost_blend + 0.12 * leap_blend - lift * 0.24 - tuck * 0.07 - dive * 0.20 - hit_kick * 0.12 - wave*0.34 - reach*0.18 + brake_blend*0.14, fast_ease)
+    # A readable faux yaw: foreshortening, overlap and lighting agree on depth.
+    var roll := sin(air_progress*TAU-0.45)*sin(air_progress*PI) if jump_phase == "airborne" else 0.0
+    var yaw_target := (roll*0.82 + turn_pose*0.45 + sin(swim_phase*0.5)*swim_blend*0.10)
+    depth_turn = 0.0 if reduced_motion else lerpf(depth_turn,yaw_target,fast_ease)
+    var depth := absf(depth_turn)
+    torso.scale = Vector2(1.0-depth*0.10,1.0+(0.0 if reduced_motion else tuck*0.025))
+    near_arm.scale = Vector2(1.0-maxf(depth_turn,0.0)*0.20,1.0)
+    far_arm.scale = Vector2(1.0-maxf(-depth_turn,0.0)*0.20,1.0)
+    near_arm.z_index = -1 if depth_turn > 0.38 else 1
+    far_arm.z_index = 1 if depth_turn > 0.38 else -1
+    near_arm.modulate = Color.WHITE.lerp(Color(0.77,0.84,0.94,1.0),maxf(depth_turn,0.0))
+    far_arm.modulate = Color(0.84,0.88,0.94,1.0).lerp(Color.WHITE,maxf(depth_turn,0.0))
+    var fan := 0.0 if reduced_motion else tuck*0.14 + launch_curl*0.08 - dive*0.08
+    fin_upper.scale = Vector2(1.04*(1.0-depth*0.12),1.06*(1.0+fan))
+    fin_lower.scale = Vector2(1.04*(1.0-depth*0.12),1.06*(1.0+fan*0.8))
+    for material in volume_materials + ribbon_materials:
+        material.set_shader_parameter("depth_turn",depth_turn)
     _update_ribbons(dt,swim_phase,swim_blend)
     self_modulate.a = alpha_value
     if is_instance_valid(hero_light):

@@ -27,6 +27,8 @@ func _run() -> void:
     check(rig.launch_curl > 0.9, "Takeoff anticipation key not applied")
     rig.set_jump_state("airborne",0.32,0,-1.0)
     check(rig.airborne_clearance(80.0) > 0.0, "Turn must keep painted fins inside viewport")
+    var saw_depth := false
+    var saw_overlap := false
     var saw_air := false
     var previous_progress := 0.0
     for i in range(20):
@@ -41,8 +43,12 @@ func _run() -> void:
         fx._process(1.0/60.0)
         if level.leap_phase == "airborne":
             saw_air = true
+            saw_depth = saw_depth or absf(rig.depth_turn) > 0.15
+            saw_overlap = saw_overlap or rig.far_arm.z_index > rig.near_arm.z_index
+            check(rig.torso.scale.x >= 0.88 and rig.near_arm.scale.x >= 0.80, "Depth projection collapses the painted body")
             check(rig.jump_direction == -1.0, "Flip direction must remain locked")
         if saw_air and level.leap_phase == "": break
+    check(saw_depth and saw_overlap, "Airborne roll needs perspective and changing limb overlap")
     check(saw_air and fx.surface_events == 2, "Exactly one breach and one landing spray required")
     check(fx.last_surface.y == level.WATER_SURFACE, "Splash must be at waterline, not Sarah centre")
     check(rig.jump_player.current_animation == "land", "Landing timeline did not start")
@@ -63,6 +69,7 @@ func _run() -> void:
     rig.reduced_motion = true
     rig.set_jump_state("airborne",0.44,1,-1)
     rig._process(1.0/60.0)
+    check(rig.depth_turn == 0.0 and rig.torso.scale == Vector2.ONE, "Gentle motion retains depth distortion")
     check(absf(rig.rotation) < 0.3, "Gentle motion must omit full spin")
     fx.update_jump(Vector2.ZERO,0,"airborne",5,true,false)
     var events: int = fx.surface_events
