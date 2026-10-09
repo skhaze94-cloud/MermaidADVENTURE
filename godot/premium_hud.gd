@@ -3,6 +3,8 @@ extends CanvasLayer
 ## Draws from one immutable snapshot every rendered frame; no gameplay state stored here.
 var canvas: Control
 var info: Dictionary = {}
+var redraw_count := 0
+var skipped_redraws := 0
 var game_size := Vector2(1400, 960)
 const DISPLAY_FONT: FontFile = preload("res://dist/fonts/treasure-display.ttf")
 var panel_style: StyleBoxFlat
@@ -42,9 +44,31 @@ func _resize() -> void:
     canvas.queue_redraw()
 
 func update_hud(next_info: Dictionary) -> void:
+    # The gameplay publishes a snapshot every frame, but we only redraw
+    # when an actual visible HUD value changes. Energy/progress use a 1%
+    # threshold to avoid wasting vector drawing on 120Hz displays.
+    var changed := info.is_empty()
+    if not changed:
+        changed = int(next_info.get("health", 0)) != int(info.get("health", 0))
+        changed = changed or int(next_info.get("score", 0)) != int(info.get("score", 0))
+        changed = changed or int(next_info.get("pearls", 0)) != int(info.get("pearls", 0))
+        changed = changed or int(float(next_info.get("energy", 0.0)) * 100.0) != int(float(info.get("energy", 0.0)) * 100.0)
+        changed = changed or int(float(next_info.get("progress", 0.0)) * 400.0) != int(float(info.get("progress", 0.0)) * 400.0)
+        changed = changed or String(next_info.get("message", "")) != String(info.get("message", ""))
+        changed = changed or (float(next_info.get("message_time", 0.0)) > 0.0) != (float(info.get("message_time", 0.0)) > 0.0)
+        changed = changed or bool(next_info.get("boss_active", false)) != bool(info.get("boss_active", false))
+        changed = changed or int(float(next_info.get("boss_health", 0.0)) * 100.0) != int(float(info.get("boss_health", 0.0)) * 100.0)
+        changed = changed or bool(next_info.get("boss_vulnerable", false)) != bool(info.get("boss_vulnerable", false))
+        changed = changed or bool(next_info.get("bubble", false)) != bool(info.get("bubble", false))
+        changed = changed or bool(next_info.get("paused", false)) != bool(info.get("paused", false))
+        changed = changed or bool(next_info.get("victory", false)) != bool(info.get("victory", false))
     info = next_info
-    if is_instance_valid(canvas):
-        canvas.queue_redraw()
+    if changed:
+        redraw_count += 1
+        if is_instance_valid(canvas):
+            canvas.queue_redraw()
+    else:
+        skipped_redraws += 1
 
 func _text(at: Vector2, label: String, size: int = 20, tint: Color = INK,
         alignment: HorizontalAlignment = HORIZONTAL_ALIGNMENT_LEFT, width: float = -1.0) -> void:
