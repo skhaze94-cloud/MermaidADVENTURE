@@ -11,6 +11,10 @@ Automated coverage uses simulated viewports/input and Linux software OpenGL. No 
 | Desktop | 1920 × 1080 | Expanded viewport, waterfall, pause |
 | Portrait phone | 390 × 844 | Rotation instruction and paused input |
 
+## Automated results
+
+Godot 4.4.1 imported the project and passed all three logic suites. The six profile layout/input checks passed; the software OpenGL workflow produced eleven profile screenshots at the requested pixel sizes plus four Level 1 checkpoints. Render inspection caught and corrected right-shifted action labels and portrait overlay leakage. Current minimum simulated touch targets are 48 px on the small phone, 52 px on the wide phone, 64 px on both tablet profiles and 72 px on desktop.
+
 ## Before signing off a physical-device release
 
 1. Run an exported Android build on a phone and a tablet; test iPad only after an iOS export is built/signed on macOS.

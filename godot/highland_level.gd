@@ -7,6 +7,7 @@ const Combat = preload("res://godot/enemy_combat.gd")
 const Highland = preload("res://godot/highland_data.gd")
 const BACKGROUND = preload("res://dist/assets/highlands.webp")
 const HERO = preload("res://dist/assets/sarah-mermaid.webp")
+const FALL_BOULDER = preload("res://godot/assets/waterfall-boulder-v07.webp")
 const REEF = preload("res://dist/assets/barrier-reef.webp")
 const FLORA = preload("res://dist/assets/flora-layer.webp")
 const CRAB = preload("res://dist/assets/crab-poses-v731.webp")
@@ -1226,7 +1227,7 @@ func _draw_waterfall(s: Vector2) -> void:
         elif kind == "jelly":
             draw_texture_rect(JELLY, Rect2(xx - 51, yy - 70, 102, 140), false)
         elif kind == "reef":
-            draw_texture_rect(REEF, Rect2(xx - 115, yy - 90, 230, 180), false)
+            draw_texture_rect(FALL_BOULDER, Rect2(xx - 115, yy - 90, 230, 180), false)
         else:
             _draw_puffer(Vector2(xx, yy), time * 2.5)
     for pearl in waterfall_gold:

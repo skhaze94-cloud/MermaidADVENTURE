@@ -101,7 +101,7 @@ func update_hud(next_info: Dictionary) -> void:
 
 func _text(at: Vector2, label: String, size: int = 20, tint: Color = INK,
         alignment: HorizontalAlignment = HORIZONTAL_ALIGNMENT_LEFT, width: float = -1.0) -> void:
-    var font: Font = DISPLAY_FONT if label == "HIGHLAND GOLD" or label == "HIGHLAND COMPLETE!" else ThemeDB.fallback_font
+    var font: Font = DISPLAY_FONT if label in ["HIGHLAND GOLD", "HIGHLAND COMPLETE!", "THE WATERFALL"] else ThemeDB.fallback_font
     canvas.draw_string(font, at, label, alignment, width, size, tint)
 
 func _backed(rect: Rect2, style: StyleBox) -> void:
@@ -137,6 +137,12 @@ func _draw_hud() -> void:
     var w := game_size.x
     var h := game_size.y
     if w < 320 or h < 240:
+        return
+    if portrait:
+        canvas.draw_rect(Rect2(0, 0, w, h), Color(0.01, 0.04, 0.08, 0.98))
+        _text(Vector2(0, h * 0.46), "ROTATE TO LANDSCAPE", 26, GOLD, HORIZONTAL_ALIGNMENT_CENTER, w)
+        _text(Vector2(0, h * 0.46 + 40), "Your adventure is paused", 18, PALE, HORIZONTAL_ALIGNMENT_CENTER, w)
+
         return
     var compact := w < 1060
     var left_width := 250.0 if compact else 320.0
@@ -196,10 +202,6 @@ func _draw_hud() -> void:
         _draw_touch_ui(w, h)
     if bool(info.get("paused", false)) or bool(info.get("victory", false)):
         _draw_modal(w, h, bool(info.get("victory", false)))
-    if portrait:
-        canvas.draw_rect(Rect2(0, 0, w, h), Color(0.01, 0.04, 0.08, 0.9))
-        _text(Vector2(0, h * 0.46), "ROTATE TO LANDSCAPE", 26, GOLD, HORIZONTAL_ALIGNMENT_CENTER, w)
-        _text(Vector2(0, h * 0.46 + 40), "Your adventure is paused", 18, PALE, HORIZONTAL_ALIGNMENT_CENTER, w)
 
 func _draw_touch_ui(w: float, h: float) -> void:
     var size := Vector2(w, h)
@@ -220,7 +222,7 @@ func _draw_touch_ui(w: float, h: float) -> void:
             continue
         var rect: Rect2 = positions[action]
         _backed(rect, warning_style if action in info.get("pressed", []) else chip_style)
-        _text(rect.position + Vector2(rect.size.x * 0.5, rect.size.y * 0.56), labels[action],
+        _text(rect.position + Vector2(0, rect.size.y * 0.56), labels[action],
             19, INK, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x)
 
 func _draw_modal(w: float, h: float, victory: bool) -> void:
