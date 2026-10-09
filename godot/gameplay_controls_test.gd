@@ -104,10 +104,13 @@ func _run() -> void:
         enemy["cooldown"] = 0
         Combat.step(enemy, Vector2(1100, 600), 0, 0.01, [])
         check(enemy["mode"] == "windup", kind + " missing telegraph")
+        # Early windup may track; the final warning and attack must stay locked.
+        for i in range(30):
+            Combat.step(enemy,Vector2(900,400),0,1.0/60.0,[])
         var aim: Vector2 = enemy["aim"]
         var fired := false
-        for i in range(61):
-            if Combat.step(enemy, Vector2(900, 400), 0, 1.0 / 60.0, []) == "fire":
+        for i in range(31):
+            if Combat.step(enemy, Vector2(1250, 780), 0, 1.0 / 60.0, []) == "fire":
                 fired = true
         check(Vector2(enemy["aim"]) == aim, kind + " retargets committed attack")
         check(enemy["mode"] == "attack", kind + " never attacks")

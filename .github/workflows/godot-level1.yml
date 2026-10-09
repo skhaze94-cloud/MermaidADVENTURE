@@ -117,6 +117,8 @@ jobs:
           if grep -E 'SCRIPT ERROR|Parse Error|Compile Error|^ERROR:' /tmp/godot-sarah.log; then
             exit 1
           fi
+      - name: Verify enemy approach, locked attacks and waterfall engagement
+        run: godot --headless --path . --script res://godot/enemy_engagement_test.gd
       - name: Validate ready ZIP extraction and fresh editor import
         run: python3 godot/package_validation.py --godot godot
       - name: Launch the storybook opening headless

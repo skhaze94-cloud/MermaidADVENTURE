@@ -1,4 +1,4 @@
-# Sarah Maria — Mermaid Adventure, Godot 4 (v0.12 Sarah Magnifique Update)
+# Sarah Maria — Mermaid Adventure, Godot 4 (v0.13 Living Reef Update)
 
 This project is the **Godot-native vertical slice** of Mermaid Sarah's first story chapter, built from the existing HTML 9.1 repository. It is a real Godot scene and scripts rather than a webpage embedded in a Godot window. The browser version in `dist/` remains available and unchanged. Godot loads the Sarah rig and music from `res://dist/assets/`, alongside new native artwork in `res://godot/assets/`.
 
@@ -9,6 +9,16 @@ This project is the **Godot-native vertical slice** of Mermaid Sarah's first sto
 3. Import **`project.godot` at the repository root**, not the `godot/` directory.
 4. Allow asset import, then press **F5**. The storybook opening leads to the main menu; select **Begin adventure** to enter Highland Gold.
 5. The menu supports portrait and landscape. Play the adventure in landscape. The project window is 1400 × 960 with stretch scaling.
+
+## v0.13 — Living Reef Update
+
+Lake creatures now notice Sarah at a greater distance and approach before attacking. Crabs scuttle along their lane; eels, sharks and swordfish close the gap; puffers and jellies seek a firing lane. Early windup tracks a modest prediction of Sarah's movement, then locks aim for the final warning and committed attack. Recovery returns creatures to their territory instead of snapping back after a fixed timer.
+
+Waterfall creatures now share a real patrol/windup/lunge/recovery state machine. They line up with Sarah, flash their warning pose, then commit to a locked-aim species-specific lunge with bounded lateral/vertical offsets. Only one waterfall creature can commit at once, and the warning lasts at least 0.64 seconds. Reefs stay fixed; boost defeats, scores, collision radii and waterfall duration remain. Portraits use the same positions and attack states as collision checks; retry recreates pursuit state.
+
+Portraits gain a restrained anticipation squash, attack stretch, recovery wobble, depth bank/skew and atlas-local rounded lighting. Eel/jelly detail remains anatomy-specific; Gentle motion removes decorative deformation, and Economy skips volume/rim samples. Existing pooled nodes and immediate combat pose swaps remain.
+
+Nine headless suites include the new `enemy_engagement_test.gd`, covering all six lake species, attack aim lock, return to territory, waterfall lane departure, the threat budget, visual/collision agreement and retry resets. Native rendered frames in `enemy-living-reef-v013.gif` show a real waterfall encounter; capture staging makes Sarah invulnerable so the full sequence can be inspected. Device captures are simulated software OpenGL, not physical-device performance measurements.
 
 ## v0.12 — Sarah Magnifique Update
 

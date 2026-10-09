@@ -18,14 +18,16 @@ for name in list(files):
             if not (root/resource).is_file():
                 raise RuntimeError('Missing runtime asset: '+resource)
             files.add(resource)
-notes = '''Sarah Maria — Mermaid Adventure | Godot v0.12 — Sarah Magnifique Update
+notes = '''Sarah Maria — Mermaid Adventure | Godot v0.13 — Living Reef Update
 
 Godot 4.4.1 or newer: Project Manager > Import > select this ZIP > choose an empty folder.
 Alternatively extract this ZIP and import the project.godot file at its root.
 Press F6 on godot/highland_level.tscn to go directly to Level 1.
 The main project runs the illustrated opening and menu first.
 
-v0.12: connected, deformable Sarah arms, hair, tail and fins, expressive gestures,
+v0.13: active lake approach/pursuit, waterfall telegraph-and-lunge encounters,
+sculpted creature lighting and anticipation/strike/recovery animation.
+Includes v0.12: connected, deformable Sarah arms, hair, tail and fins, expressive gestures,
 refined head/body/arm proportions, an elongated tail, flowing swim cycles, more responsive steering/braking and proportional touch controls.
 Includes the dimensional jump pass: elastic launch/landing, faux yaw, limb overlap,
 rounded lighting, apex fin fan and curved intertwined fin trails.

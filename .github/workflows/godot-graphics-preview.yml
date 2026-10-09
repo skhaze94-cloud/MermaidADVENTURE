@@ -73,6 +73,9 @@ jobs:
           if grep -E 'SCRIPT ERROR|Parse Error|Compile Error|^ERROR:' /tmp/enemy-renders.log; then
             exit 1
           fi
+      - name: Render active waterfall enemy engagement
+        run: |
+          GODOT_CAPTURE_PREVIEW=1 LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a -s "-screen 0 1400x960x24" godot --audio-driver Dummy --path . --script res://godot/capture_enemy_engagement.gd
       - name: Render native Sarah jump choreography
         shell: bash
         run: |

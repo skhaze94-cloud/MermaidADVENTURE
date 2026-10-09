@@ -545,8 +545,11 @@ func _sync_native_visuals() -> void:
         var half := minf(get_viewport_rect().size.x * 0.4, 520.0)
         for i in range(waterfall_hazards.size()):
             var hazard: Dictionary = waterfall_hazards[i]
-            waterfall_models[i]["x"] = get_viewport_rect().size.x * 0.5 + float(hazard["x"]) * half
-            waterfall_models[i]["y"] = 384.0 + (float(hazard["at"]) - waterfall_time) * 350.0
+            var hazard_pos := Combat.waterfall_position(hazard,waterfall_time,get_viewport_rect().size.x,half)
+            waterfall_models[i]["x"] = hazard_pos.x
+            waterfall_models[i]["y"] = hazard_pos.y
+            for key in ["mode","mode_time","aim","dir"]:
+                if hazard.has(key): waterfall_models[i][key] = hazard[key]
             waterfall_models[i]["hp"] = 0 if hazard["passed"] else 1
     waterfall_enemies.animate_visible(0.0, time, reduced_fx, get_process_delta_time(),
         waterfall_phase == "descent", high_depth_quality)
@@ -944,15 +947,21 @@ func _update_waterfall(dt: float) -> void:
     waterfall_y = clampf(waterfall_y + waterfall_velocity.y * dt, -145.0, 205.0)
     var hero_x := get_viewport_rect().size.x * 0.5 + waterfall_x * half
     var hero_y := 384.0 + waterfall_y
+    var active_attacks := 0
+    for hazard in waterfall_hazards:
+        if not hazard["passed"] and hazard.get("mode","") == "attack": active_attacks += 1
     for hazard in waterfall_hazards:
         if hazard["passed"]:
             continue
-        var age := float(hazard["at"]) - waterfall_time
-        if age * 350.0 < -290.0:
+        var old_mode: String = hazard.get("mode","patrol")
+        Combat.step_waterfall(hazard,Vector2(hero_x,hero_y),Vector2(waterfall_velocity.x*half,waterfall_velocity.y),waterfall_time,dt,get_viewport_rect().size.x,half,active_attacks == 0)
+        if old_mode != "attack" and hazard.get("mode","") == "attack": active_attacks += 1
+        var hazard_pos := Combat.waterfall_position(hazard,waterfall_time,get_viewport_rect().size.x,half)
+        if hazard_pos.y < 94.0:
             hazard["passed"] = true
             continue
-        var h_x := get_viewport_rect().size.x * 0.5 + float(hazard["x"]) * half
-        var h_y := 384.0 + age * 350.0
+        var h_x := hazard_pos.x
+        var h_y := hazard_pos.y
         var radius := 100.0 if hazard["kind"] == "reef" else 76.0
         if absf(hero_x - h_x) < radius and absf(hero_y - h_y) < 85.0:
             if waterfall_boost > 0 and hazard["kind"] != "reef":

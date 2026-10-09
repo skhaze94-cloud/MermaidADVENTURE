@@ -105,6 +105,25 @@ func animate_visible(camera_x: float, elapsed: float, reduced_motion: bool, dt: 
             sprite.rotation += clampf(aim.y * signf(aim.x), -0.22, 0.22)
         sprite.scale = Art.base_scale(kind)
         sprite.modulate = Color.WHITE
+        var mode := String(source.get("mode","patrol"))
+        var age := float(source.get("mode_time",0.0))
+        var depth_turn := 0.0
+        if not reduced_motion:
+            var aim: Vector2 = source.get("aim",Vector2.RIGHT)
+            var anticipation := sin(clampf(age/0.75,0.0,1.0)*PI) if mode == "windup" else 0.0
+            var strike := exp(-age*7.0) if mode == "attack" else 0.0
+            var wobble := sin(age*11.0)*exp(-age*3.5) if mode == "recover" else 0.0
+            # Small sculpted pose changes retain each painted species' silhouette.
+            var inflation := 0.08 if kind == "puffer" else 0.04
+            sprite.scale *= Vector2(1.0-anticipation*0.04+strike*0.06,1.0+anticipation*inflation-strike*0.04)
+            sprite.rotation += anticipation*(-0.08 if kind == "crab" else -aim.y*0.10)+wobble*0.065
+            depth_turn = sin(elapsed*1.7+phase)*0.22 + aim.y*0.25 if mode in ["approach","windup","attack"] else sin(elapsed*1.2+phase)*0.16
+            sprite.skew = depth_turn*0.045
+            sprite.scale.x *= 1.0-absf(depth_turn)*0.05
+        else:
+            sprite.skew = 0.0
+        materials[i].set_shader_parameter("depth_turn",depth_turn)
+        materials[i].set_shader_parameter("alert_mix",1.0 if mode in ["approach","windup"] else 0.0)
         if kind == "jelly" and not reduced_motion:
             var pulse := sin(elapsed * 2.4 + phase) * 0.025
             sprite.scale *= Vector2(1.0 + pulse, 1.0 - pulse)

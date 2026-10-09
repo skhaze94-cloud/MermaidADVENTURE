@@ -4,6 +4,8 @@ uniform float visual_clock = 0.0;
 uniform int anatomy = 0;
 uniform int combat_pose = 0;
 uniform bool animate_detail = true;
+uniform float depth_turn = 0.0;
+uniform float alert_mix = 0.0;
 uniform bool high_quality = true;
 varying vec4 vertex_tint;
 void vertex() { vertex_tint = COLOR; }
@@ -21,10 +23,12 @@ void fragment() {
     vec4 painted = texture(TEXTURE,uv);
     if (painted.a < 0.025) { discard; }
     if (high_quality) {
-        float neighbour = texture(TEXTURE,uv + vec2(TEXTURE_PIXEL_SIZE.x * 2.0,0.0)).a;
+        float neighbour = texture(TEXTURE,clamp(uv + vec2(TEXTURE_PIXEL_SIZE.x * 2.0,0.0),cell_uv.xy+TEXTURE_PIXEL_SIZE,cell_uv.xy+cell_uv.zw-TEXTURE_PIXEL_SIZE)).a;
         float rim = max(0.0,painted.a - neighbour);
         vec3 light = combat_pose == 1 ? vec3(1.0,0.70,0.26) : vec3(0.25,0.85,0.94);
-        painted.rgb += light * rim * 0.32;
+        float curve = sqrt(max(0.0,1.0-pow((local.y-0.5)*2.0,2.0)));
+        painted.rgb *= 0.90+curve*0.10-(local.y-0.5)*depth_turn*0.07;
+        painted.rgb += light * rim * (0.32+alert_mix*0.08);
     }
     if (combat_pose == 1) { painted.rgb = mix(painted.rgb,vec3(1.0,0.77,0.44),0.07); }
     if (combat_pose == 3) { painted.rgb = mix(painted.rgb,vec3(0.63,0.92,0.83),0.045); }
