@@ -1,0 +1,20 @@
+# Godot editor-created cache; generated on every editor import.
+.godot/
+# Native Godot export artifacts.
+*.pck
+*.exe
+*.x86_64
+*.app/
+
+# Generated QA captures and reports.
+godot/visual-previews/
+godot/device-qa/
+godot/title-previews/
+*.import
+godot/enemy-previews/
+godot/jump-previews/
+
+godot/sarah-previews/
+
+godot/ui-previews/
+*.uid

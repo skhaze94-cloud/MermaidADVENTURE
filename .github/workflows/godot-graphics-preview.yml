@@ -1,0 +1,134 @@
+name: Godot graphics visual previews
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - godot/highland-gold-level-1-prototype
+    paths:
+      - "godot/**"
+      - ".github/workflows/godot-graphics-preview.yml"
+
+jobs:
+  visual-previews:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    # The engine shader/gameplay smoke suite remains required separately.
+    # Software GL screenshot availability depends on the runner.
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Xvfb software rendering
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb libgl1-mesa-dri libgl1
+      - uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.4.1
+          use-dotnet: false
+          include-templates: false
+      - name: Import game art and textures
+        run: godot --headless --editor --path . --quit
+      - name: Render four Level 1 visual checkpoints
+        run: |
+          mkdir -p godot/visual-previews
+          GODOT_CAPTURE_PREVIEW=1 LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a -s "-screen 0 1400x960x24" \
+            godot --audio-driver Dummy --path . --script res://godot/capture_level1_previews.gd
+          ls -lh godot/visual-previews/
+      - name: Render environment landmarks and responsive biomes
+        shell: bash
+        run: |
+          set -o pipefail
+          GODOT_CAPTURE_PREVIEW=1 LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a -s "-screen 0 1400x960x24" \
+            godot --audio-driver Dummy --path . --script res://godot/capture_environment_previews.gd 2>&1 | tee /tmp/environment-renders.log
+          if grep -E 'SCRIPT ERROR|Parse Error|Compile Error|^ERROR:' /tmp/environment-renders.log; then
+            exit 1
+          fi
+      - name: Render phone, tablet, desktop and rotation profiles
+        shell: bash
+        run: |
+          set -o pipefail
+          GODOT_CAPTURE_PREVIEW=1 LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a -s "-screen 0 1920x1080x24" \
+            godot --audio-driver Dummy --path . --script res://godot/capture_device_previews.gd 2>&1 | tee /tmp/device-renders.log
+          grep -q 'GODOT DEVICE RENDER TEST PASSED' /tmp/device-renders.log
+          if grep -E 'SCRIPT ERROR|Parse Error|Compile Error|^ERROR:' /tmp/device-renders.log; then
+            exit 1
+          fi
+      - name: Render storybook opening and responsive menus
+        shell: bash
+        run: |
+          set -o pipefail
+          GODOT_CAPTURE_PREVIEW=1 LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a -s "-screen 0 1920x1080x24" \
+            godot --audio-driver Dummy --path . --script res://godot/capture_title_previews.gd 2>&1 | tee /tmp/title-renders.log
+          grep -q 'GODOT TITLE RENDER TEST PASSED' /tmp/title-renders.log
+          if grep -E 'SCRIPT ERROR|Parse Error|Compile Error|^ERROR:' /tmp/title-renders.log; then
+            exit 1
+          fi
+      - name: Render refreshed enemy roster and four combat poses
+        shell: bash
+        run: |
+          set -o pipefail
+          GODOT_CAPTURE_PREVIEW=1 LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a -s "-screen 0 1400x960x24" \
+            godot --audio-driver Dummy --path . --script res://godot/capture_enemy_previews.gd 2>&1 | tee /tmp/enemy-renders.log
+          grep -q 'GODOT ENEMY RENDER TEST PASSED' /tmp/enemy-renders.log
+          if grep -E 'SCRIPT ERROR|Parse Error|Compile Error|^ERROR:' /tmp/enemy-renders.log; then
+            exit 1
+          fi
+      - name: Render active waterfall enemy engagement
+        run: |
+          GODOT_CAPTURE_PREVIEW=1 LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a -s "-screen 0 1400x960x24" godot --audio-driver Dummy --path . --script res://godot/capture_enemy_engagement.gd
+      - name: Render native Sarah jump choreography
+        shell: bash
+        run: |
+          set -o pipefail
+          GODOT_CAPTURE_PREVIEW=1 LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a -s "-screen 0 1400x960x24" \
+            godot --audio-driver Dummy --path . --script res://godot/capture_jump_previews.gd 2>&1 | tee /tmp/jump-renders.log
+          grep -q 'GODOT JUMP RENDER TEST PASSED' /tmp/jump-renders.log
+          if grep -E 'SCRIPT ERROR|Parse Error|Compile Error|^ERROR:' /tmp/jump-renders.log; then
+            exit 1
+          fi
+      - name: Render Sarah Magnifique model and gestures
+        shell: bash
+        run: |
+          set -o pipefail
+          GODOT_CAPTURE_PREVIEW=1 LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a -s "-screen 0 1400x960x24" \
+            godot --audio-driver Dummy --path . --script res://godot/capture_sarah_previews.gd 2>&1 | tee /tmp/sarah-renders.log
+          grep -q 'GODOT SARAH MAGNIFIQUE RENDER TEST PASSED' /tmp/sarah-renders.log
+          if grep -E 'SCRIPT ERROR|Parse Error|Compile Error|^ERROR:' /tmp/sarah-renders.log; then
+            exit 1
+          fi
+      - name: Publish compact real-render preview thumbnails in logs
+        run: |
+          python3 - <<'PY'
+          import base64
+          from pathlib import Path
+          for prefix in ["01-highland-entry", "03-waterfall-descent"]:
+              path = Path("godot/visual-previews") / (prefix + "-review.jpg")
+              if path.exists():
+                  print("PREVIEW_B64_"+prefix+"="+base64.b64encode(path.read_bytes()).decode())
+          PY
+      - name: Render Pearl and Crown HUD, touch controls and results
+        run: GODOT_CAPTURE_PREVIEW=1 LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a -s "-screen 0 1920x1080x24" godot --audio-driver Dummy --path . --script res://godot/capture_ui_previews.gd
+      - name: Publish actual device profile thumbnails in logs
+        run: |
+          python3 - <<'PYTHON'
+          import base64
+          from pathlib import Path
+          for prefix in ["phone-small-waterfall", "phone-wide-pause", "tablet-4x3-waterfall", "phone-portrait-portrait"]:
+              path = Path("godot/device-qa") / (prefix + "-review.jpg")
+              if path.exists():
+                  print("PREVIEW_B64_"+prefix+"="+base64.b64encode(path.read_bytes()).decode())
+          PYTHON
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: godot-v010-jumps-creatures-and-device-previews
+          path: |
+            godot/visual-previews/*.png
+            godot/device-qa/*.png
+            godot/device-qa/*.json
+            godot/title-previews/*.png
+            godot/enemy-previews/*.png
+            godot/jump-previews/
+            godot/sarah-previews/*.png
+            godot/ui-previews/*.png
+          if-no-files-found: warn
