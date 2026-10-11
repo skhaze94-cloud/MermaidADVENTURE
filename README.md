@@ -1,3 +1,11 @@
+# Mermaid Adventure 9.2 — Level One: Living Reef
+
+Nine supplied painting sheets now dress Highland Gold with sandbanks, bubble vents, reef stone, crystal coral, glow gardens, painted currents and shell ruins. Cached transparent sprites keep the swimming path readable. The 9.1 interface, core stage lengths and enemy roster are preserved.
+
+See [9.2 release notes](docs/level-one-v92.md). Export with `python3 scripts/export-standalone.py Mermaid-Adventure-9.2.html`.
+
+## Previous update
+
 # Sarah Maria Family Adventure 9.1 — Definitive Interface
 
 9.1 consolidates the HUD into one glass rail, simplifies menu typography and buttons, and replaces persistent lesson panels with one-second control cues. Mobile controls use a smaller D-pad and matching Jump, Boost and Bubble buttons, with an always-visible energy strip. Story speech, conversations and combat feedback remain readable.
